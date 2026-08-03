@@ -35,7 +35,7 @@ export default function UserProfileModal({
   const netWorth = assets - liabilities;
 
   return (
-    <div className={`modal-backdrop ${isLoggingOut ? 'fade-out' : ''}`} onClick={onClose}>
+    <div className={`modal-backdrop ${isLoggingOut ? 'fade-out' : ''}`}>
       <div
         className={`modal-content ${isLoggingOut ? 'scale-down' : ''}`}
         onClick={e => e.stopPropagation()}

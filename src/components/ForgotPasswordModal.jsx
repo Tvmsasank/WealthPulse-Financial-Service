@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { X, Mail, Lock, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
+import { X, Mail, Lock, CheckCircle2, AlertCircle, KeyRound, ArrowRight } from 'lucide-react';
 
 export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
   if (!isOpen) return null;
 
-  const [step, setStep] = useState(1); // 1: enter email, 2: enter new password with token
+  const [step, setStep] = useState(1); // 1: Enter Email, 2: Reset Link Sent / Set Password
   const [email, setEmail] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -13,7 +13,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const handleRequestToken = async (e) => {
+  const handleRequestLink = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -29,10 +29,9 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
       if (!res.ok) throw new Error(json.error || 'Request failed');
 
       setResetToken(json.resetToken);
-      setSuccessMessage('Reset link generated! Use token below to set new password.');
       setStep(2);
     } catch (err) {
-      setError(err.message || 'Failed to request reset token');
+      setError(err.message || 'Failed to send password reset link');
     } finally {
       setLoading(false);
     }
@@ -63,7 +62,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Reset failed');
 
-      setSuccessMessage(json.message || 'Password reset successfully!');
+      setSuccessMessage('Password reset successfully! Redirecting to Sign In...');
       setTimeout(() => {
         onClose();
         onOpenLogin();
@@ -76,7 +75,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '440px' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -101,13 +100,13 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
         )}
 
         {step === 1 ? (
-          <form onSubmit={handleRequestToken}>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Enter your registered email address and we will generate a password reset authorization token.
+          <form onSubmit={handleRequestLink}>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.5' }}>
+              Enter your registered account email address. We will verify your account and issue a secure password reset link.
             </p>
 
             <div className="form-group">
-              <label className="form-label">Email Address</label>
+              <label className="form-label">Account Email Address</label>
               <div style={{ position: 'relative' }}>
                 <Mail size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
                 <input
@@ -123,20 +122,19 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
             </div>
 
             <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }} disabled={loading}>
-              {loading ? 'Generating Reset Link...' : 'Generate Reset Token'}
+              {loading ? 'Verifying Account...' : 'Send Password Reset Link'}
             </button>
           </form>
         ) : (
           <form onSubmit={handleResetPassword}>
-            <div className="form-group">
-              <label className="form-label">Reset Authorization Token</label>
-              <input
-                type="text"
-                className="form-control"
-                value={resetToken}
-                onChange={e => setResetToken(e.target.value)}
-                required
-              />
+            <div style={{ padding: '14px', background: 'var(--bg-app)', border: '1px solid var(--primary-light)', borderRadius: 'var(--radius-md)', marginBottom: '18px', textAlign: 'center' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--success-light)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px auto' }}>
+                <CheckCircle2 size={20} />
+              </div>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-main)' }}>Reset Verification Verified</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Account: <strong>{email}</strong>
+              </div>
             </div>
 
             <div className="form-group">
@@ -145,7 +143,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
                 <Lock size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
                 <input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="Minimum 6 characters"
                   className="form-control"
                   style={{ paddingLeft: '36px' }}
                   value={newPassword}
@@ -161,7 +159,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
                 <Lock size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
                 <input
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="Re-enter new password"
                   className="form-control"
                   style={{ paddingLeft: '36px' }}
                   value={confirmPassword}
@@ -172,7 +170,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
             </div>
 
             <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }} disabled={loading}>
-              {loading ? 'Resetting Password...' : 'Save New Password'}
+              {loading ? 'Saving Password...' : 'Save New Password & Sign In'}
             </button>
           </form>
         )}
