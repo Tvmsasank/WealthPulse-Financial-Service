@@ -117,39 +117,42 @@ app.get('/api/auth/me', (req, res) => {
 });
 
 async function sendResetEmail(toEmail, resetUrl) {
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  const user = (process.env.SMTP_USER || '').trim();
+  const pass = (process.env.SMTP_PASS || '').trim().replace(/\s+/g, '');
+
+  if (user && pass) {
     try {
       const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: Number(process.env.SMTP_PORT) || 587,
-        secure: false,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS
-        }
+        service: 'gmail',
+        auth: { user, pass }
       });
 
-      await transporter.sendMail({
-        from: '"Ledgerly Security" <no-reply@ledgerly.com>',
+      const info = await transporter.sendMail({
+        from: `"Ledgerly Security" <${user}>`,
         to: toEmail,
         subject: '🔑 Reset Your Ledgerly Password',
         html: `
-          <div style="font-family: sans-serif; max-width: 500px; padding: 20px; border: 1px solid #eee; borderRadius: 8px;">
-            <h2 style="color: #7C6EE6;">Ledgerly Password Reset</h2>
-            <p>You requested a password reset for your Ledgerly account (<strong>${toEmail}</strong>).</p>
-            <p style="margin: 20px 0;">
-              <a href="${resetUrl}" style="background: #7C6EE6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+          <div style="font-family: Arial, sans-serif; max-width: 520px; padding: 24px; border: 1px solid #7C6EE6; border-radius: 12px; background: #090D16; color: #FFFFFF;">
+            <h2 style="color: #7C6EE6; margin-top: 0;">Ledgerly Password Reset</h2>
+            <p style="color: #CBD5E1; font-size: 14px;">You requested a password reset for your Ledgerly account (<strong>${toEmail}</strong>).</p>
+            <p style="margin: 28px 0;">
+              <a href="${resetUrl}" style="background: #7C6EE6; color: #FFFFFF; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
                 Reset My Password
               </a>
             </p>
-            <p style="font-size: 12px; color: #777;">If you did not request this, please ignore this email.</p>
+            <p style="font-size: 12px; color: #94A3B8;">If you did not request this, please ignore this email. Link expires in 1 hour.</p>
           </div>
         `
       });
+
+      console.log(`[Ledgerly Email] Password reset email successfully sent to ${toEmail}. MessageId: ${info.messageId}`);
+      return true;
     } catch (e) {
-      console.error('Failed to dispatch real email:', e);
+      console.error('[Ledgerly Email Error] Failed to send email via Gmail SMTP:', e);
+      return false;
     }
   }
+  return false;
 }
 
 // POST /api/auth/forgot-password
@@ -161,11 +164,14 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const result = dbEngine.createPasswordResetToken(email);
     const resetUrl = `http://localhost:3000/?resetToken=${result.resetToken}`;
 
-    // Attempt real email dispatch if SMTP environment variables are present
-    await sendResetEmail(email, resetUrl);
+    // Attempt real email dispatch
+    const emailSent = await sendResetEmail(email, resetUrl);
 
     res.json({
-      message: 'Password reset token created successfully',
+      message: emailSent
+        ? `Password reset link sent to ${email}. Check your Gmail inbox!`
+        : 'Password reset token created successfully',
+      emailSent,
       resetToken: result.resetToken,
       resetUrl
     });
