@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wallet, Settings, FolderSync, AlertTriangle, RefreshCw, Plus, Trash2, CheckCircle2 } from 'lucide-react';
+import { Wallet, Settings, FolderSync, AlertTriangle, RefreshCw, Plus, Trash2, CheckCircle2, Download, ExternalLink } from 'lucide-react';
 
 export default function SettingsTab({
   settings = {},
@@ -170,7 +170,43 @@ export default function SettingsTab({
         </form>
       </div>
 
-      {/* 2. Managed Categories & Accounts */}
+      {/* 2. Google Drive Sync & Backup Export */}
+      <div className="card" style={{ marginBottom: '28px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <FolderSync size={20} style={{ color: 'var(--success)' }} />
+            <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Google Drive Sync & Backup</h3>
+          </div>
+          <a href={driveFolder.url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }}>
+            Open Drive Folder <ExternalLink size={14} />
+          </a>
+        </div>
+
+        <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+          <div>Folder Name: <strong>{driveFolder.name}</strong></div>
+          <div>Schedule: <strong>{driveSync.schedule} ({driveSync.timezone})</strong></div>
+          <div>Last Synced: <strong>{driveSync.lastSyncedAt ? new Date(driveSync.lastSyncedAt).toLocaleString() : 'Never'}</strong></div>
+          <div>Sync Status: <strong style={{ color: 'var(--success)' }}>{driveSync.lastStatus}</strong></div>
+        </div>
+
+        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+          <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>Export Data for Google Drive Backup</h4>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>
+            Download your current transactions or full database backup to save directly into your <strong>{driveFolder.name}</strong> Drive folder.
+          </p>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <a href="/api/export?format=csv" download className="btn btn-secondary btn-sm">
+              <Download size={14} /> Download CSV Transactions
+            </a>
+            <a href="/api/export?format=json" download className="btn btn-secondary btn-sm">
+              <Download size={14} /> Download Full Database JSON
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Managed Categories & Accounts */}
       <div className="card" style={{ marginBottom: '28px' }}>
         <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px' }}>Managed Lookups (Categories & Accounts)</h3>
 
@@ -233,7 +269,7 @@ export default function SettingsTab({
         </div>
       </div>
 
-      {/* 3. Automatic Detection Settings */}
+      {/* 4. Automatic Detection Settings */}
       <div className="card" style={{ marginBottom: '28px' }}>
         <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>Automatic Detection Settings</h3>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
@@ -253,20 +289,6 @@ export default function SettingsTab({
           >
             <RefreshCw size={14} /> Restore Ignored Suggestions
           </button>
-        </div>
-      </div>
-
-      {/* 4. Google Drive Sync Settings */}
-      <div className="card" style={{ marginBottom: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-          <FolderSync size={20} style={{ color: 'var(--success)' }} />
-          <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Google Drive Sync & Automation</h3>
-        </div>
-        <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div>Folder Name: <strong>{driveFolder.name}</strong></div>
-          <div>Schedule: <strong>{driveSync.schedule} ({driveSync.timezone})</strong></div>
-          <div>Last Synced: <strong>{driveSync.lastSyncedAt ? new Date(driveSync.lastSyncedAt).toLocaleString() : 'Never'}</strong></div>
-          <div>Sync Status: <strong style={{ color: 'var(--success)' }}>{driveSync.lastStatus}</strong></div>
         </div>
       </div>
 

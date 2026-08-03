@@ -31,6 +31,36 @@ app.get('/api/state', (req, res) => {
     res.status(500).json({ error: 'Failed to fetch state' });
   }
 });
+// GET /api/export
+app.get('/api/export', (req, res) => {
+  try {
+    const { format } = req.query;
+    const state = dbEngine.getState();
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    if (format === 'csv') {
+      const txs = state.transactions || [];
+      let csv = 'Date,Merchant,Amount,Type,Category,Account,Tags,Source,Receipt\n';
+      for (const t of txs) {
+        const tagsStr = (Array.isArray(t.tags) ? t.tags : JSON.parse(t.tags || '[]')).join('; ');
+        const merchantEsc = `"${(t.merchant || '').replace(/"/g, '""')}"`;
+        const catEsc = `"${(t.category || '').replace(/"/g, '""')}"`;
+        const accEsc = `"${(t.account || '').replace(/"/g, '""')}"`;
+        csv += `${t.date},${merchantEsc},${t.amount},${t.type},${catEsc},${accEsc},"${tagsStr}",${t.source},${t.receipt}\n`;
+      }
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="Ledgerly_Transactions_${dateStr}.csv"`);
+      return res.send(csv);
+    } else {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="Ledgerly_Backup_${dateStr}.json"`);
+      return res.json(state);
+    }
+  } catch (err) {
+    console.error('GET /api/export error:', err);
+    res.status(500).json({ error: 'Failed to export data' });
+  }
+});
 
 // POST /api/transactions
 app.post('/api/transactions', (req, res) => {
