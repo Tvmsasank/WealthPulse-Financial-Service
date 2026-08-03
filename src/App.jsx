@@ -48,7 +48,19 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [activeResetToken, setActiveResetToken] = useState('');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  // Check URL parameters for ?resetToken=... on load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tokenFromUrl = params.get('resetToken');
+    if (tokenFromUrl) {
+      setActiveResetToken(tokenFromUrl);
+      setIsForgotPasswordOpen(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   // App Data State
   const [transactions, setTransactions] = useState([]);
@@ -611,6 +623,7 @@ export default function App() {
       <ForgotPasswordModal
         isOpen={isForgotPasswordOpen}
         onClose={() => setIsForgotPasswordOpen(false)}
+        initialToken={activeResetToken}
         onOpenLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
       />
 

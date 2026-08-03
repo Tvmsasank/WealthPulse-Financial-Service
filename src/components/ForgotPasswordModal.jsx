@@ -1,17 +1,25 @@
-import React, { useState } from 'react';
-import { X, Mail, Lock, CheckCircle2, AlertCircle, KeyRound, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Mail, Lock, CheckCircle2, AlertCircle, KeyRound, ExternalLink, RefreshCw } from 'lucide-react';
 
-export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
+export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, initialToken = '' }) {
   if (!isOpen) return null;
 
-  const [step, setStep] = useState(1); // 1: Enter Email, 2: Reset Link Sent / Set Password
+  const [step, setStep] = useState(initialToken ? 2 : 1); // 1: Enter Email, 2: Sent Email Link / Set Password
   const [email, setEmail] = useState('');
-  const [resetToken, setResetToken] = useState('');
+  const [resetToken, setResetToken] = useState(initialToken);
+  const [resetUrl, setResetUrl] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    if (initialToken) {
+      setResetToken(initialToken);
+      setStep(2);
+    }
+  }, [initialToken]);
 
   const handleRequestLink = async (e) => {
     e.preventDefault();
@@ -29,6 +37,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
       if (!res.ok) throw new Error(json.error || 'Request failed');
 
       setResetToken(json.resetToken);
+      setResetUrl(json.resetUrl || `http://localhost:3000/?resetToken=${json.resetToken}`);
       setStep(2);
     } catch (err) {
       setError(err.message || 'Failed to send password reset link');
@@ -76,11 +85,11 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <KeyRound size={20} style={{ color: 'var(--primary)' }} />
-            <h2 style={{ fontSize: '18px' }}>Reset Your Password</h2>
+            <h2 style={{ fontSize: '18px' }}>{step === 1 ? 'Forgot Password' : 'Set New Password'}</h2>
           </div>
           <button className="modal-close" onClick={onClose} aria-label="Close">
             <X size={20} />
@@ -102,7 +111,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
         {step === 1 ? (
           <form onSubmit={handleRequestLink}>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.5' }}>
-              Enter your registered account email address. We will verify your account and issue a secure password reset link.
+              Enter your registered email address. Ledgerly will generate an authenticated password reset link for your account.
             </p>
 
             <div className="form-group">
@@ -122,19 +131,35 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
             </div>
 
             <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }} disabled={loading}>
-              {loading ? 'Verifying Account...' : 'Send Password Reset Link'}
+              {loading ? 'Sending Reset Email...' : 'Send Password Reset Link'}
             </button>
           </form>
         ) : (
           <form onSubmit={handleResetPassword}>
-            <div style={{ padding: '14px', background: 'var(--bg-app)', border: '1px solid var(--primary-light)', borderRadius: 'var(--radius-md)', marginBottom: '18px', textAlign: 'center' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--success-light)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px auto' }}>
-                <CheckCircle2 size={20} />
+            {/* Email Link Notification Card */}
+            <div style={{ padding: '14px', background: 'var(--bg-app)', border: '1px solid var(--primary-light)', borderRadius: 'var(--radius-md)', marginBottom: '18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--success-light)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Mail size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-main)' }}>Reset Link Sent to Inbox</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Target: <strong>{email || 'Your Registered Email'}</strong></div>
+                </div>
               </div>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-main)' }}>Reset Verification Verified</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Account: <strong>{email}</strong>
-              </div>
+
+              {resetUrl && (
+                <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid var(--border-color)', fontSize: '12px' }}>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Click link from email inbox to trigger reset modal:</span>
+                  <a
+                    href={resetUrl}
+                    className="btn btn-secondary btn-sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', wordBreak: 'break-all', color: 'var(--primary)' }}
+                  >
+                    Open Password Reset Link <ExternalLink size={13} />
+                  </a>
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -169,9 +194,14 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin }) {
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }} disabled={loading}>
-              {loading ? 'Saving Password...' : 'Save New Password & Sign In'}
-            </button>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+              <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setStep(1)}>
+                Back
+              </button>
+              <button type="submit" className="btn btn-primary" style={{ flex: 2 }} disabled={loading}>
+                {loading ? 'Saving Password...' : 'Save New Password'}
+              </button>
+            </div>
           </form>
         )}
       </div>
