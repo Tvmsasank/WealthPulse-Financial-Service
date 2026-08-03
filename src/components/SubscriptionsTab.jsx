@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CreditCard, Plus, Check, EyeOff, Trash2, ShieldCheck } from 'lucide-react';
 import { detectRecurring } from '../utils/recurringEngine';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 export default function SubscriptionsTab({
   transactions = [],
@@ -22,6 +23,7 @@ export default function SubscriptionsTab({
   const totalAnnual = totalMonthly * 12;
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [serviceName, setServiceName] = useState('');
   const [amount, setAmount] = useState('');
   const [cadence, setCadence] = useState('monthly');
@@ -163,7 +165,7 @@ export default function SubscriptionsTab({
                       <button
                         className="btn btn-ghost btn-sm"
                         style={{ color: 'var(--danger)' }}
-                        onClick={() => onDeleteSubscription(sub.id)}
+                        onClick={() => setDeleteTarget(sub)}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -246,6 +248,18 @@ export default function SubscriptionsTab({
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete Subscription"
+        message={`Are you sure you want to delete subscription "${deleteTarget?.serviceName || deleteTarget?.merchant}"?`}
+        itemDetails={deleteTarget ? { service: deleteTarget.serviceName || deleteTarget.merchant, amount: `₹${deleteTarget.amount}`, cadence: deleteTarget.cadence } : null}
+        onConfirm={() => {
+          if (deleteTarget) onDeleteSubscription(deleteTarget.id);
+        }}
+      />
     </div>
   );
 }

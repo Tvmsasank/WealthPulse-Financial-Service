@@ -1,5 +1,6 @@
-import React from 'react';
-import { Target, Plus, Edit2, Trash2, Calendar, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Target, Plus, Edit2, Trash2, Calendar } from 'lucide-react';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 export default function GoalsTab({
   settings = {},
@@ -8,6 +9,7 @@ export default function GoalsTab({
   onDeleteGoal
 }) {
   const { goals = [] } = settings;
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   return (
     <div>
@@ -47,7 +49,7 @@ export default function GoalsTab({
                     <button className="btn btn-ghost btn-sm" onClick={() => onEditGoal(goal)}>
                       <Edit2 size={16} />
                     </button>
-                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => onDeleteGoal(goal.id)}>
+                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => setDeleteTarget(goal)}>
                       <Trash2 size={16} />
                     </button>
                   </div>
@@ -100,6 +102,18 @@ export default function GoalsTab({
           </button>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete Goal"
+        message={`Are you sure you want to delete financial goal "${deleteTarget?.name}"?`}
+        itemDetails={deleteTarget ? { goal: deleteTarget.name, target: `₹${deleteTarget.targetAmount}`, saved: `₹${deleteTarget.currentAmount}` } : null}
+        onConfirm={() => {
+          if (deleteTarget) onDeleteGoal(deleteTarget.id);
+        }}
+      />
     </div>
   );
 }

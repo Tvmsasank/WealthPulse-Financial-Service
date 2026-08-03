@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RefreshCw, Check, EyeOff, Plus, Trash2, Calendar, Sparkles } from 'lucide-react';
 import { detectRecurring } from '../utils/recurringEngine';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 export default function RecurringTab({
   transactions = [],
@@ -22,6 +23,7 @@ export default function RecurringTab({
   const totalAnnual = totalMonthly * 12;
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [newMerchant, setNewMerchant] = useState('');
   const [newAmount, setNewAmount] = useState('');
   const [newCadence, setNewCadence] = useState('monthly');
@@ -175,7 +177,7 @@ export default function RecurringTab({
                       <button
                         className="btn btn-ghost btn-sm"
                         style={{ color: 'var(--danger)' }}
-                        onClick={() => onDeleteRecurring(rec.id)}
+                        onClick={() => setDeleteTarget(rec)}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -260,6 +262,18 @@ export default function RecurringTab({
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete Recurring Payment"
+        message={`Are you sure you want to delete recurring payment "${deleteTarget?.merchant}"?`}
+        itemDetails={deleteTarget ? { merchant: deleteTarget.merchant, amount: `₹${deleteTarget.amount}`, cadence: deleteTarget.cadence } : null}
+        onConfirm={() => {
+          if (deleteTarget) onDeleteRecurring(deleteTarget.id);
+        }}
+      />
     </div>
   );
 }
