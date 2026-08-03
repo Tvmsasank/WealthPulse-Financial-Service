@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, CheckCircle2, AlertCircle, KeyRound, ExternalLink, ArrowRight } from 'lucide-react';
+import { X, Mail, Lock, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
 
 export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, initialToken = '' }) {
   if (!isOpen) return null;
 
-  // If opened with an active token (e.g. clicked link from email), go straight to Step 3 (Set New Password)
-  const [step, setStep] = useState(initialToken ? 3 : 1); 
+  // If opened via email link (?resetToken=...), go directly to password entry
+  const [step, setStep] = useState(initialToken ? 2 : 1);
   const [email, setEmail] = useState('');
   const [resetToken, setResetToken] = useState(initialToken);
-  const [resetUrl, setResetUrl] = useState('');
-  const [emailSent, setEmailSent] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,7 +17,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
   useEffect(() => {
     if (initialToken) {
       setResetToken(initialToken);
-      setStep(3);
+      setStep(2);
     }
   }, [initialToken]);
 
@@ -39,9 +37,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
       if (!res.ok) throw new Error(json.error || 'Request failed');
 
       setResetToken(json.resetToken);
-      setEmailSent(json.emailSent || false);
-      setResetUrl(json.resetUrl || `http://localhost:3000/?resetToken=${json.resetToken}`);
-      setStep(2);
+      setSuccessMessage(`Password reset link sent to ${email.trim()}! Please check your email inbox.`);
     } catch (err) {
       setError(err.message || 'Failed to send password reset link');
     } finally {
@@ -88,12 +84,12 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '440px' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <KeyRound size={20} style={{ color: 'var(--primary)' }} />
             <h2 style={{ fontSize: '18px' }}>
-              {step === 1 ? 'Forgot Password' : step === 2 ? 'Check Your Email' : 'Set New Password'}
+              {step === 1 ? 'Forgot Password' : 'Set New Password'}
             </h2>
           </div>
           <button className="modal-close" onClick={onClose} aria-label="Close">
@@ -113,10 +109,10 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
           </div>
         )}
 
-        {step === 1 && (
+        {step === 1 ? (
           <form onSubmit={handleRequestLink}>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.5' }}>
-              Enter your registered email address. Ledgerly will generate a password reset link for your account.
+              Enter your registered account email address. We will send a secure password reset link to your email inbox.
             </p>
 
             <div className="form-group">
@@ -136,49 +132,13 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
             </div>
 
             <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '12px' }} disabled={loading}>
-              {loading ? 'Sending Reset Email...' : 'Send Password Reset Link'}
+              {loading ? 'Sending Email Link...' : 'Send Password Reset Link'}
             </button>
           </form>
-        )}
-
-        {step === 2 && (
-          <div style={{ textAlign: 'center', padding: '10px 0' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--success-light)', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
-              <Mail size={28} />
-            </div>
-
-            <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>
-              Password Reset Link Sent!
-            </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.5', marginBottom: '20px' }}>
-              We sent a secure password reset link to <strong>{email}</strong>. Open your email inbox and click the <strong>Reset My Password</strong> button.
-            </p>
-
-            {/* Direct Link Simulation for Dev Testing */}
-            <div style={{ padding: '12px', background: 'var(--bg-app)', border: '1px border var(--border-color)', borderRadius: 'var(--radius-md)', marginBottom: '20px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                Testing on localhost or want to reset now?
-              </div>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                style={{ width: '100%', color: 'var(--primary)', fontWeight: '600' }}
-                onClick={() => setStep(3)}
-              >
-                Set New Password Now <ArrowRight size={14} />
-              </button>
-            </div>
-
-            <button className="btn btn-ghost btn-sm" onClick={onClose} style={{ width: '100%' }}>
-              Close
-            </button>
-          </div>
-        )}
-
-        {step === 3 && (
+        ) : (
           <form onSubmit={handleResetPassword}>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Enter your new password below for account <strong>{email || 'your account'}</strong>.
+              Enter your new password below to reset your account credentials.
             </p>
 
             <div className="form-group">
@@ -213,14 +173,9 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-              <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setStep(1)}>
-                Back
-              </button>
-              <button type="submit" className="btn btn-primary" style={{ flex: 2 }} disabled={loading}>
-                {loading ? 'Saving Password...' : 'Save New Password'}
-              </button>
-            </div>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '16px' }} disabled={loading}>
+              {loading ? 'Saving Password...' : 'Save New Password & Sign In'}
+            </button>
           </form>
         )}
       </div>
