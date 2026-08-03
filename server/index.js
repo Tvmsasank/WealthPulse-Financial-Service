@@ -5,6 +5,8 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
+import 'dotenv/config';
 import { dbEngine } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -114,14 +116,53 @@ app.get('/api/auth/me', (req, res) => {
   res.json({ user });
 });
 
+async function sendResetEmail(toEmail, resetUrl) {
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS
+        }
+      });
+
+      await transporter.sendMail({
+        from: '"Ledgerly Security" <no-reply@ledgerly.com>',
+        to: toEmail,
+        subject: '🔑 Reset Your Ledgerly Password',
+        html: `
+          <div style="font-family: sans-serif; max-width: 500px; padding: 20px; border: 1px solid #eee; borderRadius: 8px;">
+            <h2 style="color: #7C6EE6;">Ledgerly Password Reset</h2>
+            <p>You requested a password reset for your Ledgerly account (<strong>${toEmail}</strong>).</p>
+            <p style="margin: 20px 0;">
+              <a href="${resetUrl}" style="background: #7C6EE6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Reset My Password
+              </a>
+            </p>
+            <p style="font-size: 12px; color: #777;">If you did not request this, please ignore this email.</p>
+          </div>
+        `
+      });
+    } catch (e) {
+      console.error('Failed to dispatch real email:', e);
+    }
+  }
+}
+
 // POST /api/auth/forgot-password
-app.post('/api/auth/forgot-password', (req, res) => {
+app.post('/api/auth/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
     const result = dbEngine.createPasswordResetToken(email);
     const resetUrl = `http://localhost:3000/?resetToken=${result.resetToken}`;
+
+    // Attempt real email dispatch if SMTP environment variables are present
+    await sendResetEmail(email, resetUrl);
 
     res.json({
       message: 'Password reset token created successfully',
