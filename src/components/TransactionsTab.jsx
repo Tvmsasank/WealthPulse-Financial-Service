@@ -22,9 +22,17 @@ export default function TransactionsTab({
   const filtered = filterTransactions(transactions, selectedPeriod, searchQuery, selectedAccount, selectedCategory);
 
   const handleRemoveTag = (tx, tagToRemove) => {
-    const currentTags = Array.isArray(tx.tags) ? tx.tags : JSON.parse(tx.tags || '[]');
+    const currentTags = parseTags(tx.tags);
     const newTags = currentTags.filter(t => t !== tagToRemove);
     onUpdateTags(tx.id, newTags);
+  };
+
+  const handleDeleteWithConfirm = (tx) => {
+    const amtStr = `${tx.type === 'income' ? '+' : '-'}₹${Math.abs(tx.amount).toFixed(2)}`;
+    const confirmMessage = `Are you sure you want to delete this transaction?\n\nMerchant: ${tx.merchant}\nAmount: ${amtStr}\nDate: ${tx.date}`;
+    if (window.confirm(confirmMessage)) {
+      onDeleteTransaction(tx.id);
+    }
   };
 
   return (
@@ -108,7 +116,7 @@ export default function TransactionsTab({
             </thead>
             <tbody>
               {filtered.map(tx => {
-                const txTags = Array.isArray(tx.tags) ? tx.tags : JSON.parse(tx.tags || '[]');
+                const txTags = parseTags(tx.tags);
                 return (
                   <tr key={tx.id}>
                     {/* Merchant & Date */}
@@ -189,7 +197,7 @@ export default function TransactionsTab({
                         className="btn btn-ghost btn-sm"
                         style={{ color: 'var(--danger)', padding: '4px' }}
                         title="Delete transaction"
-                        onClick={() => onDeleteTransaction(tx.id)}
+                        onClick={() => handleDeleteWithConfirm(tx)}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -223,6 +231,20 @@ export default function TransactionsTab({
 }
 
 // Helpers
+function parseTags(tagsVal) {
+  if (Array.isArray(tagsVal)) return tagsVal;
+  if (!tagsVal) return [];
+  if (typeof tagsVal === 'string') {
+    try {
+      const parsed = JSON.parse(tagsVal);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {
+      if (tagsVal.trim() && tagsVal !== '[]') return [tagsVal];
+    }
+  }
+  return [];
+}
+
 function filterTransactions(txs, period, query, account, category) {
   let result = filterByPeriod(txs, period);
 
@@ -231,7 +253,7 @@ function filterTransactions(txs, period, query, account, category) {
     result = result.filter(t => {
       const matchMerchant = (t.merchant || '').toLowerCase().includes(q);
       const matchCategory = (t.category || '').toLowerCase().includes(q);
-      const tagsArray = Array.isArray(t.tags) ? t.tags : JSON.parse(t.tags || '[]');
+      const tagsArray = parseTags(t.tags);
       const matchTag = tagsArray.some(tag => tag.toLowerCase().includes(q));
       return matchMerchant || matchCategory || matchTag;
     });

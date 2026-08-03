@@ -48,6 +48,12 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
       return;
     }
 
+    // Auto-include any pending typed tag in input field
+    let finalTags = [...selectedTags];
+    if (newTagInput.trim() && !finalTags.includes(newTagInput.trim())) {
+      finalTags.push(newTagInput.trim());
+    }
+
     setSaving(true);
     try {
       await onSave({
@@ -57,7 +63,7 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
         date,
         category,
         account,
-        tags: selectedTags,
+        tags: finalTags,
         receipt: hasReceipt ? 1 : 0,
         receiptFile: hasReceipt ? receiptFile : null,
         source: 'manual'
@@ -172,7 +178,7 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
 
           {/* Tags */}
           <div className="form-group">
-            <label className="form-label">Tags</label>
+            <label className="form-label">Select or Type Tags</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
               {tags.map(t => {
                 const isSelected = selectedTags.includes(t);
@@ -198,7 +204,7 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
             <div style={{ display: 'flex', gap: '8px' }}>
               <input
                 type="text"
-                placeholder="Add new tag..."
+                placeholder="Type tag name..."
                 className="form-control"
                 style={{ flex: 1 }}
                 value={newTagInput}
@@ -206,7 +212,7 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}
               />
               <button type="button" className="btn btn-secondary btn-sm" onClick={handleAddTag}>
-                <Plus size={16} /> Add
+                <Plus size={16} /> Add Tag
               </button>
             </div>
           </div>
