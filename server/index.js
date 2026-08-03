@@ -4,6 +4,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import jwt from 'jsonwebtoken';
 import { dbEngine } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -11,6 +12,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const JWT_SECRET = process.env.JWT_SECRET || 'ledgerly_super_secret_jwt_key_2026';
 
 app.use(cors());
 app.use(express.json({ limit: '25mb' }));
@@ -21,21 +23,158 @@ const upload = multer({
   limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit
 });
 
+// Middleware: Authenticate Token (returns user or null)
+const getUserIdFromReq = (req) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+  if (!token) return null;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded.userId || decoded.id || null;
+  } catch (err) {
+    return null;
+  }
+};
+
+const authenticateToken = (req, res, next) => {
+  const userId = getUserIdFromReq(req);
+  if (!userId) {
+    return res.status(401).json({ error: 'Authentication token required' });
+  }
+  req.userId = userId;
+  next();
+};
+
+// ==========================================
+// AUTHENTICATION ENDPOINTS
+// ==========================================
+
+// POST /api/auth/register
+app.post('/api/auth/register', (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    const user = dbEngine.createUser({ name, email, password });
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '30d' });
+
+    res.json({
+      message: 'Account created successfully',
+      token,
+      user
+    });
+  } catch (err) {
+    console.error('POST /api/auth/register error:', err);
+    res.status(400).json({ error: err.message || 'Registration failed' });
+  }
+});
+
+// POST /api/auth/login
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { email, password, rememberMe } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const user = dbEngine.verifyUserCredentials({ email, password });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const expiresIn = rememberMe ? '30d' : '1d';
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn });
+
+    res.json({
+      message: 'Signed in successfully',
+      token,
+      user
+    });
+  } catch (err) {
+    console.error('POST /api/auth/login error:', err);
+    res.status(500).json({ error: 'Authentication failed' });
+  }
+});
+
+// GET /api/auth/me
+app.get('/api/auth/me', (req, res) => {
+  const userId = getUserIdFromReq(req);
+  if (!userId) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  const user = dbEngine.getUserById(userId);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  res.json({ user });
+});
+
+// POST /api/auth/forgot-password
+app.post('/api/auth/forgot-password', (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const result = dbEngine.createPasswordResetToken(email);
+    const resetUrl = `http://localhost:3000/?resetToken=${result.resetToken}`;
+
+    res.json({
+      message: 'Password reset token created successfully',
+      resetToken: result.resetToken,
+      resetUrl
+    });
+  } catch (err) {
+    console.error('POST /api/auth/forgot-password error:', err);
+    res.status(400).json({ error: err.message || 'Password reset request failed' });
+  }
+});
+
+// POST /api/auth/reset-password
+app.post('/api/auth/reset-password', (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({ error: 'Reset token and new password are required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    const result = dbEngine.resetPassword({ resetToken, newPassword });
+    res.json({ message: 'Password reset successfully. You can now log in.', email: result.email });
+  } catch (err) {
+    console.error('POST /api/auth/reset-password error:', err);
+    res.status(400).json({ error: err.message || 'Password reset failed' });
+  }
+});
+
+// ==========================================
+// FINANCIAL DATA ENDPOINTS
+// ==========================================
+
 // GET /api/state
 app.get('/api/state', (req, res) => {
   try {
-    const state = dbEngine.getState();
+    const userId = getUserIdFromReq(req);
+    const state = dbEngine.getState(userId);
     res.json(state);
   } catch (err) {
     console.error('GET /api/state error:', err);
     res.status(500).json({ error: 'Failed to fetch state' });
   }
 });
+
 // GET /api/export
 app.get('/api/export', (req, res) => {
   try {
+    const userId = getUserIdFromReq(req);
     const { format } = req.query;
-    const state = dbEngine.getState();
+    const state = dbEngine.getState(userId);
     const dateStr = new Date().toISOString().split('T')[0];
 
     if (format === 'csv') {
@@ -65,11 +204,12 @@ app.get('/api/export', (req, res) => {
 // POST /api/transactions
 app.post('/api/transactions', (req, res) => {
   try {
+    const userId = getUserIdFromReq(req);
     const batch = req.body;
     if (!batch) {
       return res.status(400).json({ error: 'Payload required' });
     }
-    const result = dbEngine.addTransactions(batch);
+    const result = dbEngine.addTransactions(userId, batch);
     res.json(result);
   } catch (err) {
     console.error('POST /api/transactions error:', err);
@@ -80,11 +220,12 @@ app.post('/api/transactions', (req, res) => {
 // PATCH /api/transactions
 app.patch('/api/transactions', (req, res) => {
   try {
+    const userId = getUserIdFromReq(req);
     const { id, category, tags } = req.body;
     if (!id) {
       return res.status(400).json({ error: 'Transaction ID required' });
     }
-    const updated = dbEngine.updateTransaction(id, { category, tags });
+    const updated = dbEngine.updateTransaction(userId, id, { category, tags });
     if (!updated) {
       return res.status(404).json({ error: 'Transaction not found' });
     }
@@ -98,12 +239,13 @@ app.patch('/api/transactions', (req, res) => {
 // DELETE /api/transactions
 app.delete('/api/transactions', (req, res) => {
   try {
-    const { id } = req.query;
+    const userId = getUserIdFromReq(req);
+    const id = req.query.id || req.body.id;
     if (!id) {
       return res.status(400).json({ error: 'Transaction ID required' });
     }
-    const success = dbEngine.deleteTransaction(id);
-    if (!success) {
+    const deleted = dbEngine.deleteTransaction(userId, id);
+    if (!deleted) {
       return res.status(404).json({ error: 'Transaction not found' });
     }
     res.json({ success: true, deletedId: id });
@@ -116,11 +258,12 @@ app.delete('/api/transactions', (req, res) => {
 // PUT /api/preferences
 app.put('/api/preferences', (req, res) => {
   try {
+    const userId = getUserIdFromReq(req);
     const updates = req.body;
-    if (!updates || typeof updates !== 'object') {
-      return res.status(400).json({ error: 'Preferences object required' });
+    if (!updates) {
+      return res.status(400).json({ error: 'Payload required' });
     }
-    const updatedSettings = dbEngine.updatePreferences(updates);
+    const updatedSettings = dbEngine.updatePreferences(userId, updates);
     res.json(updatedSettings);
   } catch (err) {
     console.error('PUT /api/preferences error:', err);
@@ -129,199 +272,111 @@ app.put('/api/preferences', (req, res) => {
 });
 
 // POST /api/documents
-app.post('/api/documents', upload.array('files', 10), (req, res) => {
+app.post('/api/documents', upload.single('file'), (req, res) => {
   try {
-    const files = req.files || [];
-    if (files.length === 0) {
-      return res.status(400).json({ error: 'No files uploaded' });
+    const userId = getUserIdFromReq(req);
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'File attachment required' });
     }
 
-    const savedDocs = [];
-    for (const file of files) {
-      // Check 20MB limit
-      if (file.size > 20 * 1024 * 1024) {
-        return res.status(400).json({ error: `File ${file.originalname} exceeds 20 MB limit` });
-      }
-      const doc = dbEngine.saveDocument({
-        originalname: file.originalname,
-        mimeType: file.mimetype,
-        size: file.size,
-        buffer: file.buffer,
-        status: 'stored'
-      }, 'upload');
-      savedDocs.push(doc);
-    }
-
-    res.json({ success: true, documents: savedDocs });
-  } catch (err) {
-    console.error('POST /api/documents error:', err);
-    res.status(500).json({ error: err.message || 'Failed to upload document' });
-  }
-});
-
-// DELETE /api/state
-app.delete('/api/state', (req, res) => {
-  try {
-    const { confirmation } = req.body || {};
-    if (confirmation !== 'DELETE ALL LEDGERLY DATA') {
-      return res.status(400).json({ error: 'Invalid confirmation phrase. Must match exactly: DELETE ALL LEDGERLY DATA' });
-    }
-
-    dbEngine.wipeAllData();
-    const freshState = dbEngine.getState();
-
+    const doc = dbEngine.saveDocument(userId, file, 'upload');
     res.json({
       success: true,
-      message: 'All Ledgerly data erased successfully.',
-      state: freshState
+      document: doc
     });
   } catch (err) {
-    console.error('DELETE /api/state error:', err);
-    res.status(500).json({ error: 'Failed to erase state' });
+    console.error('POST /api/documents error:', err);
+    res.status(500).json({ error: 'Failed to upload document' });
   }
 });
 
-// GET /api/drive-sync
+// POST & GET /api/drive-sync
 app.get('/api/drive-sync', (req, res) => {
-  try {
-    const state = dbEngine.getState();
-    const settings = state.settings || {};
-
-    res.json({
-      folder: settings.driveFolder || {
-        name: 'Ledgerly Financial Inbox',
-        id: 'folder-ledgerly-inbox-01',
-        url: 'https://drive.google.com/drive/folders/ledgerly-inbox'
-      },
-      schedule: {
-        time: '08:00',
-        timezone: 'Asia/Kolkata',
-        cadence: 'daily'
-      },
-      lastSyncedAt: settings.driveSync?.lastSyncedAt || null,
-      lastStatus: settings.driveSync?.lastStatus || 'idle',
-      lastImportedCount: settings.driveSync?.lastImportedCount || 0,
-      lastDuplicateCount: settings.driveSync?.lastDuplicateCount || 0,
-      lastReviewCount: settings.driveSync?.lastReviewCount || 0,
-      errors: settings.driveSync?.errors || [],
-      processedFileIds: (settings.processedDriveFileIds || []).slice(0, 5000),
-      resetAt: settings.driveResetAt || null
-    });
-  } catch (err) {
-    console.error('GET /api/drive-sync error:', err);
-    res.status(500).json({ error: 'Failed to fetch drive sync status' });
-  }
+  const userId = getUserIdFromReq(req);
+  const state = dbEngine.getState(userId);
+  res.json({
+    folder: state.settings.driveFolder || {
+      name: 'Ledgerly Financial Inbox',
+      url: 'https://drive.google.com/drive/folders/ledgerly-inbox'
+    },
+    sync: state.settings.driveSync || { schedule: '08:00 AM Daily', timezone: 'Asia/Kolkata', status: 'idle' }
+  });
 });
 
-// POST /api/drive-sync
 app.post('/api/drive-sync', (req, res) => {
   try {
-    const { transactions = [], files = [], errors = [] } = req.body || {};
+    const userId = getUserIdFromReq(req);
+    const { transactions = [], files = [] } = req.body;
 
-    const state = dbEngine.getState();
-    const settings = state.settings || {};
-    const resetAt = settings.driveResetAt ? new Date(settings.driveResetAt) : null;
-    const processedIds = new Set(settings.processedDriveFileIds || []);
-
-    let txImportedCount = 0;
-    let txDuplicateCount = 0;
-    let filesStoredCount = 0;
-    let filesReviewCount = 0;
-
-    // Handle Transactions
+    let txResult = { insertedCount: 0, duplicateCount: 0 };
     if (transactions.length > 0) {
-      const txResult = dbEngine.addTransactions(transactions.map(t => ({
-        ...t,
-        source: 'google-drive',
-        account: t.account || 'Drive import',
-        tags: Array.from(new Set([...(t.tags || []), 'Drive import']))
-      })));
-
-      txImportedCount = txResult.insertedCount;
-      txDuplicateCount = txResult.duplicateCount;
+      txResult = dbEngine.addTransactions(userId, transactions);
     }
 
-    // Handle Files
-    const newlyProcessedFileIds = [];
-    for (const fileObj of files) {
-      if (!fileObj.id) continue;
-
-      // Ignore files modified at or before resetAt
-      if (resetAt && fileObj.modifiedTime) {
-        const modTime = new Date(fileObj.modifiedTime);
-        if (modTime <= resetAt) {
-          continue;
-        }
-      }
-
-      if (processedIds.has(fileObj.id)) {
-        continue;
-      }
-
-      const status = fileObj.status || 'stored';
-      if (status === 'review') {
-        filesReviewCount++;
-      } else {
-        filesStoredCount++;
-      }
-
-      dbEngine.saveDocument({
-        filename: fileObj.filename,
-        mimeType: fileObj.mimeType,
-        size: fileObj.size,
-        base64Content: fileObj.base64Content,
-        status
-      }, 'google-drive');
-
-      newlyProcessedFileIds.push(fileObj.id);
-      processedIds.add(fileObj.id);
+    const docResults = [];
+    for (const f of files) {
+      const doc = dbEngine.saveDocument(userId, f, 'google-drive');
+      docResults.push(doc);
     }
 
-    // Update settings with sync results
-    const updatedProcessed = Array.from(processedIds).slice(0, 5000);
-    const syncStatus = errors.length > 0 ? (txImportedCount > 0 ? 'partial' : 'error') : 'complete';
-
-    dbEngine.updatePreferences({
-      processedDriveFileIds: updatedProcessed,
+    const now = new Date().toISOString();
+    dbEngine.updatePreferences(userId, {
       driveSync: {
         schedule: '08:00 AM Daily',
         timezone: 'Asia/Kolkata',
-        lastSyncedAt: new Date().toISOString(),
-        lastStatus: syncStatus,
-        lastImportedCount: txImportedCount,
-        lastDuplicateCount: txDuplicateCount,
-        lastReviewCount: filesReviewCount,
-        errors: errors.slice(0, 5)
+        lastSyncedAt: now,
+        lastStatus: 'complete',
+        lastImportedCount: txResult.insertedCount,
+        lastDuplicateCount: txResult.duplicateCount,
+        lastReviewCount: 0,
+        errors: []
       }
     });
 
     res.json({
-      status: syncStatus,
-      lastSyncedAt: new Date().toISOString(),
-      transactionsImported: txImportedCount,
-      duplicatesSkipped: txDuplicateCount,
-      filesStored: filesStoredCount,
-      filesNeedingReview: filesReviewCount,
-      errors
+      success: true,
+      transactionsImported: txResult.insertedCount,
+      duplicatesSkipped: txResult.duplicateCount,
+      documentsSaved: docResults.length,
+      syncedAt: now
     });
   } catch (err) {
     console.error('POST /api/drive-sync error:', err);
-    res.status(500).json({ error: 'Failed to process drive sync' });
+    res.status(500).json({ error: 'Failed to run Drive sync' });
   }
 });
 
-// Serve Vite production build static assets if built
-const DIST_DIR = path.join(__dirname, '..', 'dist');
-app.use(express.static(DIST_DIR));
-app.get('*', (req, res, next) => {
-  if (req.url.startsWith('/api')) return next();
-  const indexPath = path.join(DIST_DIR, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('Vite server running in dev mode. Access frontend at http://localhost:3000');
+// DELETE /api/state (Data Wipe)
+app.delete('/api/state', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    const { confirmation } = req.body;
+    if (confirmation !== 'DELETE ALL LEDGERLY DATA') {
+      return res.status(400).json({ error: 'Exact confirmation phrase required' });
+    }
+
+    dbEngine.wipeAllData(userId);
+    res.json({
+      success: true,
+      message: 'All Ledgerly data erased successfully.'
+    });
+  } catch (err) {
+    console.error('DELETE /api/state error:', err);
+    res.status(500).json({ error: 'Failed to wipe data' });
   }
 });
+
+// Serve Vite Static Assets in Production
+const DIST_DIR = path.join(__dirname, '..', 'dist');
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(DIST_DIR, 'index.html'));
+    }
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`[Ledgerly] API Server running on port ${PORT}`);

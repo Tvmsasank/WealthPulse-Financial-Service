@@ -22,12 +22,31 @@ import BudgetModal from './components/BudgetModal';
 import GoalModal from './components/GoalModal';
 import RuleModal from './components/RuleModal';
 import ConfirmWipeModal from './components/ConfirmWipeModal';
-import { CheckCircle2, FolderSync, X } from 'lucide-react';
+import AuthModal from './components/AuthModal';
+import ForgotPasswordModal from './components/ForgotPasswordModal';
+import { CheckCircle2, FolderSync, X, Shield, Lock, UserPlus, LogIn, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState(() => localStorage.getItem('ledgerly_theme') || 'dark');
+
+  // Auth State
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ledgerly_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const [token, setToken] = useState(() => localStorage.getItem('ledgerly_token') || '');
+
+  // Auth Modals State
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('login');
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
   // App Data State
   const [transactions, setTransactions] = useState([]);
@@ -60,7 +79,7 @@ export default function App() {
   const [isConfirmWipeOpen, setIsConfirmWipeOpen] = useState(false);
 
   // Drive Sync Notification Modal State
-  const [driveSyncStatus, setDriveSyncStatus] = useState(null); // { syncState: 'syncing'|'success', message: '' }
+  const [driveSyncStatus, setDriveSyncStatus] = useState(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -71,9 +90,11 @@ export default function App() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
+  const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+
   const fetchState = async () => {
     try {
-      const res = await fetch('/api/state');
+      const res = await fetch('/api/state', { headers: authHeaders });
       if (res.ok) {
         const data = await res.json();
         setTransactions(data.transactions || []);
@@ -96,7 +117,27 @@ export default function App() {
 
   useEffect(() => {
     fetchState();
-  }, []);
+  }, [token]);
+
+  // Auth Handlers
+  const handleLoginSuccess = (userData, userToken, rememberMe) => {
+    setUser(userData);
+    setToken(userToken);
+    if (rememberMe) {
+      localStorage.setItem('ledgerly_token', userToken);
+      localStorage.setItem('ledgerly_user', JSON.stringify(userData));
+    } else {
+      sessionStorage.setItem('ledgerly_token', userToken);
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setToken('');
+    localStorage.removeItem('ledgerly_token');
+    localStorage.removeItem('ledgerly_user');
+    sessionStorage.removeItem('ledgerly_token');
+  };
 
   // Shared Period Selector Handler
   const handlePeriodChange = async (newPeriod) => {
@@ -104,7 +145,7 @@ export default function App() {
     try {
       await fetch('/api/preferences', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({ selectedPeriod: newPeriod })
       });
     } catch (err) {
@@ -116,7 +157,7 @@ export default function App() {
   const handleSaveEntry = async (entryData) => {
     const res = await fetch('/api/transactions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify(entryData)
     });
     if (!res.ok) {
@@ -130,7 +171,7 @@ export default function App() {
     setTransactions(prev => prev.map(t => t.id === txId ? { ...t, category } : t));
     await fetch('/api/transactions', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({ id: txId, category })
     });
     await fetchState();
@@ -141,7 +182,7 @@ export default function App() {
 
     await fetch('/api/transactions', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({ id: txId, tags: updatedTags })
     });
 
@@ -157,7 +198,7 @@ export default function App() {
 
   const handleDeleteTransaction = async (txId) => {
     setTransactions(prev => prev.filter(t => t.id !== txId));
-    await fetch(`/api/transactions?id=${txId}`, { method: 'DELETE' });
+    await fetch(`/api/transactions?id=${txId}`, { method: 'DELETE', headers: authHeaders });
     await fetchState();
   };
 
@@ -165,7 +206,7 @@ export default function App() {
   const savePreferences = async (updates) => {
     const res = await fetch('/api/preferences', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify(updates)
     });
     if (res.ok) {
@@ -268,7 +309,7 @@ export default function App() {
   const handleSaveRule = async (ruleData) => {
     await fetch('/api/preferences', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({
         rules: [...rules, { id: `rule_${Date.now()}`, ...ruleData }]
       })
@@ -310,7 +351,7 @@ export default function App() {
     try {
       const res = await fetch('/api/drive-sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({ transactions: [], files: [] })
       });
 
@@ -339,7 +380,7 @@ export default function App() {
   const handleConfirmWipeData = async () => {
     const res = await fetch('/api/state', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify({ confirmation: 'DELETE ALL LEDGERLY DATA' })
     });
     if (!res.ok) {
@@ -364,15 +405,68 @@ export default function App() {
           activeTabTitle={activeNav.label}
           theme={theme}
           onToggleTheme={toggleTheme}
-          onOpenAddEntry={() => setIsAddEntryOpen(true)}
-          onOpenImport={() => setIsImportOpen(true)}
-          onTriggerDriveSync={handleTriggerDriveSync}
+          user={user}
+          onOpenLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
+          onOpenRegister={() => { setAuthModalMode('register'); setIsAuthModalOpen(true); }}
+          onLogout={handleLogout}
+          onOpenAddEntry={() => {
+            if (!user) { setAuthModalMode('login'); setIsAuthModalOpen(true); return; }
+            setIsAddEntryOpen(true);
+          }}
+          onOpenImport={() => {
+            if (!user) { setAuthModalMode('login'); setIsAuthModalOpen(true); return; }
+            setIsImportOpen(true);
+          }}
+          onTriggerDriveSync={() => {
+            if (!user) { setAuthModalMode('login'); setIsAuthModalOpen(true); return; }
+            handleTriggerDriveSync();
+          }}
         />
 
         <main className="page-body">
           {loading ? (
             <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
               Loading Ledgerly state...
+            </div>
+          ) : !user ? (
+            /* Public Welcome / Resume Showcase Banner when Logged Out */
+            <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
+              <div className="card" style={{ padding: '48px 32px', background: 'linear-gradient(135deg, rgba(124, 110, 230, 0.1) 0%, rgba(79, 70, 229, 0.05) 100%)', border: '1px solid var(--primary-light)' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
+                  <Shield size={32} />
+                </div>
+
+                <h2 style={{ fontSize: '26px', fontWeight: '800', marginBottom: '12px' }}>
+                  Secure Personal Financial Portfolio & Dashboard
+                </h2>
+                <p style={{ fontSize: '15px', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '28px', maxWidth: '600px', margin: '0 auto 28px auto' }}>
+                  Ledgerly provides encrypted multi-user financial tracking with bcrypt password security, automated recurring bill detection, category budgets, and Google Drive integration in <strong>₹ (INR)</strong>.
+                </p>
+
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                  <button className="btn btn-primary" style={{ padding: '12px 24px', fontSize: '15px' }} onClick={() => { setAuthModalMode('register'); setIsAuthModalOpen(true); }}>
+                    <UserPlus size={18} /> Create Your Account
+                  </button>
+                  <button className="btn btn-secondary" style={{ padding: '12px 24px', fontSize: '15px' }} onClick={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}>
+                    <LogIn size={18} /> Sign In
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginTop: '40px', paddingTop: '28px', borderTop: '1px solid var(--border-color)', textTransform: 'none' }}>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--primary)' }}>🔒 Bcrypt Encrypted</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Salted 10-round password security</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--success)' }}>🔑 JWT Sessions</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Remember Me token authorization</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-main)' }}>📦 Isolated Data</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Per-user multi-tenancy workspace</div>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <>
@@ -490,6 +584,21 @@ export default function App() {
       {/* Mobile Scrollable Bottom Navigation */}
       <MobileNav activeTab={activeTab} onSelectTab={setActiveTab} />
 
+      {/* Auth Modals */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
+        onLoginSuccess={handleLoginSuccess}
+        onOpenForgotPassword={() => setIsForgotPasswordOpen(true)}
+      />
+
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordOpen}
+        onClose={() => setIsForgotPasswordOpen(false)}
+        onOpenLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
+      />
+
       {/* Drive Sync Modal Feedback */}
       {driveSyncStatus && (
         <div className="modal-backdrop" onClick={() => setDriveSyncStatus(null)}>
@@ -532,7 +641,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modals */}
+      {/* Action Modals */}
       <AddEntryModal
         isOpen={isAddEntryOpen}
         onClose={() => setIsAddEntryOpen(false)}

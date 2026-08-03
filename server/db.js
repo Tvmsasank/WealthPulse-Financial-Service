@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,42 +30,46 @@ const STARTER_ACCOUNTS = [
   'Main Checking', 'Everyday Visa', 'Rewards Card', 'Cash'
 ];
 
+const getInitialUserSettings = () => ({
+  categories: STARTER_CATEGORIES,
+  accounts: STARTER_ACCOUNTS,
+  goals: [],
+  budgets: [],
+  subscriptions: [],
+  recurring: [],
+  dismissedPatterns: [],
+  assets: 0,
+  liabilities: 0,
+  netWorthConfigured: false,
+  selectedPeriod: 'all-time',
+  driveFolder: {
+    name: 'Ledgerly Financial Inbox',
+    id: 'folder-ledgerly-inbox-01',
+    url: 'https://drive.google.com/drive/folders/ledgerly-inbox'
+  },
+  driveSync: {
+    schedule: '08:00 AM Daily',
+    timezone: 'Asia/Kolkata',
+    lastSyncedAt: null,
+    lastStatus: 'idle',
+    lastImportedCount: 0,
+    lastDuplicateCount: 0,
+    lastReviewCount: 0,
+    errors: []
+  },
+  processedDriveFileIds: [],
+  driveResetAt: null,
+  freshStart: true
+});
+
 const getInitialDb = () => ({
+  users: [],
   transactions: [],
   tags: [],
   rules: [],
   documents: [],
-  settings: {
-    categories: STARTER_CATEGORIES,
-    accounts: STARTER_ACCOUNTS,
-    goals: [],
-    budgets: [],
-    subscriptions: [],
-    recurring: [],
-    dismissedPatterns: [],
-    assets: 0,
-    liabilities: 0,
-    netWorthConfigured: false,
-    selectedPeriod: 'all-time',
-    driveFolder: {
-      name: 'Ledgerly Financial Inbox',
-      id: 'folder-ledgerly-inbox-01',
-      url: 'https://drive.google.com/drive/folders/ledgerly-inbox'
-    },
-    driveSync: {
-      schedule: '08:00 AM Daily',
-      timezone: 'Asia/Kolkata',
-      lastSyncedAt: null,
-      lastStatus: 'idle',
-      lastImportedCount: 0,
-      lastDuplicateCount: 0,
-      lastReviewCount: 0,
-      errors: []
-    },
-    processedDriveFileIds: [],
-    driveResetAt: null,
-    freshStart: true
-  }
+  settings: getInitialUserSettings(),
+  userSettings: {} // userId -> settings object
 });
 
 let memoryDb = null;
@@ -74,6 +80,8 @@ function loadDb() {
     try {
       const raw = fs.readFileSync(DB_FILE, 'utf-8');
       memoryDb = JSON.parse(raw);
+      if (!memoryDb.users) memoryDb.users = [];
+      if (!memoryDb.userSettings) memoryDb.userSettings = {};
     } catch (e) {
       console.error('Failed to parse database file, reinitializing', e);
       memoryDb = getInitialDb();
@@ -100,25 +108,177 @@ export function generateFingerprint(date, merchant, amount, account) {
 }
 
 export const dbEngine = {
-  // State API
-  getState() {
+  // User Authentication
+  createUser({ name, email, password }) {
     const db = loadDb();
-    // Return newest transactions first up to 5000
-    const sortedTx = [...db.transactions].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).slice(0, 5000);
-    // Return newest documents up to 100
-    const sortedDocs = [...db.documents].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 100);
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail || !password) {
+      throw new Error('Email and password are required');
+    }
+
+    const existing = db.users.find(u => u.email === cleanEmail);
+    if (existing) {
+      throw new Error('An account with this email already exists');
+    }
+
+    const userId = `usr_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+    const passwordHash = bcrypt.hashSync(password, 10);
+
+    const newUser = {
+      id: userId,
+      name: (name || cleanEmail.split('@')[0]).trim(),
+      email: cleanEmail,
+      passwordHash,
+      createdAt: new Date().toISOString(),
+      resetToken: null,
+      resetTokenExpiry: null
+    };
+
+    db.users.push(newUser);
+    // Initialize user settings with default or legacy state
+    db.userSettings[userId] = getInitialUserSettings();
+    saveDb();
+
+    // Migrate any existing unassigned legacy data to this newly created account
+    this.migrateLegacyDataToUser(userId);
+
+    return {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      createdAt: newUser.createdAt
+    };
+  },
+
+  verifyUserCredentials({ email, password }) {
+    const db = loadDb();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const user = db.users.find(u => u.email === cleanEmail);
+    if (!user) return null;
+
+    const isValid = bcrypt.compareSync(password, user.passwordHash);
+    if (!isValid) return null;
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt
+    };
+  },
+
+  getUserById(userId) {
+    const db = loadDb();
+    const user = db.users.find(u => u.id === userId);
+    if (!user) return null;
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt
+    };
+  },
+
+  createPasswordResetToken(email) {
+    const db = loadDb();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const user = db.users.find(u => u.email === cleanEmail);
+    if (!user) {
+      throw new Error('No user account found with this email');
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = Date.now() + 3600000; // 1 hour expiration
+
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = resetTokenExpiry;
+    saveDb();
+
+    return { resetToken, email: user.email };
+  },
+
+  resetPassword({ resetToken, newPassword }) {
+    const db = loadDb();
+    const user = db.users.find(u => u.resetToken === resetToken && u.resetTokenExpiry > Date.now());
+    if (!user) {
+      throw new Error('Invalid or expired password reset token');
+    }
+
+    user.passwordHash = bcrypt.hashSync(newPassword, 10);
+    user.resetToken = null;
+    user.resetTokenExpiry = null;
+    saveDb();
+
+    return { success: true, email: user.email };
+  },
+
+  // Legacy Data Migration: Transfer all unassigned transactions, settings, and documents to newly created account
+  migrateLegacyDataToUser(userId) {
+    const db = loadDb();
+
+    // 1. Assign transactions
+    for (const t of db.transactions) {
+      if (!t.userId) {
+        t.userId = userId;
+      }
+    }
+
+    // 2. Assign rules & tags
+    for (const r of db.rules) {
+      if (!r.userId) {
+        r.userId = userId;
+      }
+    }
+    for (const tag of db.tags) {
+      if (!tag.userId) {
+        tag.userId = userId;
+      }
+    }
+
+    // 3. Assign documents
+    for (const d of db.documents) {
+      if (!d.userId) {
+        d.userId = userId;
+      }
+    }
+
+    // 4. Migrate legacy settings to userSettings[userId]
+    if (db.settings && (db.settings.assets > 0 || db.settings.netWorthConfigured || (db.settings.goals && db.settings.goals.length > 0) || (db.settings.budgets && db.settings.budgets.length > 0))) {
+      db.userSettings[userId] = {
+        ...db.userSettings[userId],
+        ...db.settings
+      };
+    }
+
+    saveDb();
+  },
+
+  // State API scoped by userId
+  getState(userId) {
+    const db = loadDb();
+    
+    // Filter by userId or return unassigned if no user specified
+    const userTx = db.transactions.filter(t => !userId || t.userId === userId || !t.userId);
+    const userRules = db.rules.filter(r => !userId || r.userId === userId || !r.userId);
+    const userTags = db.tags.filter(t => !userId || t.userId === userId || !t.userId);
+    const userDocs = db.documents.filter(d => !userId || d.userId === userId || !d.userId);
+
+    const sortedTx = [...userTx].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).slice(0, 5000);
+    const sortedDocs = [...userDocs].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 100);
+
+    const settings = (userId && db.userSettings[userId]) || db.settings || getInitialUserSettings();
 
     return {
       transactions: sortedTx,
-      tags: db.tags || [],
-      rules: db.rules || [],
-      settings: db.settings || {},
+      tags: userTags,
+      rules: userRules,
+      settings,
       documents: sortedDocs
     };
   },
 
   // Transactions
-  addTransactions(rawBatch, options = {}) {
+  addTransactions(userId, rawBatch, options = {}) {
     const db = loadDb();
     const batch = Array.isArray(rawBatch) ? rawBatch : [rawBatch];
 
@@ -126,6 +286,8 @@ export const dbEngine = {
     let duplicateCount = 0;
     const insertedRows = [];
     const duplicates = [];
+
+    const userRules = db.rules.filter(r => !userId || r.userId === userId || !r.userId);
 
     for (const item of batch) {
       const date = item.date || new Date().toISOString().split('T')[0];
@@ -135,13 +297,13 @@ export const dbEngine = {
       const account = (item.account || 'Imported account').trim();
 
       if (!merchant || isNaN(amount) || amount <= 0) {
-        continue; // invalid transaction
+        continue;
       }
 
       const fp = generateFingerprint(date, merchant, amount, account);
 
-      // Check for duplicate fingerprint
-      const existing = db.transactions.find(t => t.fingerprint === fp);
+      // Check for duplicate fingerprint within user's transactions
+      const existing = db.transactions.find(t => t.fingerprint === fp && (!userId || t.userId === userId || !t.userId));
       if (existing) {
         duplicateCount++;
         duplicates.push(existing);
@@ -152,14 +314,15 @@ export const dbEngine = {
       let category = item.category || 'Needs review';
       let tagsArray = Array.isArray(item.tags) ? item.tags : [];
 
-      if (db.rules && db.rules.length > 0) {
-        for (const rule of db.rules) {
+      if (userRules.length > 0) {
+        for (const rule of userRules) {
           if (!rule.enabled) continue;
-          const whenLower = rule.whenText.toLowerCase().trim();
-          if (merchant.toLowerCase().includes(whenLower)) {
-            if (rule.thenCategory) category = rule.thenCategory;
-            if (rule.thenTag && !tagsArray.includes(rule.thenTag)) {
-              tagsArray.push(rule.thenTag);
+          const whenLower = (rule.whenText || rule.merchantPattern || '').toLowerCase().trim();
+          if (whenLower && merchant.toLowerCase().includes(whenLower)) {
+            if (rule.thenCategory || rule.category) category = rule.thenCategory || rule.category;
+            const tagVal = rule.thenTag || rule.tag;
+            if (tagVal && !tagsArray.includes(tagVal)) {
+              tagsArray.push(tagVal);
             }
           }
         }
@@ -170,6 +333,7 @@ export const dbEngine = {
 
       const newTx = {
         id: item.id || `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId: userId || null,
         date,
         merchant,
         category,
@@ -192,9 +356,9 @@ export const dbEngine = {
     return { insertedCount, duplicateCount, insertedRows, duplicates };
   },
 
-  updateTransaction(id, updates) {
+  updateTransaction(userId, id, updates) {
     const db = loadDb();
-    const idx = db.transactions.findIndex(t => t.id === id);
+    const idx = db.transactions.findIndex(t => t.id === id && (!userId || t.userId === userId || !t.userId));
     if (idx === -1) return null;
 
     const tx = db.transactions[idx];
@@ -211,9 +375,9 @@ export const dbEngine = {
     return tx;
   },
 
-  deleteTransaction(id) {
+  deleteTransaction(userId, id) {
     const db = loadDb();
-    const idx = db.transactions.findIndex(t => t.id === id);
+    const idx = db.transactions.findIndex(t => t.id === id && (!userId || t.userId === userId || !t.userId));
     if (idx === -1) return false;
     db.transactions.splice(idx, 1);
     saveDb();
@@ -221,45 +385,53 @@ export const dbEngine = {
   },
 
   // Preferences
-  updatePreferences(updates) {
+  updatePreferences(userId, updates) {
     const db = loadDb();
-    db.settings = {
-      ...db.settings,
+    const currentSettings = (userId && db.userSettings[userId]) || db.settings || getInitialUserSettings();
+
+    const updatedSettings = {
+      ...currentSettings,
       ...updates,
       updatedAt: new Date().toISOString()
     };
 
-    // If tags array updated in settings, also sync tags table
+    if (userId) {
+      db.userSettings[userId] = updatedSettings;
+    } else {
+      db.settings = updatedSettings;
+    }
+
+    // Sync tags if provided
     if (updates.tags && Array.isArray(updates.tags)) {
       const existingNames = new Set(db.tags.map(t => t.name));
       for (const tagName of updates.tags) {
         if (!existingNames.has(tagName)) {
-          db.tags.push({ name: tagName, createdAt: new Date().toISOString() });
+          db.tags.push({ id: `tag_${Date.now()}`, userId: userId || null, name: tagName, createdAt: new Date().toISOString() });
         }
       }
     }
 
     saveDb();
-    return db.settings;
+    return updatedSettings;
   },
 
   // Tags
-  addTag(tagName) {
+  addTag(userId, tagName) {
     const db = loadDb();
     const name = tagName.trim();
     if (!name) return null;
-    let existing = db.tags.find(t => t.name.toLowerCase() === name.toLowerCase());
+    let existing = db.tags.find(t => t.name.toLowerCase() === name.toLowerCase() && (!userId || t.userId === userId || !t.userId));
     if (!existing) {
-      existing = { name, createdAt: new Date().toISOString() };
+      existing = { id: `tag_${Date.now()}`, userId: userId || null, name, createdAt: new Date().toISOString() };
       db.tags.push(existing);
       saveDb();
     }
     return existing;
   },
 
-  deleteTag(tagName) {
+  deleteTag(userId, tagName) {
     const db = loadDb();
-    const idx = db.tags.findIndex(t => t.name.toLowerCase() === tagName.toLowerCase());
+    const idx = db.tags.findIndex(t => t.name.toLowerCase() === tagName.toLowerCase() && (!userId || t.userId === userId || !t.userId));
     if (idx !== -1) {
       db.tags.splice(idx, 1);
       saveDb();
@@ -269,14 +441,18 @@ export const dbEngine = {
   },
 
   // Rules
-  addRule(rule) {
+  addRule(userId, rule) {
     const db = loadDb();
     const newRule = {
       id: rule.id || `rule_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-      whenText: rule.whenText,
-      thenText: rule.thenText,
-      thenCategory: rule.thenCategory || '',
-      thenTag: rule.thenTag || '',
+      userId: userId || null,
+      whenText: rule.whenText || rule.merchantPattern || '',
+      merchantPattern: rule.merchantPattern || rule.whenText || '',
+      thenText: rule.thenText || '',
+      thenCategory: rule.thenCategory || rule.category || '',
+      category: rule.category || rule.thenCategory || '',
+      thenTag: rule.thenTag || rule.tag || '',
+      tag: rule.tag || rule.thenTag || '',
       enabled: rule.enabled !== undefined ? (rule.enabled ? 1 : 0) : 1,
       createdAt: new Date().toISOString()
     };
@@ -285,20 +461,21 @@ export const dbEngine = {
     return newRule;
   },
 
-  updateRule(id, updates) {
+  updateRule(userId, id, updates) {
     const db = loadDb();
-    const rule = db.rules.find(r => r.id === id);
+    const rule = db.rules.find(r => r.id === id && (!userId || r.userId === userId || !r.userId));
     if (!rule) return null;
     if (updates.enabled !== undefined) rule.enabled = updates.enabled ? 1 : 0;
     if (updates.whenText !== undefined) rule.whenText = updates.whenText;
+    if (updates.merchantPattern !== undefined) rule.merchantPattern = updates.merchantPattern;
     if (updates.thenText !== undefined) rule.thenText = updates.thenText;
     saveDb();
     return rule;
   },
 
-  deleteRule(id) {
+  deleteRule(userId, id) {
     const db = loadDb();
-    const idx = db.rules.findIndex(r => r.id === id);
+    const idx = db.rules.findIndex(r => r.id === id && (!userId || r.userId === userId || !r.userId));
     if (idx !== -1) {
       db.rules.splice(idx, 1);
       saveDb();
@@ -308,7 +485,7 @@ export const dbEngine = {
   },
 
   // R2 / Documents
-  saveDocument(fileObj, source = 'upload') {
+  saveDocument(userId, fileObj, source = 'upload') {
     const db = loadDb();
     const id = `doc_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
     const safeFilename = (fileObj.filename || fileObj.originalname || 'document').replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -334,6 +511,7 @@ export const dbEngine = {
 
     const newDoc = {
       id,
+      userId: userId || null,
       filename: fileObj.filename || fileObj.originalname || safeFilename,
       mimeType: fileObj.mimeType || fileObj.mimetype || 'application/octet-stream',
       size: fileObj.size || 0,
@@ -349,35 +527,20 @@ export const dbEngine = {
   },
 
   // Complete Data Wipe
-  wipeAllData() {
-    const db = getInitialDb();
-    db.settings.freshStart = true;
-    db.settings.driveResetAt = new Date().toISOString();
-    db.settings.assets = 0;
-    db.settings.liabilities = 0;
-    db.settings.netWorthConfigured = false;
-    db.settings.selectedPeriod = 'all-time';
+  wipeAllData(userId) {
+    const db = loadDb();
 
-    memoryDb = db;
-    saveDb();
-
-    // Clean R2 storage directory safely
-    try {
-      if (fs.existsSync(R2_DIR)) {
-        const files = fs.readdirSync(R2_DIR);
-        for (const file of files) {
-          const filePath = path.join(R2_DIR, file);
-          try {
-            fs.rmSync(filePath, { recursive: true, force: true });
-          } catch (e) {
-            // ignore individual locked file error
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Error clearing R2 directory:', e);
+    if (userId) {
+      db.transactions = db.transactions.filter(t => t.userId !== userId);
+      db.rules = db.rules.filter(r => r.userId !== userId);
+      db.tags = db.tags.filter(t => t.userId !== userId);
+      db.documents = db.documents.filter(d => d.userId !== userId);
+      db.userSettings[userId] = getInitialUserSettings();
+    } else {
+      memoryDb = getInitialDb();
     }
 
+    saveDb();
     return true;
   }
 };
