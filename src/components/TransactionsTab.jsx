@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Filter, Plus, FileText, Trash2, Tag, ChevronDown } from 'lucide-react';
+import ConfirmDeleteTxModal from './ConfirmDeleteTxModal';
 
 export default function TransactionsTab({
   transactions = [],
@@ -17,6 +18,7 @@ export default function TransactionsTab({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAccount, setSelectedAccount] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [deleteTargetTx, setDeleteTargetTx] = useState(null);
 
   // Filter transactions by period, search, account, and category
   const filtered = filterTransactions(transactions, selectedPeriod, searchQuery, selectedAccount, selectedCategory);
@@ -27,11 +29,10 @@ export default function TransactionsTab({
     onUpdateTags(tx.id, newTags);
   };
 
-  const handleDeleteWithConfirm = (tx) => {
-    const amtStr = `${tx.type === 'income' ? '+' : '-'}₹${Math.abs(tx.amount).toFixed(2)}`;
-    const confirmMessage = `Are you sure you want to delete this transaction?\n\nMerchant: ${tx.merchant}\nAmount: ${amtStr}\nDate: ${tx.date}`;
-    if (window.confirm(confirmMessage)) {
-      onDeleteTransaction(tx.id);
+  const handleConfirmDelete = () => {
+    if (deleteTargetTx) {
+      onDeleteTransaction(deleteTargetTx.id);
+      setDeleteTargetTx(null);
     }
   };
 
@@ -197,7 +198,7 @@ export default function TransactionsTab({
                         className="btn btn-ghost btn-sm"
                         style={{ color: 'var(--danger)', padding: '4px' }}
                         title="Delete transaction"
-                        onClick={() => handleDeleteWithConfirm(tx)}
+                        onClick={() => setDeleteTargetTx(tx)}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -226,6 +227,14 @@ export default function TransactionsTab({
           </div>
         </div>
       )}
+
+      {/* Custom Delete Confirmation Modal */}
+      <ConfirmDeleteTxModal
+        isOpen={!!deleteTargetTx}
+        onClose={() => setDeleteTargetTx(null)}
+        transaction={deleteTargetTx}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }
