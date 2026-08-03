@@ -8,6 +8,7 @@ export default function Header({
   user,
   onOpenLogin,
   onOpenRegister,
+  onOpenProfileModal,
   onLogout,
   onOpenAddEntry,
   onOpenImport,
@@ -51,29 +52,34 @@ export default function Header({
 
             <div style={{ width: '1px', height: '24px', background: 'var(--border-color)', margin: '0 4px' }} />
 
-            {/* User Profile Avatar & Logout */}
+            {/* Clickable Profile Badge */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div
+              <button
+                type="button"
                 style={{
-                  width: '32px',
-                  height: '32px',
+                  width: '34px',
+                  height: '34px',
                   borderRadius: '50%',
-                  background: 'var(--primary)',
+                  background: 'linear-gradient(135deg, #7C6EE6 0%, #4F46E5 100%)',
                   color: 'white',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: '700',
                   fontSize: '12px',
-                  letterSpacing: '0.5px'
+                  letterSpacing: '0.5px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(124, 110, 230, 0.3)',
+                  transition: 'transform 0.2s ease'
                 }}
-                title={user.email}
+                className="profile-avatar-btn"
+                title={`${user.name} (${user.email}) - Click to view profile`}
+                onClick={onOpenProfileModal}
               >
                 {getInitials(user.name)}
-              </div>
-              <span style={{ fontSize: '13px', fontWeight: '600', display: 'none', minWidth: '100px' }} className="user-name-label">
-                {user.name}
-              </span>
+              </button>
+
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={onLogout}

@@ -24,7 +24,8 @@ import RuleModal from './components/RuleModal';
 import ConfirmWipeModal from './components/ConfirmWipeModal';
 import AuthModal from './components/AuthModal';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
-import { CheckCircle2, FolderSync, X, Shield, Lock, UserPlus, LogIn, Sparkles } from 'lucide-react';
+import UserProfileModal from './components/UserProfileModal';
+import { CheckCircle2, FolderSync, X, Shield, Lock, UserPlus, LogIn } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -47,6 +48,7 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // App Data State
   const [transactions, setTransactions] = useState([]);
@@ -137,6 +139,7 @@ export default function App() {
     localStorage.removeItem('ledgerly_token');
     localStorage.removeItem('ledgerly_user');
     sessionStorage.removeItem('ledgerly_token');
+    setActiveTab('dashboard');
   };
 
   // Shared Period Selector Handler
@@ -408,6 +411,7 @@ export default function App() {
           user={user}
           onOpenLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
           onOpenRegister={() => { setAuthModalMode('register'); setIsAuthModalOpen(true); }}
+          onOpenProfileModal={() => setIsProfileModalOpen(true)}
           onLogout={handleLogout}
           onOpenAddEntry={() => {
             if (!user) { setAuthModalMode('login'); setIsAuthModalOpen(true); return; }
@@ -583,6 +587,17 @@ export default function App() {
 
       {/* Mobile Scrollable Bottom Navigation */}
       <MobileNav activeTab={activeTab} onSelectTab={setActiveTab} />
+
+      {/* User Profile & Portfolio Modal */}
+      <UserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={user}
+        settings={settings}
+        transactionCount={transactions.length}
+        onLogout={handleLogout}
+        onOpenForgotPassword={() => setIsForgotPasswordOpen(true)}
+      />
 
       {/* Auth Modals */}
       <AuthModal

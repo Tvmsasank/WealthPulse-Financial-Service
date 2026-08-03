@@ -28,10 +28,16 @@ export default function Sidebar({ activeTab, onSelectTab }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <a href="#dashboard" className="sidebar-logo">
+        <button
+          type="button"
+          className="sidebar-logo"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'left' }}
+          onClick={() => onSelectTab('dashboard')}
+          title="Go to Dashboard"
+        >
           <ShieldCheck size={28} />
           <span>Ledgerly</span>
-        </a>
+        </button>
       </div>
 
       <nav className="sidebar-nav">
@@ -42,7 +48,7 @@ export default function Sidebar({ activeTab, onSelectTab }) {
             <button
               key={item.id}
               className={`nav-item ${isActive ? 'active' : ''}`}
-              onClick={() => onSelectTab(item.id)}
+              onClick={() => onSelectTab('dashboard' === item.id ? 'dashboard' : item.id)}
             >
               <Icon size={18} />
               <span>{item.label}</span>
