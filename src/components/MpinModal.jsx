@@ -61,7 +61,7 @@ export default function MpinModal({
     }
   }, [loading, isConfirming]);
 
-  // Physical & Mobile Keyboard Listener
+  // Physical Keyboard Input Listener
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
@@ -93,11 +93,12 @@ export default function MpinModal({
         body: JSON.stringify({ email: targetEmail, mpin: completedPin })
       });
 
-      let json;
+      const responseText = await res.text();
+      let json = {};
       try {
-        json = await res.json();
+        json = JSON.parse(responseText);
       } catch (e) {
-        throw new Error('API server connection lost. Please ensure npm run dev:all is running.');
+        throw new Error(`Server response error (${res.status}). Please check API server.`);
       }
 
       if (!res.ok) throw new Error(json.error || 'Invalid 4-Digit MPIN');
@@ -125,21 +126,24 @@ export default function MpinModal({
     }
 
     setLoading(true);
+    const activeToken = token || localStorage.getItem('ledgerly_token') || sessionStorage.getItem('ledgerly_token') || '';
+
     try {
       const res = await fetch('/api/auth/mpin/set', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${activeToken}`
         },
         body: JSON.stringify({ mpin: secondPin })
       });
 
-      let json;
+      const responseText = await res.text();
+      let json = {};
       try {
-        json = await res.json();
+        json = JSON.parse(responseText);
       } catch (e) {
-        throw new Error('API server connection lost. Please ensure npm run dev:all is running.');
+        throw new Error(`Server response error (${res.status}). Please check API server.`);
       }
 
       if (!res.ok) throw new Error(json.error || 'Failed to set MPIN');
