@@ -200,6 +200,90 @@ app.post('/api/auth/reset-password', (req, res) => {
   }
 });
 
+// POST /api/auth/mpin/set
+app.post('/api/auth/mpin/set', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized: Please sign in' });
+
+    const { mpin } = req.body;
+    dbEngine.setUserMpin({ userId, mpin });
+
+    res.json({ message: '4-Digit MPIN set successfully!' });
+  } catch (err) {
+    console.error('POST /api/auth/mpin/set error:', err);
+    res.status(400).json({ error: err.message || 'Failed to set MPIN' });
+  }
+});
+
+// POST /api/auth/mpin/verify
+app.post('/api/auth/mpin/verify', (req, res) => {
+  try {
+    const { email, mpin } = req.body;
+    if (!email || !mpin) {
+      return res.status(400).json({ error: 'Email and MPIN are required' });
+    }
+
+    const user = dbEngine.verifyUserMpin({ email, mpin });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid 4-digit MPIN' });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.json({ message: 'MPIN authentication successful', token, user });
+  } catch (err) {
+    console.error('POST /api/auth/mpin/verify error:', err);
+    res.status(400).json({ error: err.message || 'MPIN authentication failed' });
+  }
+});
+
+// POST /api/auth/webauthn/register
+app.post('/api/auth/webauthn/register', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized: Please sign in' });
+
+    const { credentialId, publicKey } = req.body;
+    dbEngine.registerWebAuthnCredential({ userId, credentialId, publicKey });
+
+    res.json({ message: 'Biometric Face ID / Touch ID registered successfully!' });
+  } catch (err) {
+    console.error('POST /api/auth/webauthn/register error:', err);
+    res.status(400).json({ error: err.message || 'Failed to register biometrics' });
+  }
+});
+
+// POST /api/auth/webauthn/verify
+app.post('/api/auth/webauthn/verify', (req, res) => {
+  try {
+    const { credentialId } = req.body;
+    if (!credentialId) {
+      return res.status(400).json({ error: 'Biometric credential ID required' });
+    }
+
+    const user = dbEngine.verifyWebAuthnCredential({ credentialId });
+    if (!user) {
+      return res.status(401).json({ error: 'Biometric verification failed' });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.json({ message: 'Biometric authentication successful', token, user });
+  } catch (err) {
+    console.error('POST /api/auth/webauthn/verify error:', err);
+    res.status(400).json({ error: err.message || 'Biometric authentication failed' });
+  }
+});
+
 // ==========================================
 // FINANCIAL DATA ENDPOINTS
 // ==========================================
