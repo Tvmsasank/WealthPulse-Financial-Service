@@ -38,7 +38,8 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
     e.preventDefault();
     setError('');
 
-    const parsedAmount = parseFloat(amount);
+    const cleanAmountStr = String(amount || '').replace(/,/g, '.').trim();
+    const parsedAmount = Math.abs(parseFloat(cleanAmountStr));
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       setError('Please enter a valid positive amount.');
       return;

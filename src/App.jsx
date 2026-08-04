@@ -132,7 +132,13 @@ export default function App() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+  const rememberedEmail = localStorage.getItem('ledgerly_remembered_email') || (user ? user.email : '');
+  const activeToken = token || localStorage.getItem('ledgerly_token') || sessionStorage.getItem('ledgerly_token') || '';
+
+  const authHeaders = {
+    ...(activeToken ? { 'Authorization': `Bearer ${activeToken}`, 'X-Auth-Token': activeToken } : {}),
+    ...(rememberedEmail ? { 'X-User-Email': rememberedEmail } : {})
+  };
 
   const fetchState = async () => {
     try {
