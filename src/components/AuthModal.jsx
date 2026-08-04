@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Lock, Mail, User, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function AuthModal({
@@ -12,13 +12,25 @@ export default function AuthModal({
 
   const [mode, setMode] = useState(initialMode);
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => localStorage.getItem('ledgerly_remembered_email') || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(() => {
+    const savedEmail = localStorage.getItem('ledgerly_remembered_email');
+    return savedEmail ? true : true;
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Sync remembered email on modal open
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem('ledgerly_remembered_email');
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,9 +55,10 @@ export default function AuthModal({
 
     setLoading(true);
     const endpoint = mode === 'register' ? '/api/auth/register' : '/api/auth/login';
+    const trimmedEmail = email.trim();
     const payload = mode === 'register'
-      ? { name: name.trim(), email: email.trim(), password }
-      : { email: email.trim(), password, rememberMe };
+      ? { name: name.trim(), email: trimmedEmail, password }
+      : { email: trimmedEmail, password, rememberMe };
 
     try {
       const res = await fetch(endpoint, {
@@ -57,6 +70,13 @@ export default function AuthModal({
       const json = await res.json();
       if (!res.ok) {
         throw new Error(json.error || 'Authentication failed');
+      }
+
+      // Save or remove remembered email based on Remember Me checkbox
+      if (rememberMe) {
+        localStorage.setItem('ledgerly_remembered_email', trimmedEmail);
+      } else {
+        localStorage.removeItem('ledgerly_remembered_email');
       }
 
       setSuccess(json.message || 'Authenticated successfully!');
