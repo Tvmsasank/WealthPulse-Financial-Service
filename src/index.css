@@ -643,6 +643,17 @@ body {
   100% { opacity: 1; transform: translateY(0); }
 }
 
+/* Responsive Helper Utilities */
+.btn-text-mobile {
+  display: none;
+}
+.header-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-color);
+  margin: 0 4px;
+}
+
 /* Responsive Media Queries */
 @media (max-width: 1024px) {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -653,9 +664,88 @@ body {
   .sidebar { display: none; }
   .main-content { margin-left: 0; }
   .mobile-nav { display: block; }
-  .top-bar { padding: 0 16px; }
-  .page-body { padding: 16px 16px 80px 16px; }
+
+  .top-bar {
+    padding: 0 12px;
+    height: 56px;
+    gap: 8px;
+  }
+  .page-title-area h1 {
+    font-size: 17px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+  }
+  .top-actions {
+    gap: 4px;
+  }
+  .btn-text-desktop {
+    display: none;
+  }
+  .btn-text-mobile {
+    display: inline;
+  }
+  .header-action-btn {
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+  }
+  .header-divider {
+    display: none;
+  }
+
+  .page-body {
+    padding: 14px 14px 84px 14px;
+  }
+
   .grid-4 { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
   .grid-2 { grid-template-columns: 1fr; }
-  .period-selector { overflow-x: auto; width: 100%; }
+
+  /* Smooth Touch Scrollable Period Selector */
+  .period-selector {
+    display: flex;
+    overflow-x: auto;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 3px;
+    gap: 4px;
+  }
+  .period-selector::-webkit-scrollbar {
+    display: none;
+  }
+  .period-btn {
+    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Smooth Touch Scrollable Bottom Nav */
+  .mobile-nav {
+    padding: 6px 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .mobile-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .mobile-nav-inner {
+    display: flex;
+    gap: 4px;
+    min-width: max-content;
+  }
+  .mobile-nav-item {
+    padding: 6px 10px;
+    font-size: 10px;
+  }
+
+  /* Modal responsiveness for mobile phones */
+  .modal-content {
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    max-height: 94vh;
+  }
 }

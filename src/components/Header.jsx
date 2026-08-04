@@ -1,5 +1,5 @@
 import React from 'react';
-import { FolderSync, Upload, Plus, Sun, Moon, LogIn, UserPlus, LogOut, User } from 'lucide-react';
+import { FolderSync, Upload, Plus, Sun, Moon, LogIn, UserPlus, LogOut } from 'lucide-react';
 
 export default function Header({
   activeTabTitle,
@@ -27,33 +27,34 @@ export default function Header({
         <h1>{activeTabTitle}</h1>
       </div>
 
-      <div className="top-actions" style={{ gap: '10px' }}>
+      <div className="top-actions">
         <button
           className="btn btn-ghost btn-sm"
           onClick={onToggleTheme}
           title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          style={{ padding: '6px 8px' }}
         >
           {theme === 'dark' ? <Sun size={18} style={{ color: '#FDE047' }} /> : <Moon size={18} />}
         </button>
 
         {user ? (
           <>
-            <button className="btn btn-ghost btn-sm" onClick={onTriggerDriveSync} title="Sync Google Drive Inbox">
-              <FolderSync size={16} /> Drive sync
+            <button className="btn btn-ghost btn-sm header-action-btn" onClick={onTriggerDriveSync} title="Sync Google Drive Inbox">
+              <FolderSync size={16} /> <span className="btn-text-desktop">Drive sync</span>
             </button>
 
-            <button className="btn btn-secondary btn-sm" onClick={onOpenImport} title="Import Statement or File">
-              <Upload size={16} /> Import
+            <button className="btn btn-secondary btn-sm header-action-btn" onClick={onOpenImport} title="Import Statement or File">
+              <Upload size={16} /> <span className="btn-text-desktop">Import</span>
             </button>
 
-            <button className="btn btn-primary btn-sm" onClick={onOpenAddEntry} title="Add Entry">
-              <Plus size={16} /> Add entry
+            <button className="btn btn-primary btn-sm header-action-btn" onClick={onOpenAddEntry} title="Add Entry">
+              <Plus size={16} /> <span className="btn-text-desktop">Add entry</span>
             </button>
 
-            <div style={{ width: '1px', height: '24px', background: 'var(--border-color)', margin: '0 4px' }} />
+            <div className="header-divider" />
 
-            {/* Clickable Profile Badge */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Clickable Profile Avatar Badge */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <button
                 type="button"
                 style={{
@@ -71,7 +72,7 @@ export default function Header({
                   border: 'none',
                   cursor: 'pointer',
                   boxShadow: '0 2px 8px rgba(124, 110, 230, 0.3)',
-                  transition: 'transform 0.2s ease'
+                  flexShrink: 0
                 }}
                 className="profile-avatar-btn"
                 title={`${user.name} (${user.email}) - Click to view profile`}
@@ -91,14 +92,23 @@ export default function Header({
             </div>
           </>
         ) : (
-          <>
-            <button className="btn btn-secondary btn-sm" onClick={onOpenLogin}>
-              <LogIn size={15} /> Sign In
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={onOpenLogin}
+              style={{ fontSize: '12px', padding: '6px 10px' }}
+            >
+              <LogIn size={14} /> <span>Sign In</span>
             </button>
-            <button className="btn btn-primary btn-sm" onClick={onOpenRegister}>
-              <UserPlus size={15} /> Create Account
+
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={onOpenRegister}
+              style={{ fontSize: '12px', padding: '6px 10px' }}
+            >
+              <UserPlus size={14} /> <span className="btn-text-desktop">Create Account</span><span className="btn-text-mobile">Join</span>
             </button>
-          </>
+          </div>
         )}
       </div>
     </header>
