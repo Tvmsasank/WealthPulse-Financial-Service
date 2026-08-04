@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, Mail, User, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Lock, Mail, User, CheckCircle2, AlertCircle, Fingerprint, KeyRound, Shield } from 'lucide-react';
+import { authenticateWithBiometrics, isBiometricsAvailable } from '../utils/biometrics';
 
 export default function AuthModal({
   isOpen,
   onClose,
   initialMode = 'login', // 'login' | 'register'
   onLoginSuccess,
-  onOpenForgotPassword
+  onOpenForgotPassword,
+  onOpenMpinModal
 }) {
   if (!isOpen) return null;
 
@@ -15,21 +17,18 @@ export default function AuthModal({
   const [email, setEmail] = useState(() => localStorage.getItem('ledgerly_remembered_email') || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(() => {
-    const savedEmail = localStorage.getItem('ledgerly_remembered_email');
-    return savedEmail ? true : true;
-  });
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [biometricSupported, setBiometricSupported] = useState(false);
 
-  // Sync remembered email on modal open
   useEffect(() => {
     const rememberedEmail = localStorage.getItem('ledgerly_remembered_email');
     if (rememberedEmail) {
       setEmail(rememberedEmail);
-      setRememberMe(true);
     }
+    isBiometricsAvailable().then(setBiometricSupported);
   }, [isOpen]);
 
   const handleSubmit = async (e) => {
@@ -72,7 +71,6 @@ export default function AuthModal({
         throw new Error(json.error || 'Authentication failed');
       }
 
-      // Save or remove remembered email based on Remember Me checkbox
       if (rememberMe) {
         localStorage.setItem('ledgerly_remembered_email', trimmedEmail);
       } else {
@@ -86,6 +84,23 @@ export default function AuthModal({
       }, 600);
     } catch (err) {
       setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const result = await authenticateWithBiometrics();
+      setSuccess('Biometric Face ID / Touch ID Verified!');
+      setTimeout(() => {
+        onLoginSuccess(result.user, result.token, true);
+        onClose();
+      }, 600);
+    } catch (err) {
+      setError(err.message || 'Biometric authentication failed');
     } finally {
       setLoading(false);
     }
@@ -143,6 +158,36 @@ export default function AuthModal({
         {success && (
           <div style={{ padding: '10px 14px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CheckCircle2 size={16} /> {success}
+          </div>
+        )}
+
+        {/* Alternative Fast Auth Options for Mobile / Desktop */}
+        {mode === 'login' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: '12px', gap: '6px' }}
+              onClick={handleBiometricLogin}
+              disabled={loading}
+              title="Sign in using Face ID, Touch ID, or Fingerprint"
+            >
+              <Fingerprint size={16} style={{ color: 'var(--primary)' }} /> Face ID / Touch ID
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: '12px', gap: '6px' }}
+              onClick={() => {
+                onClose();
+                onOpenMpinModal('verify', email);
+              }}
+              disabled={loading}
+              title="Sign in using 4-Digit MPIN"
+            >
+              <KeyRound size={16} style={{ color: 'var(--success)' }} /> 4-Digit MPIN
+            </button>
           </div>
         )}
 

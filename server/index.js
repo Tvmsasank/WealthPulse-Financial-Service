@@ -192,8 +192,8 @@ app.post('/api/auth/reset-password', (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    const result = dbEngine.resetPassword({ resetToken, newPassword });
-    res.json({ message: 'Password reset successfully. You can now log in.', email: result.email });
+    dbEngine.resetPassword({ resetToken, newPassword });
+    res.json({ message: 'Password updated successfully' });
   } catch (err) {
     console.error('POST /api/auth/reset-password error:', err);
     res.status(400).json({ error: err.message || 'Password reset failed' });

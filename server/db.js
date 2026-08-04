@@ -175,6 +175,63 @@ export const dbEngine = {
       id: user.id,
       name: user.name,
       email: user.email,
+      hasMpin: !!user.mpinHash,
+      hasBiometrics: !!user.webauthnCredentialId,
+      createdAt: user.createdAt
+    };
+  },
+
+  setUserMpin({ userId, mpin }) {
+    const db = loadDb();
+    const user = db.users.find(u => u.id === userId);
+    if (!user) throw new Error('User not found');
+
+    if (!/^\d{4}$/.test(mpin)) {
+      throw new Error('MPIN must be exactly 4 digits');
+    }
+
+    user.mpinHash = bcrypt.hashSync(mpin, 10);
+    saveDb();
+    return true;
+  },
+
+  verifyUserMpin({ email, mpin }) {
+    const db = loadDb();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const user = db.users.find(u => u.email === cleanEmail);
+    if (!user || !user.mpinHash) return null;
+
+    const isValid = bcrypt.compareSync(mpin, user.mpinHash);
+    if (!isValid) return null;
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt
+    };
+  },
+
+  registerWebAuthnCredential({ userId, credentialId, publicKey }) {
+    const db = loadDb();
+    const user = db.users.find(u => u.id === userId);
+    if (!user) throw new Error('User not found');
+
+    user.webauthnCredentialId = credentialId;
+    user.webauthnPublicKey = publicKey;
+    saveDb();
+    return true;
+  },
+
+  verifyWebAuthnCredential({ credentialId }) {
+    const db = loadDb();
+    const user = db.users.find(u => u.webauthnCredentialId === credentialId);
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
       createdAt: user.createdAt
     };
   },

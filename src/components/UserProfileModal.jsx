@@ -1,18 +1,23 @@
 import React, { useState } from 'react';
-import { X, User, Mail, ShieldCheck, Lock, Calendar, Wallet, LogOut, KeyRound, CheckCircle2, Edit3 } from 'lucide-react';
+import { X, User, Mail, ShieldCheck, Lock, Calendar, Wallet, LogOut, KeyRound, CheckCircle2, Fingerprint, ShieldAlert, Sparkles } from 'lucide-react';
+import { registerBiometricPasskey } from '../utils/biometrics';
 
 export default function UserProfileModal({
   isOpen,
   onClose,
   user,
+  token,
   settings = {},
   transactionCount = 0,
   onLogout,
-  onOpenForgotPassword
+  onOpenForgotPassword,
+  onOpenMpinModal
 }) {
   if (!isOpen || !user) return null;
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [bioMessage, setBioMessage] = useState('');
+  const [bioError, setBioError] = useState('');
 
   const getInitials = (name) => {
     if (!name) return 'U';
@@ -30,6 +35,17 @@ export default function UserProfileModal({
     }, 400);
   };
 
+  const handleEnableBiometrics = async () => {
+    setBioMessage('');
+    setBioError('');
+    try {
+      await registerBiometricPasskey(user, token);
+      setBioMessage('Face ID / Touch ID Biometrics Enabled!');
+    } catch (err) {
+      setBioError(err.message || 'Failed to enable biometrics');
+    }
+  };
+
   const assets = Number(settings.assets || 0);
   const liabilities = Number(settings.liabilities || 0);
   const netWorth = assets - liabilities;
@@ -39,12 +55,12 @@ export default function UserProfileModal({
       <div
         className={`modal-content ${isLoggingOut ? 'scale-down' : ''}`}
         onClick={e => e.stopPropagation()}
-        style={{ maxWidth: '520px', transition: 'all 0.3s ease' }}
+        style={{ maxWidth: '540px', transition: 'all 0.3s ease' }}
       >
         <div className="modal-header" style={{ marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <ShieldCheck size={20} style={{ color: 'var(--primary)' }} />
-            <h2 style={{ fontSize: '18px' }}>User Profile & Portfolio</h2>
+            <h2 style={{ fontSize: '18px' }}>User Profile & Security</h2>
           </div>
           <button className="modal-close" onClick={onClose} aria-label="Close">
             <X size={20} />
@@ -86,6 +102,53 @@ export default function UserProfileModal({
           </div>
         </div>
 
+        {/* Quick Authentication Actions: Biometrics & MPIN */}
+        <div style={{ marginBottom: '20px' }}>
+          <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', marginBottom: '10px', fontWeight: '700' }}>
+            Fast Authentication Options
+          </h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <button
+              className="btn btn-secondary"
+              style={{ fontSize: '13px', justifyContent: 'flex-start', padding: '12px 14px' }}
+              onClick={handleEnableBiometrics}
+            >
+              <Fingerprint size={18} style={{ color: 'var(--primary)' }} />
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontWeight: '700' }}>Face ID / Biometrics</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Enable Touch ID / Passkey</div>
+              </div>
+            </button>
+
+            <button
+              className="btn btn-secondary"
+              style={{ fontSize: '13px', justifyContent: 'flex-start', padding: '12px 14px' }}
+              onClick={() => {
+                onClose();
+                onOpenMpinModal('set');
+              }}
+            >
+              <KeyRound size={18} style={{ color: 'var(--success)' }} />
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontWeight: '700' }}>4-Digit MPIN</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Set Quick Mobile Pin</div>
+              </div>
+            </button>
+          </div>
+
+          {bioMessage && (
+            <div style={{ marginTop: '10px', padding: '8px 12px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={14} /> {bioMessage}
+            </div>
+          )}
+
+          {bioError && (
+            <div style={{ marginTop: '10px', padding: '8px 12px', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 'var(--radius-md)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <ShieldAlert size={14} /> {bioError}
+            </div>
+          )}
+        </div>
+
         {/* Financial Portfolio Summary */}
         <div style={{ marginBottom: '20px' }}>
           <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', marginBottom: '10px', fontWeight: '700' }}>
@@ -108,30 +171,20 @@ export default function UserProfileModal({
           </div>
         </div>
 
-        {/* Security & System Info */}
+        {/* Security Architecture */}
         <div style={{ marginBottom: '24px' }}>
           <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', marginBottom: '10px', fontWeight: '700' }}>
-            Security & Cryptographic Architecture
+            Security Architecture
           </h4>
-          <div className="card" style={{ padding: '16px', background: 'var(--bg-app)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
+          <div className="card" style={{ padding: '14px', background: 'var(--bg-app)', fontSize: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <div>
                 <span style={{ color: 'var(--text-muted)' }}>Password Hashing:</span>
                 <div style={{ fontWeight: '600', color: 'var(--text-main)', marginTop: '2px' }}>bcrypt (10 rounds)</div>
               </div>
               <div>
-                <span style={{ color: 'var(--text-muted)' }}>Session Security:</span>
-                <div style={{ fontWeight: '600', color: 'var(--text-main)', marginTop: '2px' }}>JWT Authorized Token</div>
-              </div>
-              <div>
-                <span style={{ color: 'var(--text-muted)' }}>Workspace Mode:</span>
-                <div style={{ fontWeight: '600', color: 'var(--text-main)', marginTop: '2px' }}>Per-User Isolated Multi-Tenant</div>
-              </div>
-              <div>
-                <span style={{ color: 'var(--text-muted)' }}>Member Since:</span>
-                <div style={{ fontWeight: '600', color: 'var(--text-main)', marginTop: '2px' }}>
-                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent'}
-                </div>
+                <span style={{ color: 'var(--text-muted)' }}>Passkeys & Biometrics:</span>
+                <div style={{ fontWeight: '600', color: 'var(--text-main)', marginTop: '2px' }}>W3C WebAuthn Hardware</div>
               </div>
             </div>
           </div>

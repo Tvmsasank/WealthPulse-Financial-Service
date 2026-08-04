@@ -25,7 +25,8 @@ import ConfirmWipeModal from './components/ConfirmWipeModal';
 import AuthModal from './components/AuthModal';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import UserProfileModal from './components/UserProfileModal';
-import { CheckCircle2, FolderSync, X, Shield, Lock, UserPlus, LogIn } from 'lucide-react';
+import MpinModal from './components/MpinModal';
+import { CheckCircle2, FolderSync, X, Shield, Lock, UserPlus, LogIn, Fingerprint, KeyRound } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -51,6 +52,11 @@ export default function App() {
   const [activeResetToken, setActiveResetToken] = useState('');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
+  // MPIN Modal State
+  const [isMpinModalOpen, setIsMpinModalOpen] = useState(false);
+  const [mpinModalMode, setMpinModalMode] = useState('verify'); // 'verify' | 'set'
+  const [mpinModalEmail, setMpinModalEmail] = useState('');
+
   // Check URL parameters for ?resetToken=... on load
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -60,6 +66,28 @@ export default function App() {
       setIsForgotPasswordOpen(true);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
+  }, []);
+
+  // Cross-Tab Multi-Session Synchronization
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'ledgerly_token') {
+        if (!e.newValue) {
+          setUser(null);
+          setToken('');
+          setActiveTab('dashboard');
+        } else {
+          setToken(e.newValue);
+          try {
+            const savedUser = localStorage.getItem('ledgerly_user');
+            if (savedUser) setUser(JSON.parse(savedUser));
+          } catch (err) {}
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // App Data State
@@ -104,30 +132,6 @@ export default function App() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  // Cross-Tab Multi-Session Synchronization
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'ledgerly_token') {
-        if (!e.newValue) {
-          // Logged out or password reset in another tab
-          setUser(null);
-          setToken('');
-          setActiveTab('dashboard');
-        } else {
-          // Logged in or token updated in another tab
-          setToken(e.newValue);
-          try {
-            const savedUser = localStorage.getItem('ledgerly_user');
-            if (savedUser) setUser(JSON.parse(savedUser));
-          } catch (err) {}
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
   const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
 
   const fetchState = async () => {
@@ -146,7 +150,6 @@ export default function App() {
           }));
         }
       } else if (res.status === 401) {
-        // Active token is unauthorized/invalid -> Auto logout this tab
         handleLogout();
       }
     } catch (err) {
@@ -161,7 +164,7 @@ export default function App() {
   }, [token]);
 
   // Auth Handlers
-  const handleLoginSuccess = (userData, userToken, rememberMe) => {
+  const handleLoginSuccess = (userData, userToken, rememberMe = true) => {
     setUser(userData);
     setToken(userToken);
     if (rememberMe) {
@@ -179,6 +182,12 @@ export default function App() {
     localStorage.removeItem('ledgerly_user');
     sessionStorage.removeItem('ledgerly_token');
     setActiveTab('dashboard');
+  };
+
+  const handleOpenMpinModal = (mode = 'verify', emailOverride = '') => {
+    setMpinModalMode(mode);
+    setMpinModalEmail(emailOverride || (user ? user.email : localStorage.getItem('ledgerly_remembered_email') || ''));
+    setIsMpinModalOpen(true);
   };
 
   // Shared Period Selector Handler
@@ -483,7 +492,7 @@ export default function App() {
                   Secure Personal Financial Portfolio & Dashboard
                 </h2>
                 <p style={{ fontSize: '15px', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '28px', maxWidth: '600px', margin: '0 auto 28px auto' }}>
-                  Ledgerly provides encrypted multi-user financial tracking with bcrypt password security, automated recurring bill detection, category budgets, and Google Drive integration in <strong>₹ (INR)</strong>.
+                  Ledgerly provides encrypted multi-user financial tracking with Face ID, 4-digit MPIN, bcrypt password security, and Google Drive integration in <strong>₹ (INR)</strong>.
                 </p>
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
@@ -495,18 +504,22 @@ export default function App() {
                   </button>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginTop: '40px', paddingTop: '28px', borderTop: '1px solid var(--border-color)', textTransform: 'none' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', marginTop: '40px', paddingTop: '28px', borderTop: '1px solid var(--border-color)', textTransform: 'none' }}>
                   <div>
-                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--primary)' }}>🔒 Bcrypt Encrypted</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Salted 10-round password security</div>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--primary)' }}>👤 Face ID / Touch ID</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>W3C WebAuthn Passkeys</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--success)' }}>🔑 JWT Sessions</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Remember Me token authorization</div>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--success)' }}>🔢 4-Digit MPIN</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Fast numeric lock pad</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-main)' }}>📦 Isolated Data</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>Per-user multi-tenancy workspace</div>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--info)' }}>🔒 Bcrypt Encrypted</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Salted 10-round passwords</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-main)' }}>🔑 JWT Sessions</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Token authorization</div>
                   </div>
                 </div>
               </div>
@@ -632,10 +645,12 @@ export default function App() {
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
         user={user}
+        token={token}
         settings={settings}
         transactionCount={transactions.length}
         onLogout={handleLogout}
         onOpenForgotPassword={() => setIsForgotPasswordOpen(true)}
+        onOpenMpinModal={handleOpenMpinModal}
       />
 
       {/* Auth Modals */}
@@ -645,6 +660,7 @@ export default function App() {
         initialMode={authModalMode}
         onLoginSuccess={handleLoginSuccess}
         onOpenForgotPassword={() => setIsForgotPasswordOpen(true)}
+        onOpenMpinModal={handleOpenMpinModal}
       />
 
       <ForgotPasswordModal
@@ -655,9 +671,20 @@ export default function App() {
         onOpenLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
       />
 
+      <MpinModal
+        isOpen={isMpinModalOpen}
+        onClose={() => setIsMpinModalOpen(false)}
+        mode={mpinModalMode}
+        email={mpinModalEmail}
+        token={token}
+        onSuccess={(u, t) => {
+          if (u && t) handleLoginSuccess(u, t, true);
+        }}
+      />
+
       {/* Drive Sync Modal Feedback */}
       {driveSyncStatus && (
-        <div className="modal-backdrop" onClick={() => setDriveSyncStatus(null)}>
+        <div className="modal-backdrop">
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '440px', textAlign: 'center' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
