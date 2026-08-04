@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, CheckCircle2, AlertCircle, KeyRound } from 'lucide-react';
+import { X, Mail, Lock, CheckCircle2, AlertCircle, KeyRound, ArrowRight, Info } from 'lucide-react';
 
 export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, initialToken = '' }) {
   if (!isOpen) return null;
@@ -8,6 +8,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
   const [step, setStep] = useState(initialToken ? 2 : 1);
   const [email, setEmail] = useState('');
   const [resetToken, setResetToken] = useState(initialToken);
+  const [emailSent, setEmailSent] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,6 +25,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
   const handleRequestLink = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
     setLoading(true);
 
     try {
@@ -37,7 +39,13 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
       if (!res.ok) throw new Error(json.error || 'Request failed');
 
       setResetToken(json.resetToken);
-      setSuccessMessage(`Password reset link sent to ${email.trim()}! Please check your email inbox.`);
+      setEmailSent(json.emailSent || false);
+
+      if (json.emailSent) {
+        setSuccessMessage(`Password reset link sent to ${email.trim()}! Please check your Gmail inbox.`);
+      } else {
+        setError('Real Gmail delivery requires a .env file with SMTP credentials. Use the link below to set your new password now.');
+      }
     } catch (err) {
       setError(err.message || 'Failed to send password reset link');
     } finally {
@@ -98,8 +106,21 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
         </div>
 
         {error && (
-          <div style={{ padding: '10px 14px', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AlertCircle size={16} /> {error}
+          <div style={{ padding: '10px 14px', background: 'var(--warning-light)', color: 'var(--warning)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600' }}>
+              <AlertCircle size={16} /> {error}
+            </div>
+
+            {resetToken && !emailSent && (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                style={{ width: '100%', marginTop: '4px' }}
+                onClick={() => { setError(''); setStep(2); }}
+              >
+                Set New Password Now <ArrowRight size={14} />
+              </button>
+            )}
           </div>
         )}
 
@@ -112,7 +133,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
         {step === 1 ? (
           <form onSubmit={handleRequestLink}>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.5' }}>
-              Enter your registered account email address. We will send a secure password reset link to your email inbox.
+              Enter your registered account email address. We will generate a password reset link for your account.
             </p>
 
             <div className="form-group">
