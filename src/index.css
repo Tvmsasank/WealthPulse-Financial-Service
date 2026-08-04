@@ -659,10 +659,22 @@ body {
 .mobile-cards-view {
   display: none;
 }
-.transaction-filter-grid {
+.settings-grid-3 {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.settings-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
   gap: 12px;
+  margin-bottom: 12px;
+}
+.settings-manage-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
 }
 
 /* Responsive Media Queries */
@@ -769,7 +781,10 @@ body {
     display: flex !important;
     flex-direction: column;
   }
-  .transaction-filter-grid {
-    grid-template-columns: 1fr;
+  .transaction-filter-grid,
+  .settings-grid-3,
+  .settings-grid-2,
+  .settings-manage-grid {
+    grid-template-columns: 1fr !important;
   }
 }

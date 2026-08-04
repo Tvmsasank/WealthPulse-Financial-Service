@@ -149,8 +149,8 @@ export default function SettingsTab({
         )}
 
         <form onSubmit={handleNetWorthSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <div className="form-group">
+          <div className="settings-grid-3">
+            <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Total Assets (₹)</label>
               <input
                 type="number"
@@ -162,7 +162,7 @@ export default function SettingsTab({
               />
             </div>
 
-            <div className="form-group">
+            <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Total Liabilities (₹)</label>
               <input
                 type="number"
@@ -174,9 +174,9 @@ export default function SettingsTab({
               />
             </div>
 
-            <div className="form-group">
+            <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Calculated Net Worth Preview</label>
-              <div style={{ padding: '10px 14px', background: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '18px', fontWeight: '700', color: hasEnteredValues ? (calculatedPreview >= 0 ? 'var(--success)' : 'var(--danger)') : 'var(--warning)', minHeight: '44px', display: 'flex', alignItems: 'center' }}>
+              <div style={{ padding: '10px 14px', background: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontSize: '18px', fontWeight: '700', color: hasEnteredValues ? (calculatedPreview >= 0 ? 'var(--success)' : 'var(--warning)') : 'var(--warning)', minHeight: '44px', display: 'flex', alignItems: 'center' }}>
                 {hasEnteredValues
                   ? `₹${calculatedPreview.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
                   : 'Not set'}
@@ -184,7 +184,7 @@ export default function SettingsTab({
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="btn btn-primary" style={{ marginTop: '16px' }}>
             Save Net Worth Configuration
           </button>
         </form>
@@ -192,7 +192,7 @@ export default function SettingsTab({
 
       {/* 2. Google Drive Sync & Backup */}
       <div className="card" style={{ marginBottom: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <FolderSync size={20} style={{ color: 'var(--success)' }} />
             <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Google Drive Sync & Backup</h3>
@@ -213,7 +213,7 @@ export default function SettingsTab({
             <Link2 size={16} style={{ color: 'var(--primary)' }} /> Configure Your Google Drive Folder Link
           </h4>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', marginBottom: '12px' }}>
+          <div className="settings-grid-2">
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label" style={{ fontSize: '12px' }}>Folder Name</label>
               <input
@@ -238,12 +238,12 @@ export default function SettingsTab({
             </div>
           </div>
 
-          <button type="submit" className="btn btn-secondary btn-sm" style={{ fontSize: '12px' }}>
+          <button type="submit" className="btn btn-secondary btn-sm" style={{ fontSize: '12px', marginTop: '12px' }}>
             Save Drive Folder Link
           </button>
         </form>
 
-        <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+        <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }} className="settings-grid-2">
           <div>Folder Name: <strong>{driveFolder.name}</strong></div>
           <div>Schedule: <strong>{driveSync.schedule} ({driveSync.timezone})</strong></div>
           <div>Last Synced: <strong>{driveSync.lastSyncedAt ? new Date(driveSync.lastSyncedAt).toLocaleString() : 'Never'}</strong></div>
@@ -277,15 +277,16 @@ export default function SettingsTab({
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <div className="settings-manage-grid">
           {/* Categories Manager */}
           <div>
             <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>Categories ({categories.length})</h4>
             <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
               <input
                 type="text"
-                placeholder="New Category..."
+                placeholder="New Category Name..."
                 className="form-control"
+                style={{ flex: 1 }}
                 value={newCatInput}
                 onChange={e => setNewCatInput(e.target.value)}
               />
@@ -312,8 +313,9 @@ export default function SettingsTab({
             <form onSubmit={handleAddAccount} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
               <input
                 type="text"
-                placeholder="New Account..."
+                placeholder="New Account Name..."
                 className="form-control"
+                style={{ flex: 1 }}
                 value={newAccInput}
                 onChange={e => setNewAccInput(e.target.value)}
               />
@@ -336,10 +338,10 @@ export default function SettingsTab({
         </div>
       </div>
 
-      {/* 4. Restore Ignored Recurring / Subscription Suggestions */}
+      {/* 4. Restore Ignored Suggestions */}
       {dismissedCount > 0 && (
         <div className="card" style={{ marginBottom: '28px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <h3 style={{ fontSize: '15px', fontWeight: '700' }}>Ignored Suggestions ({dismissedCount})</h3>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
