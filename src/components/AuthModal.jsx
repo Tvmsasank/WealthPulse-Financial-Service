@@ -190,9 +190,14 @@ export default function AuthModal({
         body: JSON.stringify(payload)
       });
 
-      const json = await res.json();
+      const responseText = await res.text();
+      let json = {};
+      try {
+        json = JSON.parse(responseText);
+      } catch (e) {}
+
       if (!res.ok) {
-        throw new Error(json.error || 'Authentication failed');
+        throw new Error(json.error || 'Invalid email or password. If this is a fresh Render deployment, please click "Create Account" first.');
       }
 
       if (rememberMe) {

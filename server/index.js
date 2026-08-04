@@ -498,14 +498,17 @@ app.delete('/api/state', (req, res) => {
   }
 });
 
+// API 404 Handler (Always returns JSON for /api routes)
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: `API endpoint ${req.originalUrl} not found` });
+});
+
 // Serve Vite Static Assets in Production
 const DIST_DIR = path.join(__dirname, '..', 'dist');
 if (fs.existsSync(DIST_DIR)) {
   app.use(express.static(DIST_DIR));
   app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(DIST_DIR, 'index.html'));
-    }
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
   });
 }
 
