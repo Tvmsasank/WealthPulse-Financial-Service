@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wallet, Settings, FolderSync, AlertTriangle, RefreshCw, Plus, Trash2, CheckCircle2, Download, ExternalLink } from 'lucide-react';
+import { Wallet, Settings, FolderSync, AlertTriangle, RefreshCw, Plus, Trash2, CheckCircle2, Download, ExternalLink, Link2 } from 'lucide-react';
 
 export default function SettingsTab({
   settings = {},
@@ -27,8 +27,12 @@ export default function SettingsTab({
 
   const driveFolder = settings.driveFolder || {
     name: 'Ledgerly Financial Inbox',
-    url: 'https://drive.google.com/drive/folders/ledgerly-inbox'
+    url: 'https://drive.google.com/drive/my-drive'
   };
+  const [driveNameInput, setDriveNameInput] = useState(driveFolder.name || 'Ledgerly Financial Inbox');
+  const [driveUrlInput, setDriveUrlInput] = useState(driveFolder.url || 'https://drive.google.com/drive/my-drive');
+  const [driveMessage, setDriveMessage] = useState('');
+
   const driveSync = settings.driveSync || {
     schedule: '08:00 AM Daily',
     timezone: 'Asia/Kolkata',
@@ -43,7 +47,7 @@ export default function SettingsTab({
   const handleNetWorthSubmit = async (e) => {
     e.preventDefault();
     if (assetsInput === '' && liabilitiesInput === '') {
-      setNetWorthMessage('Please enter assets or liabilities values.');
+      setNetWorthMessage('Please enter assets or liabilities amount');
       return;
     }
     const assets = parseFloat(assetsInput) || 0;
@@ -55,46 +59,62 @@ export default function SettingsTab({
       netWorthConfigured: true
     });
 
-    setNetWorthMessage('Net worth totals saved successfully!');
-    setTimeout(() => setNetWorthMessage(''), 3000);
+    setNetWorthMessage('Net worth configuration saved successfully!');
+    setTimeout(() => setNetWorthMessage(''), 4000);
   };
 
-  const handleAddCategory = () => {
-    const cat = newCatInput.trim();
-    if (!cat) return;
-    if (categories.some(c => c.toLowerCase() === cat.toLowerCase())) {
-      setCatAccMessage('Category already exists.');
+  const handleDriveFolderSubmit = async (e) => {
+    e.preventDefault();
+    await onSaveNetWorth({
+      driveFolder: {
+        name: driveNameInput.trim() || 'Ledgerly Financial Inbox',
+        url: driveUrlInput.trim() || 'https://drive.google.com/drive/my-drive'
+      }
+    });
+    setDriveMessage('Custom Google Drive Folder link saved successfully!');
+    setTimeout(() => setDriveMessage(''), 4000);
+  };
+
+  const handleAddCategory = (e) => {
+    e.preventDefault();
+    if (!newCatInput.trim()) return;
+    const catName = newCatInput.trim();
+    if (categories.includes(catName)) {
+      setCatAccMessage('Category already exists');
       return;
     }
-    onSaveCategories([...categories, cat]);
+    onSaveCategories([...categories, catName]);
     setNewCatInput('');
-    setCatAccMessage('');
+    setCatAccMessage('Category added successfully');
+    setTimeout(() => setCatAccMessage(''), 3000);
   };
 
-  const handleRemoveCategory = (cat) => {
+  const handleDeleteCategory = (cat) => {
     if (categories.length <= 1) {
-      setCatAccMessage('Must keep at least one category.');
+      setCatAccMessage('Must keep at least one category');
       return;
     }
     onSaveCategories(categories.filter(c => c !== cat));
     setCatAccMessage('');
   };
 
-  const handleAddAccount = () => {
-    const acc = newAccInput.trim();
-    if (!acc) return;
-    if (accounts.some(a => a.toLowerCase() === acc.toLowerCase())) {
-      setCatAccMessage('Account already exists.');
+  const handleAddAccount = (e) => {
+    e.preventDefault();
+    if (!newAccInput.trim()) return;
+    const accName = newAccInput.trim();
+    if (accounts.includes(accName)) {
+      setCatAccMessage('Account already exists');
       return;
     }
-    onSaveAccounts([...accounts, acc]);
+    onSaveAccounts([...accounts, accName]);
     setNewAccInput('');
-    setCatAccMessage('');
+    setCatAccMessage('Account added successfully');
+    setTimeout(() => setCatAccMessage(''), 3000);
   };
 
-  const handleRemoveAccount = (acc) => {
+  const handleDeleteAccount = (acc) => {
     if (accounts.length <= 1) {
-      setCatAccMessage('Must keep at least one account.');
+      setCatAccMessage('Must keep at least one account');
       return;
     }
     onSaveAccounts(accounts.filter(a => a !== acc));
@@ -170,17 +190,58 @@ export default function SettingsTab({
         </form>
       </div>
 
-      {/* 2. Google Drive Sync & Backup Export */}
+      {/* 2. Google Drive Sync & Backup */}
       <div className="card" style={{ marginBottom: '28px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <FolderSync size={20} style={{ color: 'var(--success)' }} />
             <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Google Drive Sync & Backup</h3>
           </div>
-          <a href={driveFolder.url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }}>
+          <a href={driveFolder.url || 'https://drive.google.com/drive/my-drive'} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }}>
             Open Drive Folder <ExternalLink size={14} />
           </a>
         </div>
+
+        {driveMessage && (
+          <div style={{ padding: '10px 14px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <CheckCircle2 size={16} /> {driveMessage}
+          </div>
+        )}
+
+        <form onSubmit={handleDriveFolderSubmit} style={{ marginBottom: '20px', padding: '16px', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+          <h4 style={{ fontSize: '13px', fontWeight: '700', marginBottom: '12px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Link2 size={16} style={{ color: 'var(--primary)' }} /> Configure Your Google Drive Folder Link
+          </h4>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px', marginBottom: '12px' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label" style={{ fontSize: '12px' }}>Folder Name</label>
+              <input
+                type="text"
+                placeholder="e.g. My Financial Inbox"
+                className="form-control"
+                style={{ fontSize: '13px' }}
+                value={driveNameInput}
+                onChange={e => setDriveNameInput(e.target.value)}
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label" style={{ fontSize: '12px' }}>Google Drive Folder Link / URL</label>
+              <input
+                type="url"
+                placeholder="https://drive.google.com/drive/folders/your-folder-id"
+                className="form-control"
+                style={{ fontSize: '13px' }}
+                value={driveUrlInput}
+                onChange={e => setDriveUrlInput(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="btn btn-secondary btn-sm" style={{ fontSize: '12px' }}>
+            Save Drive Folder Link
+          </button>
+        </form>
 
         <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
           <div>Folder Name: <strong>{driveFolder.name}</strong></div>
@@ -208,98 +269,102 @@ export default function SettingsTab({
 
       {/* 3. Managed Categories & Accounts */}
       <div className="card" style={{ marginBottom: '28px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px' }}>Managed Lookups (Categories & Accounts)</h3>
+        <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px' }}>Categories & Accounts Management</h3>
 
         {catAccMessage && (
-          <div style={{ padding: '10px 14px', background: 'var(--warning-light)', color: 'var(--warning)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px' }}>
+          <div style={{ padding: '10px 14px', background: 'var(--info-light)', color: 'var(--info)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px' }}>
             {catAccMessage}
           </div>
         )}
 
-        <div className="grid-2">
-          {/* Categories */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          {/* Categories Manager */}
           <div>
-            <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '10px' }}>Categories</h4>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>Categories ({categories.length})</h4>
+            <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
               <input
                 type="text"
-                placeholder="Add category..."
+                placeholder="New Category..."
                 className="form-control"
-                style={{ minHeight: '36px', fontSize: '13px' }}
                 value={newCatInput}
                 onChange={e => setNewCatInput(e.target.value)}
               />
-              <button type="button" className="btn btn-secondary btn-sm" onClick={handleAddCategory}><Plus size={14} /> Add</button>
-            </div>
+              <button type="submit" className="btn btn-secondary" style={{ flexShrink: 0 }}>
+                <Plus size={16} /> Add
+              </button>
+            </form>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>
               {categories.map(cat => (
-                <span key={cat} className="badge badge-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 10px' }}>
-                  {cat}
-                  <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => handleRemoveCategory(cat)}>×</button>
-                </span>
+                <div key={cat} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)', fontSize: '13px' }}>
+                  <span>{cat}</span>
+                  <button className="btn btn-ghost btn-sm" style={{ padding: '4px', color: 'var(--danger)' }} onClick={() => handleDeleteCategory(cat)}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* Accounts */}
+          {/* Accounts Manager */}
           <div>
-            <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '10px' }}>Accounts</h4>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>Accounts ({accounts.length})</h4>
+            <form onSubmit={handleAddAccount} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
               <input
                 type="text"
-                placeholder="Add account..."
+                placeholder="New Account..."
                 className="form-control"
-                style={{ minHeight: '36px', fontSize: '13px' }}
                 value={newAccInput}
                 onChange={e => setNewAccInput(e.target.value)}
               />
-              <button type="button" className="btn btn-secondary btn-sm" onClick={handleAddAccount}><Plus size={14} /> Add</button>
-            </div>
+              <button type="submit" className="btn btn-secondary" style={{ flexShrink: 0 }}>
+                <Plus size={16} /> Add
+              </button>
+            </form>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto' }}>
               {accounts.map(acc => (
-                <span key={acc} className="badge badge-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 10px' }}>
-                  {acc}
-                  <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} onClick={() => handleRemoveAccount(acc)}>×</button>
-                </span>
+                <div key={acc} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)', fontSize: '13px' }}>
+                  <span>{acc}</span>
+                  <button className="btn btn-ghost btn-sm" style={{ padding: '4px', color: 'var(--danger)' }} onClick={() => handleDeleteAccount(acc)}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* 4. Automatic Detection Settings */}
-      <div className="card" style={{ marginBottom: '28px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>Automatic Detection Settings</h3>
-        <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-          Ledgerly detects recurring payments using normalized merchant names and cadence windows (weekly to annual). Dismissed suggestions are remembered across devices.
-        </p>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)' }}>
-          <div>
-            <div style={{ fontSize: '14px', fontWeight: '600' }}>Ignored Pattern Suggestions</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Currently ignoring {dismissedCount} dismissed merchant patterns</div>
+      {/* 4. Restore Ignored Recurring / Subscription Suggestions */}
+      {dismissedCount > 0 && (
+        <div className="card" style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <h3 style={{ fontSize: '15px', fontWeight: '700' }}>Ignored Suggestions ({dismissedCount})</h3>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                You have ignored {dismissedCount} auto-detected recurring or subscription pattern suggestions.
+              </p>
+            </div>
+            <button className="btn btn-secondary btn-sm" onClick={onRestoreIgnoredSuggestions}>
+              <RefreshCw size={14} /> Restore All Suggestions
+            </button>
           </div>
-
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={onRestoreIgnoredSuggestions}
-            disabled={dismissedCount === 0}
-          >
-            <RefreshCw size={14} /> Restore Ignored Suggestions
-          </button>
         </div>
-      </div>
+      )}
 
-      {/* 5. Danger Zone */}
-      <div className="card" style={{ borderColor: 'var(--danger-light)', background: 'rgba(239, 68, 68, 0.05)' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--danger)', marginBottom: '8px' }}>Danger Zone</h3>
+      {/* 5. Danger Zone: Wipe All Data */}
+      <div className="card" style={{ border: '1px solid var(--danger-light)', background: 'rgba(239, 68, 68, 0.03)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', color: 'var(--danger)' }}>
+          <AlertTriangle size={20} />
+          <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Danger Zone</h3>
+        </div>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-          Permanently delete all site database records (transactions, rules, budgets, goals) and R2 file copies.
+          Permanently delete all financial transactions, rules, tags, and settings for your account. This action cannot be undone.
         </p>
-        <button className="btn btn-danger" onClick={onOpenConfirmWipe}>
-          Erase All Ledgerly Data...
+
+        <button className="btn btn-danger btn-sm" onClick={onOpenConfirmWipe}>
+          <Trash2 size={14} /> Erase All Account Data
         </button>
       </div>
     </div>

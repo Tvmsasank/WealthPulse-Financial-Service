@@ -45,7 +45,7 @@ const getInitialUserSettings = () => ({
   driveFolder: {
     name: 'Ledgerly Financial Inbox',
     id: 'folder-ledgerly-inbox-01',
-    url: 'https://drive.google.com/drive/folders/ledgerly-inbox'
+    url: 'https://drive.google.com/drive/my-drive'
   },
   driveSync: {
     schedule: '08:00 AM Daily',
