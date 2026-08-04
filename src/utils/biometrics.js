@@ -45,7 +45,7 @@ export async function registerBiometricPasskey(user, token) {
     credential = await navigator.credentials.create(creationOptions);
   } catch (e) {
     if (e.name === 'NotAllowedError') {
-      throw new Error('Passkey / Biometric creation timed out or was cancelled. If on Windows Chrome, ensure Google Password Manager or Windows Hello is enabled.');
+      throw new Error('Passkey creation timed out or was cancelled. If on Windows Chrome, ensure Google Password Manager or Windows Hello is enabled.');
     }
     throw new Error(e.message || 'Biometric registration cancelled');
   }
@@ -76,13 +76,14 @@ export async function registerBiometricPasskey(user, token) {
   if (!res.ok) throw new Error(json.error || 'Failed to register biometrics');
 
   localStorage.setItem('ledgerly_biometric_credential', credentialId);
+  localStorage.setItem('ledgerly_has_biometrics', 'true');
   return json;
 }
 
 export async function authenticateWithBiometrics() {
   const credentialId = localStorage.getItem('ledgerly_biometric_credential');
   if (!credentialId) {
-    throw new Error('No Biometric Face ID / Fingerprint registered on this device yet. Please sign in and enable Biometrics in your profile.');
+    throw new Error('No Biometric Face ID / Fingerprint registered on this device yet.');
   }
 
   const challengeBuffer = crypto.getRandomValues(new Uint8Array(32));
@@ -104,7 +105,7 @@ export async function authenticateWithBiometrics() {
     assertion = await navigator.credentials.get(requestOptions);
   } catch (e) {
     if (e.name === 'NotAllowedError') {
-      throw new Error('Biometric scan cancelled. Please try again or use 4-Digit MPIN / Password.');
+      throw new Error('Biometric scan cancelled.');
     }
     throw new Error('Face ID / Biometric verification cancelled');
   }

@@ -148,6 +148,7 @@ export default function MpinModal({
 
       if (!res.ok) throw new Error(json.error || 'Failed to set MPIN');
 
+      localStorage.setItem('ledgerly_has_mpin', 'true');
       setSuccess('4-Digit Security MPIN Set Successfully!');
       setTimeout(() => {
         if (onSuccess) onSuccess();
