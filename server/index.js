@@ -200,6 +200,24 @@ app.post('/api/auth/reset-password', (req, res) => {
   }
 });
 
+// POST /api/auth/check-methods
+app.post('/api/auth/check-methods', (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.json({ hasMpin: false, hasBiometrics: false });
+
+    const user = dbEngine.getUserByEmail(email);
+    if (!user) return res.json({ hasMpin: false, hasBiometrics: false });
+
+    res.json({
+      hasMpin: !!user.mpinHash,
+      hasBiometrics: !!user.webauthnCredentialId
+    });
+  } catch (err) {
+    res.json({ hasMpin: false, hasBiometrics: false });
+  }
+});
+
 // POST /api/auth/mpin/set
 app.post('/api/auth/mpin/set', (req, res) => {
   try {

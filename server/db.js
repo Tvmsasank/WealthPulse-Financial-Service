@@ -188,6 +188,12 @@ export const dbEngine = {
     };
   },
 
+  getUserByEmail(email) {
+    const db = loadDb();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    return db.users.find(u => u.email === cleanEmail) || null;
+  },
+
   getUserById(userId) {
     const db = loadDb();
     const user = db.users.find(u => u.id === userId);

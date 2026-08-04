@@ -51,12 +51,33 @@ export default function AuthModal({
 
     if (initialMode === 'register') {
       setAuthMethod('register');
-    } else if (hasBiometrics && savedEmail) {
-      setAuthMethod('biometrics');
-      // Auto-prompt biometrics like Zerodha
-      handleBiometricLogin(savedEmail);
-    } else if (hasMpin && savedEmail) {
-      setAuthMethod('mpin');
+      return;
+    }
+
+    if (savedEmail) {
+      // Query server for MPIN / Biometrics status for this email across all domains
+      fetch('/api/auth/check-methods', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: savedEmail })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.hasBiometrics && localStorage.getItem('ledgerly_biometric_credential')) {
+            localStorage.setItem('ledgerly_has_biometrics', 'true');
+            setAuthMethod('biometrics');
+            handleBiometricLogin(savedEmail);
+          } else if (data.hasMpin) {
+            localStorage.setItem('ledgerly_has_mpin', 'true');
+            setAuthMethod('mpin');
+          } else {
+            setAuthMethod('password');
+          }
+        })
+        .catch(() => {
+          if (hasMpin) setAuthMethod('mpin');
+          else setAuthMethod('password');
+        });
     } else {
       setAuthMethod('password');
     }
