@@ -1,0 +1,281 @@
+{
+  "users": [
+    {
+      "id": "usr_1785755811844_crbzz5",
+      "name": "Venkatamani Sasank Tadepalli",
+      "email": "venkatamanishashankt@gmail.com",
+      "passwordHash": "$2b$10$jS44iODEb/WqZJ/QlbLfjOmjU5ejlER56FKtgKKAldgvoMbUkhunu",
+      "createdAt": "2026-08-03T11:16:51.908Z",
+      "resetToken": null,
+      "resetTokenExpiry": null,
+      "mpinHash": "$2b$10$Qvdcz.x0DXxyKqy7IoWrgOoxTVSz2oWz1VhlCmngzM5Fk0rOM9LFe"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx_1785818160348_2fkoulo4i",
+      "userId": "usr_1785755811844_crbzz5",
+      "date": "2026-08-04",
+      "merchant": "HMWSSB",
+      "category": "Utilities",
+      "amount": 600,
+      "type": "expense",
+      "account": "Main Checking",
+      "tags": "[\"Water tanker\"]",
+      "receipt": 0,
+      "source": "manual",
+      "fingerprint": "2026-08-04|hmwssb|600.00|main checking",
+      "createdAt": "2026-08-04T04:36:00.348Z"
+    },
+    {
+      "id": "tx_1785817210490_kg7gu5faq",
+      "userId": "usr_1785755811844_crbzz5",
+      "date": "2026-08-04",
+      "merchant": "Tiffins (Swathi hotel jpts)",
+      "category": "Dining",
+      "amount": 80,
+      "type": "expense",
+      "account": "Main Checking",
+      "tags": "[\"Tiffins\"]",
+      "receipt": 0,
+      "source": "manual",
+      "fingerprint": "2026-08-04|tiffins (swathi hotel jpts)|80.00|main checking",
+      "createdAt": "2026-08-04T04:20:10.490Z"
+    },
+    {
+      "id": "tx_1785750352806_ct7hmvvqk",
+      "userId": "usr_1785755811844_crbzz5",
+      "date": "2026-08-03",
+      "merchant": "Parivaahan LLR Telangana",
+      "category": "Transportation",
+      "amount": 570.36,
+      "type": "expense",
+      "account": "Main Checking",
+      "tags": "[\"Personal\"]",
+      "receipt": 0,
+      "source": "manual",
+      "fingerprint": "2026-08-03|parivaahan llr telangana|570.36|main checking",
+      "createdAt": "2026-08-03T09:45:52.806Z"
+    },
+    {
+      "id": "tx_1785750308622_ufcju15fo",
+      "userId": "usr_1785755811844_crbzz5",
+      "date": "2026-08-03",
+      "merchant": "AWS (Monthly Payment SAE)",
+      "category": "Utilities",
+      "amount": 63.13,
+      "type": "expense",
+      "account": "Main Checking",
+      "tags": "[\"Services\"]",
+      "receipt": 0,
+      "source": "manual",
+      "fingerprint": "2026-08-03|aws (monthly payment sae)|63.13|main checking",
+      "createdAt": "2026-08-03T09:45:08.622Z"
+    },
+    {
+      "id": "tx_1785750244243_v0f4q87a5",
+      "userId": "usr_1785755811844_crbzz5",
+      "date": "2026-08-02",
+      "merchant": "Coriander",
+      "category": "Groceries",
+      "amount": 10,
+      "type": "expense",
+      "account": "Main Checking",
+      "tags": "[\"home\"]",
+      "receipt": 0,
+      "source": "manual",
+      "fingerprint": "2026-08-02|coriander|10.00|main checking",
+      "createdAt": "2026-08-03T09:44:04.243Z"
+    },
+    {
+      "id": "tx_1785750184243_genprov01",
+      "userId": "usr_1785755811844_crbzz5",
+      "date": "2026-08-01",
+      "merchant": "General Provision (BRU Packets)",
+      "category": "Groceries",
+      "amount": 20,
+      "type": "expense",
+      "account": "Main Checking",
+      "tags": "[\"home\"]",
+      "receipt": 0,
+      "source": "manual",
+      "fingerprint": "2026-08-01|general provision (bru packets)|20.00|main checking",
+      "createdAt": "2026-08-03T09:43:04.243Z"
+    },
+    {
+      "id": "tx_1785750124243_kassdiner01",
+      "userId": "usr_1785755811844_crbzz5",
+      "date": "2026-07-31",
+      "merchant": "Dinner at Hotel KASS (Office)",
+      "category": "Dining",
+      "amount": 477,
+      "type": "expense",
+      "account": "Main Checking",
+      "tags": "[\"Office\"]",
+      "receipt": 0,
+      "source": "manual",
+      "fingerprint": "2026-07-31|dinner at hotel kass (office)|477.00|main checking",
+      "createdAt": "2026-08-03T09:42:04.243Z"
+    },
+    {
+      "id": "tx_1785749969071_icfaisalary",
+      "userId": "usr_1785755811844_crbzz5",
+      "date": "2026-07-31",
+      "merchant": "SALARIES THE ICFAI FOUNDATION FOR HIGHEREDUCATION",
+      "category": "Income",
+      "amount": 23803,
+      "type": "income",
+      "account": "Main Checking",
+      "tags": "[\"Salary\"]",
+      "receipt": 0,
+      "source": "manual",
+      "fingerprint": "2026-07-31|salaries the icfai foundation for highereducation|23803.00|main checking",
+      "createdAt": "2026-08-03T09:39:29.071Z"
+    }
+  ],
+  "tags": [
+    {
+      "id": "tag_01",
+      "userId": "usr_1785755811844_crbzz5",
+      "name": "Personal",
+      "createdAt": "2026-08-03T09:39:29.071Z"
+    },
+    {
+      "id": "tag_02",
+      "userId": "usr_1785755811844_crbzz5",
+      "name": "Services",
+      "createdAt": "2026-08-03T09:39:29.071Z"
+    },
+    {
+      "id": "tag_03",
+      "userId": "usr_1785755811844_crbzz5",
+      "name": "Office",
+      "createdAt": "2026-08-03T09:39:29.071Z"
+    },
+    {
+      "id": "tag_04",
+      "userId": "usr_1785755811844_crbzz5",
+      "name": "Salary",
+      "createdAt": "2026-08-03T09:39:29.071Z"
+    },
+    {
+      "id": "tag_1785817311138",
+      "userId": "usr_1785755811844_crbzz5",
+      "name": "home",
+      "createdAt": "2026-08-04T04:21:51.138Z"
+    }
+  ],
+  "rules": [],
+  "documents": [],
+  "settings": {
+    "categories": [
+      "Groceries",
+      "Shopping",
+      "Dining",
+      "Transportation",
+      "Utilities",
+      "Subscriptions",
+      "Insurance",
+      "Health",
+      "Entertainment",
+      "Income",
+      "Needs review",
+      "Other",
+      "Housing"
+    ],
+    "accounts": [
+      "Main Checking",
+      "Everyday Visa",
+      "Rewards Card",
+      "Cash"
+    ],
+    "goals": [],
+    "budgets": [],
+    "subscriptions": [],
+    "recurring": [],
+    "dismissedPatterns": [],
+    "assets": 105343,
+    "liabilities": 0,
+    "netWorthConfigured": true,
+    "selectedPeriod": "all-time",
+    "driveFolder": {
+      "name": "Ledgerly Financial Inbox",
+      "id": "folder-ledgerly-inbox-01",
+      "url": "https://drive.google.com/drive/u/0/folders/1Cwt2bp3M4b9rvXH0RdeTAHmpkiN22Omf"
+    },
+    "driveSync": {
+      "schedule": "08:00 AM Daily",
+      "timezone": "Asia/Kolkata",
+      "lastSyncedAt": "2026-08-03T10:19:52.526Z",
+      "lastStatus": "complete",
+      "lastImportedCount": 0,
+      "lastDuplicateCount": 0,
+      "lastReviewCount": 0,
+      "errors": []
+    },
+    "processedDriveFileIds": [],
+    "driveResetAt": "2026-08-03T09:17:51.855Z",
+    "freshStart": false,
+    "updatedAt": "2026-08-03T10:19:52.526Z"
+  },
+  "userSettings": {
+    "usr_1785755811844_crbzz5": {
+      "categories": [
+        "Groceries",
+        "Shopping",
+        "Dining",
+        "Transportation",
+        "Utilities",
+        "Subscriptions",
+        "Insurance",
+        "Health",
+        "Entertainment",
+        "Income",
+        "Needs review",
+        "Other",
+        "Housing"
+      ],
+      "accounts": [
+        "Main Checking",
+        "Everyday Visa",
+        "Rewards Card",
+        "Cash"
+      ],
+      "goals": [],
+      "budgets": [],
+      "subscriptions": [],
+      "recurring": [],
+      "dismissedPatterns": [],
+      "assets": 105343,
+      "liabilities": 0,
+      "netWorthConfigured": true,
+      "selectedPeriod": "all-time",
+      "driveFolder": {
+        "name": "Ledgerly Financial Inbox",
+        "id": "folder-ledgerly-inbox-01",
+        "url": "https://drive.google.com/drive/u/0/folders/1Cwt2bp3M4b9rvXH0RdeTAHmpkiN22Omf"
+      },
+      "driveSync": {
+        "schedule": "08:00 AM Daily",
+        "timezone": "Asia/Kolkata",
+        "lastSyncedAt": "2026-08-04T04:36:32.385Z",
+        "lastStatus": "complete",
+        "lastImportedCount": 0,
+        "lastDuplicateCount": 0,
+        "lastReviewCount": 0,
+        "errors": []
+      },
+      "processedDriveFileIds": [],
+      "driveResetAt": "2026-08-03T09:17:51.855Z",
+      "freshStart": false,
+      "updatedAt": "2026-08-04T05:06:42.545Z",
+      "tags": [
+        "Personal",
+        "Services",
+        "Office",
+        "Salary",
+        "home"
+      ]
+    }
+  }
+}

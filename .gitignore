@@ -6,8 +6,7 @@ node_modules/
 dist/
 build/
 
-# Local Database & Binary Storage (Personal Data)
-data/db.json
+# Local Binary Storage
 storage/r2/*
 !storage/r2/.gitkeep
 
