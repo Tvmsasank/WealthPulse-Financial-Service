@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Lock, KeyRound, ShieldCheck, Delete, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, KeyRound, CheckCircle2, AlertCircle, Delete } from 'lucide-react';
 
 export default function MpinModal({
   isOpen,
@@ -26,17 +26,19 @@ export default function MpinModal({
     setSuccess('');
   }, [isOpen, mode]);
 
-  const handleKeyPress = (numStr) => {
+  const handleKeyPress = useCallback((numStr) => {
     if (loading) return;
     setError('');
 
-    const current = isConfirming ? confirmPin : pin;
-    if (current.length < 4) {
-      const next = current + numStr;
-      if (isConfirming) {
+    if (isConfirming) {
+      if (confirmPin.length < 4) {
+        const next = confirmPin + numStr;
         setConfirmPin(next);
         if (next.length === 4) handleFinishSetMpin(pin, next);
-      } else {
+      }
+    } else {
+      if (pin.length < 4) {
+        const next = pin + numStr;
         setPin(next);
         if (next.length === 4) {
           if (mode === 'verify') {
@@ -47,9 +49,9 @@ export default function MpinModal({
         }
       }
     }
-  };
+  }, [loading, isConfirming, pin, confirmPin, mode]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     if (loading) return;
     setError('');
     if (isConfirming) {
@@ -57,14 +59,32 @@ export default function MpinModal({
     } else {
       setPin(prev => prev.slice(0, -1));
     }
-  };
+  }, [loading, isConfirming]);
+
+  // Physical & Mobile Keyboard Listener
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        handleKeyPress(e.key);
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        handleDelete();
+      } else if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleKeyPress, handleDelete, onClose]);
 
   const handleVerifyMpin = async (completedPin) => {
     setLoading(true);
     try {
       const targetEmail = email || localStorage.getItem('ledgerly_remembered_email');
       if (!targetEmail) {
-        throw new Error('Please enter your account email first');
+        throw new Error('Please enter your account email address first');
       }
 
       const res = await fetch('/api/auth/mpin/verify', {
@@ -73,7 +93,13 @@ export default function MpinModal({
         body: JSON.stringify({ email: targetEmail, mpin: completedPin })
       });
 
-      const json = await res.json();
+      let json;
+      try {
+        json = await res.json();
+      } catch (e) {
+        throw new Error('API server connection lost. Please ensure npm run dev:all is running.');
+      }
+
       if (!res.ok) throw new Error(json.error || 'Invalid 4-Digit MPIN');
 
       setSuccess('MPIN Verified!');
@@ -109,7 +135,13 @@ export default function MpinModal({
         body: JSON.stringify({ mpin: secondPin })
       });
 
-      const json = await res.json();
+      let json;
+      try {
+        json = await res.json();
+      } catch (e) {
+        throw new Error('API server connection lost. Please ensure npm run dev:all is running.');
+      }
+
       if (!res.ok) throw new Error(json.error || 'Failed to set MPIN');
 
       setSuccess('4-Digit Security MPIN Set Successfully!');
@@ -144,26 +176,26 @@ export default function MpinModal({
           </button>
         </div>
 
-        <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
           {mode === 'verify'
-            ? `Enter your 4-digit MPIN for ${email || 'your account'}`
-            : (isConfirming ? 'Re-enter 4-digit MPIN to confirm' : 'Choose a 4-digit Security PIN for fast mobile unlock')}
+            ? `Type or tap your 4-digit MPIN for ${email || 'your account'}`
+            : (isConfirming ? 'Re-type 4-digit MPIN to confirm' : 'Type or tap a 4-digit PIN using keyboard or key pad')}
         </p>
 
         {error && (
-          <div style={{ padding: '8px 12px', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <div style={{ padding: '8px 12px', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
             <AlertCircle size={15} /> {error}
           </div>
         )}
 
         {success && (
-          <div style={{ padding: '8px 12px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <div style={{ padding: '8px 12px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
             <CheckCircle2 size={15} /> {success}
           </div>
         )}
 
         {/* Tactile 4-Dot PIN Indicator */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '28px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
           {[0, 1, 2, 3].map(index => {
             const isFilled = activeDigits.length > index;
             return (
@@ -185,14 +217,14 @@ export default function MpinModal({
         </div>
 
         {/* Number Pad Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', maxWidth: '280px', margin: '0 auto 16px auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', maxWidth: '280px', margin: '0 auto 16px auto' }}>
           {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
             <button
               key={num}
               type="button"
               className="btn btn-secondary"
               style={{
-                height: '56px',
+                height: '54px',
                 fontSize: '20px',
                 fontWeight: '700',
                 borderRadius: '50%',
@@ -210,7 +242,7 @@ export default function MpinModal({
             type="button"
             className="btn btn-secondary"
             style={{
-              height: '56px',
+              height: '54px',
               fontSize: '20px',
               fontWeight: '700',
               borderRadius: '50%',
@@ -226,7 +258,7 @@ export default function MpinModal({
             type="button"
             className="btn btn-ghost"
             style={{
-              height: '56px',
+              height: '54px',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -234,7 +266,7 @@ export default function MpinModal({
               color: 'var(--text-muted)'
             }}
             onClick={handleDelete}
-            title="Backspace"
+            title="Backspace (Delete)"
           >
             <Delete size={22} />
           </button>

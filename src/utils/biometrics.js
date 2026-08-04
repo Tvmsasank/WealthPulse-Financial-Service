@@ -33,19 +33,27 @@ export async function registerBiometricPasskey(user, token) {
       challenge: challengeBuffer,
       pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
       authenticatorSelection: {
-        authenticatorAttachment: 'platform', // Native Face ID / Touch ID / Fingerprint
-        userVerification: 'required'
+        authenticatorAttachment: 'platform',
+        userVerification: 'preferred'
       },
       timeout: 60000
     }
   };
 
-  const credential = await navigator.credentials.create(creationOptions);
+  let credential;
+  try {
+    credential = await navigator.credentials.create(creationOptions);
+  } catch (e) {
+    if (e.name === 'NotAllowedError') {
+      throw new Error('Passkey / Biometric creation timed out or was cancelled. If on Windows Chrome, ensure Google Password Manager or Windows Hello is enabled.');
+    }
+    throw new Error(e.message || 'Biometric registration cancelled');
+  }
+
   if (!credential) throw new Error('Biometric registration cancelled or failed');
 
   const credentialId = credential.id;
 
-  // Send to backend API
   const res = await fetch('/api/auth/webauthn/register', {
     method: 'POST',
     headers: {
@@ -58,7 +66,13 @@ export async function registerBiometricPasskey(user, token) {
     })
   });
 
-  const json = await res.json();
+  let json;
+  try {
+    json = await res.json();
+  } catch (e) {
+    throw new Error('API server connection lost. Please ensure npm run dev:all is running.');
+  }
+
   if (!res.ok) throw new Error(json.error || 'Failed to register biometrics');
 
   localStorage.setItem('ledgerly_biometric_credential', credentialId);
@@ -68,7 +82,7 @@ export async function registerBiometricPasskey(user, token) {
 export async function authenticateWithBiometrics() {
   const credentialId = localStorage.getItem('ledgerly_biometric_credential');
   if (!credentialId) {
-    throw new Error('No Biometric Face ID / Fingerprint registered on this device yet. Please sign in and enable Biometrics in Settings.');
+    throw new Error('No Biometric Face ID / Fingerprint registered on this device yet. Please sign in and enable Biometrics in your profile.');
   }
 
   const challengeBuffer = crypto.getRandomValues(new Uint8Array(32));
@@ -80,7 +94,7 @@ export async function authenticateWithBiometrics() {
         id: new TextEncoder().encode(credentialId),
         type: 'public-key'
       }],
-      userVerification: 'required',
+      userVerification: 'preferred',
       timeout: 60000
     }
   };
@@ -89,6 +103,9 @@ export async function authenticateWithBiometrics() {
   try {
     assertion = await navigator.credentials.get(requestOptions);
   } catch (e) {
+    if (e.name === 'NotAllowedError') {
+      throw new Error('Biometric scan cancelled. Please try again or use 4-Digit MPIN / Password.');
+    }
     throw new Error('Face ID / Biometric verification cancelled');
   }
 
@@ -98,7 +115,13 @@ export async function authenticateWithBiometrics() {
     body: JSON.stringify({ credentialId })
   });
 
-  const json = await res.json();
+  let json;
+  try {
+    json = await res.json();
+  } catch (e) {
+    throw new Error('API server connection lost. Please ensure npm run dev:all is running.');
+  }
+
   if (!res.ok) throw new Error(json.error || 'Biometric authentication failed');
 
   return json;
