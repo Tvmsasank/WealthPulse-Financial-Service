@@ -65,6 +65,10 @@ export default function MpinModal({
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
+      const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+        return; // Allow natural typing & backspace inside input fields!
+      }
       if (e.key >= '0' && e.key <= '9') {
         e.preventDefault();
         handleKeyPress(e.key);

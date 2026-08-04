@@ -104,6 +104,10 @@ export default function AuthModal({
   useEffect(() => {
     if (!isOpen || authMethod !== 'mpin') return;
     const handleKeyDown = (e) => {
+      const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+        return; // Allow natural typing & backspace inside input fields!
+      }
       if (e.key >= '0' && e.key <= '9') {
         e.preventDefault();
         handleKeyPress(e.key);
@@ -190,11 +194,10 @@ export default function AuthModal({
         setError('Passwords do not match');
         return;
       }
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters');
+        return;
+      }
     }
 
     setLoading(true);
