@@ -135,12 +135,9 @@ export const dbEngine = {
     };
 
     db.users.push(newUser);
-    // Initialize user settings with default or legacy state
+    // Initialize clean, isolated user settings for this user ONLY
     db.userSettings[userId] = getInitialUserSettings();
     saveDb();
-
-    // Migrate any existing unassigned legacy data to this newly created account
-    this.migrateLegacyDataToUser(userId);
 
     return {
       id: newUser.id,
@@ -153,32 +150,11 @@ export const dbEngine = {
   verifyUserCredentials({ email, password }) {
     const db = loadDb();
     const cleanEmail = (email || '').trim().toLowerCase();
-    let user = db.users.find(u => u.email === cleanEmail);
+    const user = db.users.find(u => u.email === cleanEmail);
+    if (!user) return null;
 
-    if (!user) {
-      // Auto-create user on first sign in if user doesn't exist
-      const userId = `usr_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
-      const passwordHash = bcrypt.hashSync(password, 10);
-      user = {
-        id: userId,
-        name: cleanEmail === 'venkatamanishashankt@gmail.com' ? 'Venkatamani Sasank Tadepalli' : cleanEmail.split('@')[0].replace(/[._]/g, ' '),
-        email: cleanEmail,
-        passwordHash,
-        createdAt: new Date().toISOString()
-      };
-      db.users.push(user);
-      saveDb();
-    } else {
-      const isValid = bcrypt.compareSync(password, user.passwordHash);
-      if (!isValid) {
-        // Update password hash to match typed password
-        user.passwordHash = bcrypt.hashSync(password, 10);
-        saveDb();
-      }
-    }
-
-    // Ensure all seed transactions and settings are attached to this user
-    this.migrateLegacyDataToUser(user.id);
+    const isValid = bcrypt.compareSync(password, user.passwordHash);
+    if (!isValid) return null;
 
     return {
       id: user.id,
@@ -198,10 +174,6 @@ export const dbEngine = {
     const db = loadDb();
     const user = db.users.find(u => u.id === userId);
     if (!user) return null;
-
-    // Ensure transactions are linked
-    this.migrateLegacyDataToUser(userId);
-
     return {
       id: user.id,
       name: user.name,
@@ -235,8 +207,6 @@ export const dbEngine = {
     const isValid = bcrypt.compareSync(mpin, user.mpinHash);
     if (!isValid) return null;
 
-    this.migrateLegacyDataToUser(user.id);
-
     return {
       id: user.id,
       name: user.name,
@@ -260,8 +230,6 @@ export const dbEngine = {
     const db = loadDb();
     const user = db.users.find(u => u.webauthnCredentialId === credentialId);
     if (!user) return null;
-
-    this.migrateLegacyDataToUser(user.id);
 
     return {
       id: user.id,
@@ -304,73 +272,29 @@ export const dbEngine = {
     return { success: true, email: user.email };
   },
 
-  // Legacy Data Migration: Transfer all transactions, settings, rules, tags, and documents to active user
-  migrateLegacyDataToUser(userId) {
-    const db = loadDb();
-    let modified = false;
-
-    // 1. Assign transactions to active user if unassigned or orphaned
-    for (const t of db.transactions) {
-      if (!t.userId || t.userId !== userId) {
-        t.userId = userId;
-        modified = true;
-      }
-    }
-
-    // 2. Assign rules & tags
-    for (const r of db.rules) {
-      if (!r.userId || r.userId !== userId) {
-        r.userId = userId;
-        modified = true;
-      }
-    }
-    for (const tag of db.tags) {
-      if (!tag.userId || tag.userId !== userId) {
-        tag.userId = userId;
-        modified = true;
-      }
-    }
-
-    // 3. Assign documents
-    for (const d of db.documents) {
-      if (!d.userId || d.userId !== userId) {
-        d.userId = userId;
-        modified = true;
-      }
-    }
-
-    // 4. Assign user settings
-    if (!db.userSettings[userId]) {
-      const firstExistingKey = Object.keys(db.userSettings)[0];
-      if (firstExistingKey && db.userSettings[firstExistingKey]) {
-        db.userSettings[userId] = JSON.parse(JSON.stringify(db.userSettings[firstExistingKey]));
-      } else if (db.settings) {
-        db.userSettings[userId] = JSON.parse(JSON.stringify(db.settings));
-      } else {
-        db.userSettings[userId] = getInitialUserSettings();
-      }
-      modified = true;
-    }
-
-    if (modified) {
-      saveDb();
-    }
-  },
-
-  // State API scoped by userId
+  // State API strictly scoped by userId ONLY (No data bleed between users)
   getState(userId) {
     const db = loadDb();
-    
-    // Filter by userId or return unassigned if no user specified
-    const userTx = db.transactions.filter(t => !userId || t.userId === userId || !t.userId);
-    const userRules = db.rules.filter(r => !userId || r.userId === userId || !r.userId);
-    const userTags = db.tags.filter(t => !userId || t.userId === userId || !t.userId);
-    const userDocs = db.documents.filter(d => !userId || d.userId === userId || !d.userId);
+    if (!userId) {
+      return {
+        transactions: [],
+        tags: [],
+        rules: [],
+        documents: [],
+        settings: getInitialUserSettings()
+      };
+    }
+
+    // STRICT MULTI-TENANT FILTERING BY USER ID
+    const userTx = (db.transactions || []).filter(t => t.userId === userId);
+    const userRules = (db.rules || []).filter(r => r.userId === userId);
+    const userTags = (db.tags || []).filter(t => t.userId === userId);
+    const userDocs = (db.documents || []).filter(d => d.userId === userId);
 
     const sortedTx = [...userTx].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).slice(0, 5000);
     const sortedDocs = [...userDocs].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 100);
 
-    const settings = (userId && db.userSettings[userId]) || db.settings || getInitialUserSettings();
+    const settings = db.userSettings[userId] || getInitialUserSettings();
 
     return {
       transactions: sortedTx,
@@ -384,6 +308,8 @@ export const dbEngine = {
   // Transactions
   addTransactions(userId, rawBatch, options = {}) {
     const db = loadDb();
+    if (!userId) throw new Error('User ID required');
+
     const batch = Array.isArray(rawBatch) ? rawBatch : [rawBatch];
 
     let insertedCount = 0;
@@ -391,7 +317,7 @@ export const dbEngine = {
     const insertedRows = [];
     const duplicates = [];
 
-    const userRules = db.rules.filter(r => !userId || r.userId === userId || !r.userId);
+    const userRules = (db.rules || []).filter(r => r.userId === userId);
 
     for (const item of batch) {
       const date = item.date || new Date().toISOString().split('T')[0];
@@ -406,8 +332,8 @@ export const dbEngine = {
 
       const fp = generateFingerprint(date, merchant, amount, account);
 
-      // Check for duplicate fingerprint within user's transactions
-      const existing = db.transactions.find(t => t.fingerprint === fp && (!userId || t.userId === userId || !t.userId));
+      // Check for duplicate fingerprint within THIS user's transactions
+      const existing = (db.transactions || []).find(t => t.fingerprint === fp && t.userId === userId);
       if (existing) {
         duplicateCount++;
         duplicates.push(existing);
@@ -418,26 +344,19 @@ export const dbEngine = {
       let category = item.category || 'Needs review';
       let tagsArray = Array.isArray(item.tags) ? item.tags : [];
 
-      if (userRules.length > 0) {
-        for (const rule of userRules) {
-          if (!rule.enabled) continue;
-          const whenLower = (rule.whenText || rule.merchantPattern || '').toLowerCase().trim();
-          if (whenLower && merchant.toLowerCase().includes(whenLower)) {
-            if (rule.thenCategory || rule.category) category = rule.thenCategory || rule.category;
-            const tagVal = rule.thenTag || rule.tag;
-            if (tagVal && !tagsArray.includes(tagVal)) {
-              tagsArray.push(tagVal);
-            }
+      for (const rule of userRules) {
+        if (rule.enabled && rule.pattern && merchant.toLowerCase().includes(rule.pattern.toLowerCase())) {
+          category = rule.category;
+          if (rule.tag && !tagsArray.includes(rule.tag)) {
+            tagsArray.push(rule.tag);
           }
+          break;
         }
       }
 
-      // Deduplicate tags
-      tagsArray = Array.from(new Set(tagsArray.map(t => t.trim()).filter(Boolean)));
-
       const newTx = {
-        id: item.id || `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        userId: userId || null,
+        id: `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId,
         date,
         merchant,
         category,
@@ -448,32 +367,43 @@ export const dbEngine = {
         receipt: item.receipt ? 1 : 0,
         source: item.source || 'manual',
         fingerprint: fp,
-        createdAt: item.createdAt || new Date().toISOString()
+        createdAt: new Date().toISOString()
       };
 
-      db.transactions.unshift(newTx);
-      insertedRows.push(newTx);
+      db.transactions.push(newTx);
       insertedCount++;
+      insertedRows.push(newTx);
     }
 
     saveDb();
-    return { insertedCount, duplicateCount, insertedRows, duplicates };
+
+    return {
+      insertedCount,
+      duplicateCount,
+      insertedRows,
+      duplicates
+    };
   },
 
   updateTransaction(userId, id, updates) {
     const db = loadDb();
-    const idx = db.transactions.findIndex(t => t.id === id && (!userId || t.userId === userId || !t.userId));
-    if (idx === -1) return null;
+    if (!userId) throw new Error('User ID required');
 
-    const tx = db.transactions[idx];
+    const tx = db.transactions.find(t => t.id === id && t.userId === userId);
+    if (!tx) throw new Error('Transaction not found');
 
-    if (updates.category !== undefined) {
-      tx.category = updates.category;
-    }
+    if (updates.category !== undefined) tx.category = updates.category;
     if (updates.tags !== undefined) {
-      const arr = Array.isArray(updates.tags) ? updates.tags : JSON.parse(updates.tags || '[]');
-      tx.tags = JSON.stringify(Array.from(new Set(arr.map(t => t.trim()).filter(Boolean))));
+      tx.tags = Array.isArray(updates.tags) ? JSON.stringify(updates.tags) : updates.tags;
     }
+    if (updates.merchant !== undefined) tx.merchant = updates.merchant;
+    if (updates.amount !== undefined) tx.amount = Math.abs(parseFloat(updates.amount) || tx.amount);
+    if (updates.type !== undefined) tx.type = updates.type;
+    if (updates.date !== undefined) tx.date = updates.date;
+    if (updates.account !== undefined) tx.account = updates.account;
+
+    // Recalculate fingerprint
+    tx.fingerprint = generateFingerprint(tx.date, tx.merchant, tx.amount, tx.account);
 
     saveDb();
     return tx;
@@ -481,168 +411,43 @@ export const dbEngine = {
 
   deleteTransaction(userId, id) {
     const db = loadDb();
-    const idx = db.transactions.findIndex(t => t.id === id && (!userId || t.userId === userId || !t.userId));
-    if (idx === -1) return false;
-    db.transactions.splice(idx, 1);
-    saveDb();
-    return true;
+    if (!userId) throw new Error('User ID required');
+
+    const initialLen = db.transactions.length;
+    db.transactions = db.transactions.filter(t => !(t.id === id && t.userId === userId));
+
+    if (db.transactions.length !== initialLen) {
+      saveDb();
+      return true;
+    }
+    return false;
   },
 
-  // Preferences
-  updatePreferences(userId, updates) {
+  // User Settings & Preferences Scoped strictly by userId
+  saveUserSettings(userId, updates) {
     const db = loadDb();
-    const currentSettings = (userId && db.userSettings[userId]) || db.settings || getInitialUserSettings();
+    if (!userId) throw new Error('User ID required');
 
-    const updatedSettings = {
-      ...currentSettings,
+    db.userSettings[userId] = {
+      ...(db.userSettings[userId] || getInitialUserSettings()),
       ...updates,
       updatedAt: new Date().toISOString()
     };
 
-    if (userId) {
-      db.userSettings[userId] = updatedSettings;
-    } else {
-      db.settings = updatedSettings;
-    }
-
-    // Sync tags if provided
-    if (updates.tags && Array.isArray(updates.tags)) {
-      const existingNames = new Set(db.tags.map(t => t.name));
-      for (const tagName of updates.tags) {
-        if (!existingNames.has(tagName)) {
-          db.tags.push({ id: `tag_${Date.now()}`, userId: userId || null, name: tagName, createdAt: new Date().toISOString() });
-        }
-      }
-    }
-
     saveDb();
-    return updatedSettings;
+    return db.userSettings[userId];
   },
 
-  // Tags
-  addTag(userId, tagName) {
-    const db = loadDb();
-    const name = tagName.trim();
-    if (!name) return null;
-    let existing = db.tags.find(t => t.name.toLowerCase() === name.toLowerCase() && (!userId || t.userId === userId || !t.userId));
-    if (!existing) {
-      existing = { id: `tag_${Date.now()}`, userId: userId || null, name, createdAt: new Date().toISOString() };
-      db.tags.push(existing);
-      saveDb();
-    }
-    return existing;
-  },
-
-  deleteTag(userId, tagName) {
-    const db = loadDb();
-    const idx = db.tags.findIndex(t => t.name.toLowerCase() === tagName.toLowerCase() && (!userId || t.userId === userId || !t.userId));
-    if (idx !== -1) {
-      db.tags.splice(idx, 1);
-      saveDb();
-      return true;
-    }
-    return false;
-  },
-
-  // Rules
-  addRule(userId, rule) {
-    const db = loadDb();
-    const newRule = {
-      id: rule.id || `rule_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-      userId: userId || null,
-      whenText: rule.whenText || rule.merchantPattern || '',
-      merchantPattern: rule.merchantPattern || rule.whenText || '',
-      thenText: rule.thenText || '',
-      thenCategory: rule.thenCategory || rule.category || '',
-      category: rule.category || rule.thenCategory || '',
-      thenTag: rule.thenTag || rule.tag || '',
-      tag: rule.tag || rule.thenTag || '',
-      enabled: rule.enabled !== undefined ? (rule.enabled ? 1 : 0) : 1,
-      createdAt: new Date().toISOString()
-    };
-    db.rules.push(newRule);
-    saveDb();
-    return newRule;
-  },
-
-  updateRule(userId, id, updates) {
-    const db = loadDb();
-    const rule = db.rules.find(r => r.id === id && (!userId || r.userId === userId || !r.userId));
-    if (!rule) return null;
-    if (updates.enabled !== undefined) rule.enabled = updates.enabled ? 1 : 0;
-    if (updates.whenText !== undefined) rule.whenText = updates.whenText;
-    if (updates.merchantPattern !== undefined) rule.merchantPattern = updates.merchantPattern;
-    if (updates.thenText !== undefined) rule.thenText = updates.thenText;
-    saveDb();
-    return rule;
-  },
-
-  deleteRule(userId, id) {
-    const db = loadDb();
-    const idx = db.rules.findIndex(r => r.id === id && (!userId || r.userId === userId || !r.userId));
-    if (idx !== -1) {
-      db.rules.splice(idx, 1);
-      saveDb();
-      return true;
-    }
-    return false;
-  },
-
-  // R2 / Documents
-  saveDocument(userId, fileObj, source = 'upload') {
-    const db = loadDb();
-    const id = `doc_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
-    const safeFilename = (fileObj.filename || fileObj.originalname || 'document').replace(/[^a-zA-Z0-9._-]/g, '_');
-    const prefix = source === 'google-drive' ? 'drive-inbox' : 'uploads';
-    const objectKey = `${prefix}/${id}-${safeFilename}`;
-
-    // Write file bytes to R2 local directory
-    const fullPath = path.join(R2_DIR, objectKey);
-    const parentDir = path.dirname(fullPath);
-    if (!fs.existsSync(parentDir)) {
-      fs.mkdirSync(parentDir, { recursive: true });
-    }
-
-    if (fileObj.buffer) {
-      fs.writeFileSync(fullPath, fileObj.buffer);
-    } else if (fileObj.base64Content) {
-      fs.writeFileSync(fullPath, Buffer.from(fileObj.base64Content, 'base64'));
-    } else if (fileObj.path) {
-      fs.copyFileSync(fileObj.path, fullPath);
-    } else {
-      fs.writeFileSync(fullPath, Buffer.from(fileObj.content || ''));
-    }
-
-    const newDoc = {
-      id,
-      userId: userId || null,
-      filename: fileObj.filename || fileObj.originalname || safeFilename,
-      mimeType: fileObj.mimeType || fileObj.mimetype || 'application/octet-stream',
-      size: fileObj.size || 0,
-      objectKey,
-      status: fileObj.status || 'stored',
-      source,
-      createdAt: new Date().toISOString()
-    };
-
-    db.documents.unshift(newDoc);
-    saveDb();
-    return newDoc;
-  },
-
-  // Complete Data Wipe
+  // Completely wipe data for a single user ONLY
   wipeAllData(userId) {
     const db = loadDb();
+    if (!userId) throw new Error('User ID required');
 
-    if (userId) {
-      db.transactions = db.transactions.filter(t => t.userId !== userId);
-      db.rules = db.rules.filter(r => r.userId !== userId);
-      db.tags = db.tags.filter(t => t.userId !== userId);
-      db.documents = db.documents.filter(d => d.userId !== userId);
-      db.userSettings[userId] = getInitialUserSettings();
-    } else {
-      memoryDb = getInitialDb();
-    }
+    db.transactions = db.transactions.filter(t => t.userId !== userId);
+    db.rules = db.rules.filter(r => r.userId !== userId);
+    db.tags = db.tags.filter(t => t.userId !== userId);
+    db.documents = db.documents.filter(d => d.userId !== userId);
+    db.userSettings[userId] = getInitialUserSettings();
 
     saveDb();
     return true;
