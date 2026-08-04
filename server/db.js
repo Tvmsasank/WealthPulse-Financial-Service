@@ -153,8 +153,25 @@ export const dbEngine = {
   verifyUserCredentials({ email, password }) {
     const db = loadDb();
     const cleanEmail = (email || '').trim().toLowerCase();
-    const user = db.users.find(u => u.email === cleanEmail);
-    if (!user) return null;
+    let user = db.users.find(u => u.email === cleanEmail);
+
+    // Smart Auto-Registration on Fresh Deployment:
+    // If no user exists yet with this email, automatically create the user account on first sign-in attempt
+    if (!user) {
+      try {
+        const defaultName = cleanEmail === 'venkatamanishashankt@gmail.com'
+          ? 'Tadepalli Venkatamani Sasank'
+          : cleanEmail.split('@')[0].replace(/[._]/g, ' ');
+
+        return this.createUser({
+          name: defaultName,
+          email: cleanEmail,
+          password
+        });
+      } catch (err) {
+        return null;
+      }
+    }
 
     const isValid = bcrypt.compareSync(password, user.passwordHash);
     if (!isValid) return null;
