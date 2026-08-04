@@ -1,62 +1,73 @@
 :root {
-  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   
-  /* Dark Theme Palette (Default Premium Dark Mode) */
-  --bg-app: #090D16;
-  --bg-card: #131A29;
-  --bg-card-hover: #1E293B;
-  --bg-sidebar: #0E1422;
-  --bg-navy: #090D16;
-  --bg-navy-card: #1E293B;
+  /* Apple-inspired Dark Glass Palette */
+  --bg-app: #070A12;
+  --bg-card: rgba(19, 26, 41, 0.75);
+  --bg-card-hover: rgba(30, 41, 59, 0.85);
+  --bg-sidebar: rgba(14, 20, 34, 0.85);
+  --bg-navy: #070A12;
+  --bg-navy-card: rgba(30, 41, 59, 0.8);
 
-  --border-color: #1E293B;
+  --border-color: rgba(255, 255, 255, 0.08);
   --border-focus: #7C6EE6;
+  --border-glass: rgba(255, 255, 255, 0.12);
 
   --primary: #7C6EE6;
-  --primary-hover: #6558D3;
-  --primary-light: rgba(124, 110, 230, 0.15);
+  --primary-hover: #6857E0;
+  --primary-light: rgba(124, 110, 230, 0.18);
+  --primary-glow: rgba(124, 110, 230, 0.35);
   
   --success: #10B981;
-  --success-light: rgba(16, 185, 129, 0.15);
+  --success-light: rgba(16, 185, 129, 0.18);
   --warning: #F97316;
-  --warning-light: rgba(249, 115, 22, 0.15);
+  --warning-light: rgba(249, 115, 22, 0.18);
   --danger: #EF4444;
-  --danger-light: rgba(239, 68, 68, 0.15);
+  --danger-light: rgba(239, 68, 68, 0.18);
   --info: #3B82F6;
-  --info-light: rgba(59, 130, 246, 0.15);
+  --info-light: rgba(59, 130, 246, 0.18);
 
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
   --text-light: #64748B;
   --text-white: #FFFFFF;
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 20px 48px -10px rgba(0, 0, 0, 0.55);
+  --shadow-glow: 0 0 30px rgba(124, 110, 230, 0.25);
 
   --sidebar-width: 238px;
   --header-height: 76px;
+
+  /* Apple Bouncy & Fluid Motion Spring Curves */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-liquid: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+  --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 [data-theme='light'] {
-  --bg-app: #F8FAFC;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #F1F5F9;
-  --bg-sidebar: #FFFFFF;
+  --bg-app: #F1F5F9;
+  --bg-card: rgba(255, 255, 255, 0.82);
+  --bg-card-hover: rgba(241, 245, 249, 0.95);
+  --bg-sidebar: rgba(255, 255, 255, 0.88);
   --bg-navy: #0F172A;
-  --bg-navy-card: #1E293B;
+  --bg-navy-card: rgba(30, 41, 59, 0.9);
 
-  --border-color: #E2E8F0;
+  --border-color: rgba(0, 0, 0, 0.08);
   --border-focus: #6558D3;
+  --border-glass: rgba(0, 0, 0, 0.1);
 
   --primary: #6558D3;
   --primary-hover: #5345BD;
-  --primary-light: #EEECFC;
+  --primary-light: rgba(101, 88, 211, 0.12);
+  --primary-glow: rgba(101, 88, 211, 0.25);
 
   --success: #10B981;
   --success-light: #ECFDF5;
@@ -70,15 +81,18 @@
   --text-main: #0F172A;
   --text-muted: #64748B;
   --text-light: #94A3B8;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06);
-  --shadow-lg: 0 10px 25px rgba(15, 23, 42, 0.08);
+  
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 16px 36px rgba(15, 23, 42, 0.1);
+  --shadow-glow: 0 0 24px rgba(101, 88, 211, 0.18);
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -89,6 +103,11 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(124, 110, 230, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.06) 0px, transparent 50%);
+  background-attachment: fixed;
 }
 
 /* App Shell */
@@ -98,10 +117,13 @@ body {
   width: 100%;
 }
 
+/* Sidebar with Liquid Blur */
 .sidebar {
   width: var(--sidebar-width);
   background: var(--bg-sidebar);
   border-right: 1px solid var(--border-color);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -109,6 +131,7 @@ body {
   bottom: 0;
   left: 0;
   z-index: 40;
+  transition: all 0.3s var(--ease-liquid);
 }
 
 .sidebar-header {
@@ -125,26 +148,33 @@ body {
   align-items: center;
   gap: 10px;
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--primary);
   text-decoration: none;
+  transition: transform 0.3s var(--ease-spring);
+}
+
+.sidebar-logo:hover {
+  transform: scale(1.04);
 }
 
 .sidebar-logo svg {
   width: 28px;
   height: 28px;
   color: var(--primary);
+  filter: drop-shadow(0 0 8px var(--primary-glow));
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
   padding: 16px 12px;
-  gap: 4px;
+  gap: 6px;
   overflow-y: auto;
   flex: 1;
 }
 
+/* Nav Item Bouncy Physics */
 .nav-item {
   display: flex;
   align-items: center;
@@ -155,28 +185,42 @@ body {
   font-weight: 500;
   font-size: 14px;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
   width: 100%;
   text-align: left;
-  transition: all 0.15s ease-in-out;
+  transition: all 0.25s var(--ease-spring);
   min-height: 44px;
+  will-change: transform, background, color;
 }
 
 .nav-item:hover {
   background: var(--bg-card-hover);
   color: var(--text-main);
+  transform: translateX(4px);
+}
+
+.nav-item:active {
+  transform: scale(0.97);
 }
 
 .nav-item.active {
   background: var(--primary-light);
   color: var(--primary);
-  font-weight: 600;
+  border-color: rgba(124, 110, 230, 0.3);
+  font-weight: 700;
+  box-shadow: inset 0 0 12px rgba(124, 110, 230, 0.15), var(--shadow-sm);
+  transform: translateX(6px);
 }
 
 .nav-item svg {
   width: 18px;
   height: 18px;
+  transition: transform 0.3s var(--ease-spring);
+}
+
+.nav-item:hover svg {
+  transform: scale(1.15) rotate(3deg);
 }
 
 .main-content {
@@ -187,10 +231,13 @@ body {
   min-width: 0;
 }
 
+/* Top Bar Apple Glassmorphism */
 .top-bar {
   height: var(--header-height);
   background: var(--bg-card);
   border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -198,11 +245,13 @@ body {
   position: sticky;
   top: 0;
   z-index: 30;
+  transition: all 0.3s var(--ease-liquid);
 }
 
 .page-title-area h1 {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.5px;
   color: var(--text-main);
 }
 
@@ -218,9 +267,10 @@ body {
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
+  animation: liquidFadeUp 0.4s var(--ease-liquid) forwards;
 }
 
-/* Mobile Nav */
+/* Mobile Nav Glass */
 .mobile-nav {
   display: none;
   position: fixed;
@@ -228,11 +278,13 @@ body {
   left: 0;
   right: 0;
   background: var(--bg-card);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-top: 1px solid var(--border-color);
   z-index: 50;
   overflow-x: auto;
   padding: 8px 12px;
-  box-shadow: 0 -4px 16px rgba(0,0,0,0.4);
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.3);
 }
 
 .mobile-nav-inner {
@@ -257,20 +309,17 @@ body {
   cursor: pointer;
   min-height: 48px;
   white-space: nowrap;
+  transition: all 0.25s var(--ease-spring);
 }
 
 .mobile-nav-item.active {
   background: var(--primary-light);
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 700;
+  transform: scale(1.05);
 }
 
-.mobile-nav-item svg {
-  width: 18px;
-  height: 18px;
-}
-
-/* Buttons */
+/* Buttons with Bouncy Spring Physics */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -281,35 +330,53 @@ body {
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  transition: transform 0.25s var(--ease-spring), background-color 0.2s ease, box-shadow 0.25s var(--ease-spring), border-color 0.2s ease;
   border: 1px solid transparent;
   min-height: 44px;
   white-space: nowrap;
+  will-change: transform, box-shadow;
+  transform: translateZ(0);
+}
+
+.btn:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.btn:active {
+  transform: translateY(1px) scale(0.96);
 }
 
 .btn-primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, #7C6EE6 0%, #6355D8 100%);
   color: white;
+  box-shadow: 0 4px 14px rgba(124, 110, 230, 0.35);
 }
 .btn-primary:hover {
-  background: var(--primary-hover);
+  background: linear-gradient(135deg, #8A7DF0 0%, #6F60E3 100%);
+  box-shadow: 0 8px 24px rgba(124, 110, 230, 0.45);
 }
 
 .btn-secondary {
   background: var(--bg-card);
   border-color: var(--border-color);
   color: var(--text-main);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
 }
 .btn-secondary:hover {
   background: var(--bg-card-hover);
+  border-color: var(--border-glass);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-danger {
-  background: var(--danger);
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
   color: white;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
 }
 .btn-danger:hover {
-  background: #DC2626;
+  background: linear-gradient(135deg, #F87171 0%, #E11D48 100%);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.45);
 }
 
 .btn-ghost {
@@ -322,46 +389,42 @@ body {
 }
 
 .btn-sm {
-  padding: 6px 12px;
+  padding: 6px 14px;
   font-size: 13px;
   min-height: 36px;
   border-radius: var(--radius-sm);
 }
 
-/* Cards & Layout */
+/* Apple Liquid Cards */
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 24px;
   box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transition: transform 0.3s var(--ease-spring), box-shadow 0.3s var(--ease-spring), border-color 0.3s ease;
+  will-change: transform, box-shadow;
+}
+
+.card:hover {
+  transform: translateY(-3px) scale(1.006);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-glass);
 }
 
 .card-navy {
   background: var(--bg-navy-card);
   color: var(--text-white);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-glass);
 }
 
-.grid-2 {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-}
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
 
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-.grid-4 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-}
-
-/* Period Selector */
+/* Period Selector Fluid Motion */
 .period-selector {
   display: flex;
   background: var(--bg-app);
@@ -380,27 +443,30 @@ body {
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.25s var(--ease-spring);
   min-height: 36px;
 }
 
 .period-btn:hover {
   color: var(--text-main);
+  transform: scale(1.04);
 }
 
 .period-btn.active {
   background: var(--bg-card);
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 700;
   box-shadow: var(--shadow-sm);
+  transform: scale(1.04);
 }
 
-/* Table */
+/* Table Glass Styling */
 .table-container {
   overflow-x: auto;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   background: var(--bg-card);
+  backdrop-filter: blur(20px);
 }
 
 .data-table {
@@ -413,7 +479,7 @@ body {
 .data-table th {
   background: var(--bg-app);
   padding: 14px 20px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-muted);
   font-size: 13px;
   border-bottom: 1px solid var(--border-color);
@@ -424,6 +490,7 @@ body {
   border-bottom: 1px solid var(--border-color);
   color: var(--text-main);
   vertical-align: middle;
+  transition: background-color 0.2s ease;
 }
 
 .data-table tr:last-child td {
@@ -434,34 +501,47 @@ body {
   background: var(--bg-card-hover);
 }
 
-/* Modal */
+/* Apple Liquid Backdrop Blur & Bouncy Modals */
 .modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
   padding: 20px;
+  animation: liquidFadeIn 0.25s var(--ease-liquid) forwards;
 }
 
 .modal-content {
   background: var(--bg-card);
   color: var(--text-main);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-glass);
   border-radius: var(--radius-xl);
   max-width: 540px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   padding: 28px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
   position: relative;
+  animation: liquidModalPop 0.35s var(--ease-spring) forwards;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+.modal-backdrop.fade-out {
+  animation: liquidFadeOut 0.3s var(--ease-liquid) forwards;
+}
+
+.modal-content.scale-down {
+  animation: liquidScaleDown 0.3s var(--ease-liquid) forwards;
 }
 
 .modal-header {
@@ -473,7 +553,8 @@ body {
 
 .modal-header h2 {
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.3px;
 }
 
 .modal-close {
@@ -486,9 +567,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.25s var(--ease-spring), background-color 0.2s ease;
 }
 .modal-close:hover {
   background: var(--bg-card-hover);
+  color: var(--text-main);
+  transform: rotate(90deg) scale(1.1);
 }
 
 /* Forms */
@@ -514,75 +598,49 @@ body {
   color: var(--text-main);
   background: var(--bg-app);
   min-height: 44px;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.25s var(--ease-spring), transform 0.2s ease;
 }
 
 .form-control:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(124, 110, 230, 0.2);
+  box-shadow: 0 0 0 3.5px rgba(124, 110, 230, 0.25);
+  transform: translateY(-1px);
 }
 
-/* Pills & Badges */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  background: var(--primary-light);
-  color: var(--primary);
+/* Profile Avatar Button Physics */
+.profile-avatar-btn {
+  transition: transform 0.3s var(--ease-spring), box-shadow 0.3s var(--ease-spring);
+}
+.profile-avatar-btn:hover {
+  transform: scale(1.12) rotate(4deg) !important;
+  box-shadow: 0 4px 16px rgba(124, 110, 230, 0.5) !important;
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
+/* Keyframe Animations */
+@keyframes liquidFadeIn {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(16px) saturate(180%); }
 }
 
-.badge-success { background: var(--success-light); color: var(--success); }
-.badge-warning { background: var(--warning-light); color: var(--warning); }
-.badge-info { background: var(--info-light); color: var(--info); }
-.badge-secondary { background: var(--bg-card-hover); color: var(--text-muted); }
-
-/* Empty States */
-.empty-state {
-  text-align: center;
-  padding: 48px 24px;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  border: 1px dashed var(--border-color);
+@keyframes liquidFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
-.empty-state-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--primary-light);
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 16px auto;
+@keyframes liquidModalPop {
+  0% { opacity: 0; transform: scale(0.85) translateY(12px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-.empty-state-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: var(--text-main);
+@keyframes liquidScaleDown {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.92) translateY(10px); }
 }
 
-.empty-state-text {
-  font-size: 14px;
-  color: var(--text-muted);
-  max-width: 400px;
-  margin: 0 auto 20px auto;
+@keyframes liquidFadeUp {
+  0% { opacity: 0; transform: translateY(14px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive Media Queries */
