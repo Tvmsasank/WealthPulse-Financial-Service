@@ -692,14 +692,15 @@ body {
     gap: 4px;
   }
   .btn-text-desktop {
-    display: none;
+    display: none !important;
   }
   .btn-text-mobile {
-    display: inline;
+    display: inline !important;
   }
   .header-action-btn {
     padding: 6px 8px !important;
     font-size: 12px !important;
+    min-width: unset !important;
   }
   .header-divider {
     display: none;
