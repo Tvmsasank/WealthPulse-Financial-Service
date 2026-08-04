@@ -653,6 +653,17 @@ body {
   background: var(--border-color);
   margin: 0 4px;
 }
+.desktop-table-view {
+  display: block;
+}
+.mobile-cards-view {
+  display: none;
+}
+.transaction-filter-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+}
 
 /* Responsive Media Queries */
 @media (max-width: 1024px) {
@@ -747,5 +758,17 @@ body {
     padding: 20px;
     border-radius: var(--radius-lg);
     max-height: 94vh;
+  }
+
+  /* Mobile Transaction & Activity View Toggle */
+  .desktop-table-view {
+    display: none !important;
+  }
+  .mobile-cards-view {
+    display: flex !important;
+    flex-direction: column;
+  }
+  .transaction-filter-grid {
+    grid-template-columns: 1fr;
   }
 }

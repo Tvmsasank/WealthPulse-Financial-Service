@@ -229,33 +229,55 @@ export default function DashboardTab({
           </div>
 
           {recentTx.length > 0 ? (
-            <div className="table-container">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Date & Merchant</th>
-                    <th>Category</th>
-                    <th style={{ textAlign: 'right' }}>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentTx.map(tx => (
-                    <tr key={tx.id}>
-                      <td>
-                        <div style={{ fontWeight: '600' }}>{tx.merchant}</div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tx.date}</div>
-                      </td>
-                      <td>
-                        <span className="badge badge-secondary">{tx.category}</span>
-                      </td>
-                      <td style={{ textAlign: 'right', fontWeight: '600', color: tx.type === 'income' ? 'var(--success)' : 'var(--text-main)' }}>
-                        {tx.type === 'income' ? '+' : '-'}₹{Math.abs(tx.amount).toFixed(2)}
-                      </td>
+            <>
+              {/* Desktop Table View */}
+              <div className="table-container desktop-table-view">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date & Merchant</th>
+                      <th>Category</th>
+                      <th style={{ textAlign: 'right' }}>Amount</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {recentTx.map(tx => (
+                      <tr key={tx.id}>
+                        <td>
+                          <div style={{ fontWeight: '600' }}>{tx.merchant}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tx.date}</div>
+                        </td>
+                        <td>
+                          <span className="badge badge-secondary">{tx.category}</span>
+                        </td>
+                        <td style={{ textAlign: 'right', fontWeight: '600', color: tx.type === 'income' ? 'var(--success)' : 'var(--text-main)' }}>
+                          {tx.type === 'income' ? '+' : '-'}₹{Math.abs(tx.amount).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Recent Activity Card List */}
+              <div className="mobile-cards-view">
+                {recentTx.map(tx => (
+                  <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', marginBottom: '8px' }}>
+                    <div style={{ minWidth: 0, flex: 1, paddingRight: '8px' }}>
+                      <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {tx.merchant}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                        <span>{tx.date}</span> • <span className="badge badge-secondary" style={{ fontSize: '10px', padding: '1px 6px' }}>{tx.category}</span>
+                      </div>
+                    </div>
+                    <div style={{ fontWeight: '700', fontSize: '14px', flexShrink: 0, color: tx.type === 'income' ? 'var(--success)' : 'var(--text-main)' }}>
+                      {tx.type === 'income' ? '+' : '-'}₹{Math.abs(tx.amount).toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <div className="empty-state" style={{ padding: '24px 16px' }}>
               <div className="empty-state-text">No recent transactions in selected period.</div>

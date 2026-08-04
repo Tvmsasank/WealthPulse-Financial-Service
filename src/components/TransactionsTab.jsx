@@ -39,13 +39,13 @@ export default function TransactionsTab({
   return (
     <div>
       {/* Top Controls Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h2 style={{ fontSize: '20px', fontWeight: '700' }}>Transactions</h2>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Search, filter, and manage financial records</p>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', maxWidth: '100%' }}>
           <div className="period-selector">
             {[
               { id: 'all-time', label: 'All time' },
@@ -65,15 +65,15 @@ export default function TransactionsTab({
             ))}
           </div>
 
-          <button className="btn btn-primary" onClick={onOpenAddEntry}>
+          <button className="btn btn-primary" onClick={onOpenAddEntry} style={{ fontSize: '13px' }}>
             <Plus size={16} /> Add Entry
           </button>
         </div>
       </div>
 
       {/* Filter Controls Card */}
-      <div className="card" style={{ marginBottom: '20px', padding: '16px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '12px' }}>
+      <div className="card" style={{ marginBottom: '20px', padding: '14px' }}>
+        <div className="transaction-filter-grid">
           {/* Search Box */}
           <div style={{ position: 'relative' }}>
             <Search size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
@@ -101,139 +101,205 @@ export default function TransactionsTab({
         </div>
       </div>
 
-      {/* Transactions Table */}
+      {/* Transactions Output */}
       {filtered.length > 0 ? (
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Date & Merchant</th>
-                <th>Category (Inline edit)</th>
-                <th>Account</th>
-                <th>Tags</th>
-                <th style={{ textAlign: 'right' }}>Amount</th>
-                <th style={{ textAlign: 'center' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(tx => {
-                const txTags = parseTags(tx.tags);
-                return (
-                  <tr key={tx.id}>
-                    {/* Merchant & Date */}
-                    <td>
-                      <div style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {tx.merchant}
-                        {tx.receipt === 1 && (
-                          <span title="Receipt Attached" style={{ color: 'var(--primary)', display: 'inline-flex' }}>
-                            <FileText size={14} />
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tx.date} • <span style={{ textTransform: 'capitalize' }}>{tx.source}</span></div>
-                    </td>
+        <>
+          {/* Desktop Table View */}
+          <div className="table-container desktop-table-view">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Date & Merchant</th>
+                  <th>Category (Inline edit)</th>
+                  <th>Account</th>
+                  <th>Tags</th>
+                  <th style={{ textAlign: 'right' }}>Amount</th>
+                  <th style={{ textAlign: 'center' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(tx => {
+                  const txTags = parseTags(tx.tags);
+                  return (
+                    <tr key={tx.id}>
+                      {/* Merchant & Date */}
+                      <td>
+                        <div style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {tx.merchant}
+                          {tx.receipt === 1 && (
+                            <span title="Receipt Attached" style={{ color: 'var(--primary)', display: 'inline-flex' }}>
+                              <FileText size={14} />
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tx.date} • <span style={{ textTransform: 'capitalize' }}>{tx.source}</span></div>
+                      </td>
 
-                    {/* Inline Category Editor Dropdown */}
-                    <td>
-                      <div style={{ position: 'relative', display: 'inline-block' }}>
-                        <select
-                          className="form-control"
-                          style={{
-                            padding: '4px 24px 4px 10px',
-                            minHeight: '32px',
-                            fontSize: '13px',
-                            fontWeight: '500',
-                            borderRadius: 'var(--radius-sm)',
-                            background: tx.category === 'Needs review' ? 'var(--warning-light)' : 'var(--bg-app)',
-                            borderColor: tx.category === 'Needs review' ? 'var(--warning)' : 'var(--border-color)',
-                            color: tx.category === 'Needs review' ? 'var(--warning)' : 'var(--text-main)'
-                          }}
-                          value={tx.category}
-                          onChange={e => onUpdateCategory(tx.id, e.target.value)}
-                        >
-                          {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                    </td>
-
-                    {/* Account */}
-                    <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                      {tx.account}
-                    </td>
-
-                    {/* Inline Tag Pills + Add Tag Button */}
-                    <td>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px' }}>
-                        {txTags.map(tag => (
-                          <span
-                            key={tag}
-                            className="pill"
-                            style={{ cursor: 'pointer', padding: '2px 8px', fontSize: '11px' }}
-                            title="Click to remove tag"
-                            onClick={() => handleRemoveTag(tx, tag)}
+                      {/* Inline Category Editor Dropdown */}
+                      <td>
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                          <select
+                            className="form-control"
+                            style={{
+                              padding: '4px 24px 4px 10px',
+                              minHeight: '32px',
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              borderRadius: 'var(--radius-sm)',
+                              background: tx.category === 'Needs review' ? 'var(--warning-light)' : 'var(--bg-app)',
+                              borderColor: tx.category === 'Needs review' ? 'var(--warning)' : 'var(--border-color)',
+                              color: tx.category === 'Needs review' ? 'var(--warning)' : 'var(--text-main)'
+                            }}
+                            value={tx.category}
+                            onChange={e => onUpdateCategory(tx.id, e.target.value)}
                           >
-                            {tag} ×
-                          </span>
-                        ))}
+                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                      </td>
+
+                      {/* Account */}
+                      <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                        {tx.account}
+                      </td>
+
+                      {/* Inline Tag Pills + Add Tag Button */}
+                      <td>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px' }}>
+                          {txTags.map(tag => (
+                            <span
+                              key={tag}
+                              className="pill"
+                              style={{ cursor: 'pointer', padding: '2px 8px', fontSize: '11px' }}
+                              title="Click to remove tag"
+                              onClick={() => handleRemoveTag(tx, tag)}
+                            >
+                              {tag} ×
+                            </span>
+                          ))}
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            style={{ padding: '2px 6px', minHeight: '26px', fontSize: '12px' }}
+                            title="Add tag"
+                            onClick={() => onOpenTagModal(tx)}
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* Amount */}
+                      <td style={{ textAlign: 'right', fontWeight: '700', fontSize: '15px', color: tx.type === 'income' ? 'var(--success)' : 'var(--text-main)' }}>
+                        {tx.type === 'income' ? '+' : '-'}₹{Math.abs(tx.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </td>
+
+                      {/* Actions: Delete Trash Icon */}
+                      <td style={{ textAlign: 'center' }}>
                         <button
                           type="button"
                           className="btn btn-ghost btn-sm"
-                          style={{ padding: '2px 6px', minHeight: '26px', fontSize: '12px' }}
-                          title="Add tag"
-                          onClick={() => onOpenTagModal(tx)}
+                          style={{ padding: '6px', color: 'var(--danger)' }}
+                          title="Delete Transaction"
+                          onClick={() => setDeleteTargetTx(tx)}
                         >
-                          <Plus size={14} />
+                          <Trash2 size={16} />
                         </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Transaction Cards View */}
+          <div className="mobile-cards-view">
+            {filtered.map(tx => {
+              const txTags = parseTags(tx.tags);
+              return (
+                <div key={tx.id} className="card" style={{ padding: '14px', marginBottom: '10px' }}>
+                  {/* Top Row: Merchant + Amount + Delete */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div style={{ minWidth: 0, flex: 1, paddingRight: '8px' }}>
+                      <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <span>{tx.merchant}</span>
+                        {tx.receipt === 1 && <FileText size={14} style={{ color: 'var(--primary)', flexShrink: 0 }} />}
                       </div>
-                    </td>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        {tx.date} • <span style={{ textTransform: 'capitalize' }}>{tx.source}</span>
+                      </div>
+                    </div>
 
-                    {/* Amount */}
-                    <td style={{ textAlign: 'right', fontWeight: '700', fontSize: '15px', color: tx.type === 'income' ? 'var(--success)' : 'var(--text-main)' }}>
-                      {tx.type === 'income' ? '+' : '-'}₹{Math.abs(tx.amount).toFixed(2)}
-                    </td>
-
-                    {/* Actions */}
-                    <td style={{ textAlign: 'center' }}>
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        style={{ color: 'var(--danger)', padding: '4px' }}
-                        title="Delete transaction"
-                        onClick={() => setDeleteTargetTx(tx)}
-                      >
+                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                      <div style={{ fontWeight: '800', fontSize: '16px', color: tx.type === 'income' ? 'var(--success)' : 'var(--text-main)' }}>
+                        {tx.type === 'income' ? '+' : '-'}₹{Math.abs(tx.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </div>
+                      <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '4px' }} onClick={() => setDeleteTargetTx(tx)}>
                         <Trash2 size={16} />
                       </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  </div>
+
+                  {/* Middle Row: Category Select + Account Badge */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                    <select
+                      className="form-control"
+                      style={{
+                        padding: '4px 10px',
+                        minHeight: '32px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        borderRadius: 'var(--radius-sm)',
+                        flex: 1,
+                        background: tx.category === 'Needs review' ? 'var(--warning-light)' : 'var(--bg-app)',
+                        borderColor: tx.category === 'Needs review' ? 'var(--warning)' : 'var(--border-color)',
+                        color: tx.category === 'Needs review' ? 'var(--warning)' : 'var(--text-main)'
+                      }}
+                      value={tx.category}
+                      onChange={e => onUpdateCategory(tx.id, e.target.value)}
+                    >
+                      {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+
+                    <span className="badge badge-secondary" style={{ fontSize: '11px', whiteSpace: 'nowrap' }}>
+                      {tx.account}
+                    </span>
+                  </div>
+
+                  {/* Bottom Row: Tags */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px' }}>
+                    {txTags.map(tag => (
+                      <span key={tag} className="pill" style={{ cursor: 'pointer', padding: '2px 8px', fontSize: '11px' }} onClick={() => handleRemoveTag(tx, tag)}>
+                        {tag} ×
+                      </span>
+                    ))}
+                    <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 6px', minHeight: '24px', fontSize: '11px' }} onClick={() => onOpenTagModal(tx)}>
+                      <Plus size={12} /> Tag
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       ) : (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <Filter size={28} />
-          </div>
+        <div className="card empty-state" style={{ padding: '48px 20px' }}>
+          <div className="empty-state-icon"><Filter size={32} /></div>
           <div className="empty-state-title">No transactions found</div>
-          <div className="empty-state-text">
-            {transactions.length === 0
-              ? 'Your ledger is empty. Add a manual transaction or import a statement.'
-              : 'No transactions match your current search or filter criteria.'}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-            <button className="btn btn-primary" onClick={onOpenAddEntry}>
-              Add Transaction
-            </button>
-          </div>
+          <div className="empty-state-text">No records match your selected filters or period.</div>
+          <button className="btn btn-primary btn-sm" onClick={onOpenAddEntry}>
+            <Plus size={14} /> Add Transaction
+          </button>
         </div>
       )}
 
-      {/* Custom Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal */}
       <ConfirmDeleteTxModal
         isOpen={!!deleteTargetTx}
         onClose={() => setDeleteTargetTx(null)}
-        transaction={deleteTargetTx}
         onConfirm={handleConfirmDelete}
+        transaction={deleteTargetTx}
       />
     </div>
   );
@@ -241,70 +307,54 @@ export default function TransactionsTab({
 
 // Helpers
 function parseTags(tagsVal) {
-  if (Array.isArray(tagsVal)) return tagsVal;
   if (!tagsVal) return [];
-  if (typeof tagsVal === 'string') {
-    try {
-      const parsed = JSON.parse(tagsVal);
-      if (Array.isArray(parsed)) return parsed;
-    } catch (e) {
-      if (tagsVal.trim() && tagsVal !== '[]') return [tagsVal];
-    }
+  if (Array.isArray(tagsVal)) return tagsVal;
+  try {
+    const parsed = JSON.parse(tagsVal);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
   }
-  return [];
 }
 
-function filterTransactions(txs, period, query, account, category) {
-  let result = filterByPeriod(txs, period);
-
-  if (query.trim()) {
-    const q = query.toLowerCase().trim();
-    result = result.filter(t => {
-      const matchMerchant = (t.merchant || '').toLowerCase().includes(q);
-      const matchCategory = (t.category || '').toLowerCase().includes(q);
-      const tagsArray = parseTags(t.tags);
-      const matchTag = tagsArray.some(tag => tag.toLowerCase().includes(q));
-      return matchMerchant || matchCategory || matchTag;
-    });
-  }
-
-  if (account) {
-    result = result.filter(t => t.account === account);
-  }
-
-  if (category) {
-    result = result.filter(t => t.category === category);
-  }
-
-  return result;
-}
-
-function filterByPeriod(txs = [], period) {
-  if (period === 'all-time' || !period) return txs;
+function filterTransactions(transactions, period, searchQuery, account, category) {
   const now = new Date();
-  
-  return txs.filter(t => {
-    const txDate = new Date(t.date);
-    if (isNaN(txDate.getTime())) return false;
+  const lowerSearch = searchQuery.toLowerCase().trim();
 
+  return transactions.filter(tx => {
+    const txDate = new Date(tx.date);
+
+    // Period filter
     if (period === 'this-month') {
-      return txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
+      if (txDate.getMonth() !== now.getMonth() || txDate.getFullYear() !== now.getFullYear()) return false;
+    } else if (period === 'last-month') {
+      const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      if (txDate.getMonth() !== lm.getMonth() || txDate.getFullYear() !== lm.getFullYear()) return false;
+    } else if (period === 'last-3-months') {
+      const l3m = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+      if (txDate < l3m) return false;
+    } else if (period === 'last-6-months') {
+      const l6m = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+      if (txDate < l6m) return false;
+    } else if (period === 'this-year') {
+      if (txDate.getFullYear() !== now.getFullYear()) return false;
     }
-    if (period === 'last-month') {
-      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      return txDate.getMonth() === lastMonth.getMonth() && txDate.getFullYear() === lastMonth.getFullYear();
+
+    // Account filter
+    if (account && tx.account !== account) return false;
+
+    // Category filter
+    if (category && tx.category !== category) return false;
+
+    // Search query (Merchant, Category, Tags)
+    if (lowerSearch) {
+      const tagsStr = parseTags(tx.tags).join(' ').toLowerCase();
+      const matchMerchant = (tx.merchant || '').toLowerCase().includes(lowerSearch);
+      const matchCategory = (tx.category || '').toLowerCase().includes(lowerSearch);
+      const matchTags = tagsStr.includes(lowerSearch);
+      if (!matchMerchant && !matchCategory && !matchTags) return false;
     }
-    if (period === 'last-3-months') {
-      const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-      return txDate >= threeMonthsAgo;
-    }
-    if (period === 'last-6-months') {
-      const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
-      return txDate >= sixMonthsAgo;
-    }
-    if (period === 'this-year') {
-      return txDate.getFullYear() === now.getFullYear();
-    }
+
     return true;
   });
 }
