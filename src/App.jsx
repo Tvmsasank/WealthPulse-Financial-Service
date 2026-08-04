@@ -624,6 +624,7 @@ export default function App() {
         isOpen={isForgotPasswordOpen}
         onClose={() => setIsForgotPasswordOpen(false)}
         initialToken={activeResetToken}
+        onLogout={handleLogout}
         onOpenLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
       />
 

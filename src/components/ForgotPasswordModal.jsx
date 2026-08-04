@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, CheckCircle2, AlertCircle, KeyRound, ArrowRight, Info } from 'lucide-react';
+import { X, Mail, Lock, CheckCircle2, AlertCircle, KeyRound, ArrowRight } from 'lucide-react';
 
-export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, initialToken = '' }) {
+export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, onLogout, initialToken = '' }) {
   if (!isOpen) return null;
 
   // If opened via email link (?resetToken=...), go directly to password entry
@@ -19,6 +19,8 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
     if (initialToken) {
       setResetToken(initialToken);
       setStep(2);
+      // Immediately log out active session on reset token activation for security
+      if (onLogout) onLogout();
     }
   }, [initialToken]);
 
@@ -78,11 +80,14 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Reset failed');
 
-      setSuccessMessage('Password reset successfully! Redirecting to Sign In...');
+      // Security: Invalidate all active sessions immediately
+      if (onLogout) onLogout();
+
+      setSuccessMessage('Password reset successfully! Account logged out across all sessions for security. Opening Sign In...');
       setTimeout(() => {
         onClose();
         onOpenLogin();
-      }, 1500);
+      }, 1200);
     } catch (err) {
       setError(err.message || 'Failed to reset password');
     } finally {
@@ -116,7 +121,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
                 type="button"
                 className="btn btn-primary btn-sm"
                 style={{ width: '100%', marginTop: '4px' }}
-                onClick={() => { setError(''); setStep(2); }}
+                onClick={() => { setError(''); setStep(2); if (onLogout) onLogout(); }}
               >
                 Set New Password Now <ArrowRight size={14} />
               </button>
@@ -133,7 +138,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, init
         {step === 1 ? (
           <form onSubmit={handleRequestLink}>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.5' }}>
-              Enter your registered account email address. We will generate a password reset link for your account.
+              Enter your registered account email address. We will send a secure password reset link to your email inbox.
             </p>
 
             <div className="form-group">
