@@ -55,12 +55,12 @@ export default function UserProfileModal({
       <div
         className={`modal-content ${isLoggingOut ? 'scale-down' : ''}`}
         onClick={e => e.stopPropagation()}
-        style={{ maxWidth: '540px', transition: 'all 0.3s ease' }}
+        style={{ maxWidth: '520px', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}
       >
-        <div className="modal-header" style={{ marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ShieldCheck size={20} style={{ color: 'var(--primary)' }} />
-            <h2 style={{ fontSize: '18px' }}>User Profile & Security</h2>
+        <div className="modal-header" style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <ShieldCheck size={20} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+            <h2 style={{ fontSize: '18px', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>User Profile & Security</h2>
           </div>
           <button className="modal-close" onClick={onClose} aria-label="Close">
             <X size={20} />
@@ -68,12 +68,12 @@ export default function UserProfileModal({
         </div>
 
         {/* Identity Header Card */}
-        <div className="card" style={{ background: 'linear-gradient(135deg, rgba(124, 110, 230, 0.15) 0%, rgba(79, 70, 229, 0.05) 100%)', border: '1px solid var(--primary-light)', marginBottom: '20px', padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="card" style={{ background: 'linear-gradient(135deg, rgba(124, 110, 230, 0.15) 0%, rgba(79, 70, 229, 0.05) 100%)', border: '1px solid var(--primary-light)', marginBottom: '16px', padding: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <div
               style={{
-                width: '56px',
-                height: '56px',
+                width: '48px',
+                height: '48px',
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, #7C6EE6 0%, #4F46E5 100%)',
                 color: 'white',
@@ -81,40 +81,41 @@ export default function UserProfileModal({
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: '800',
-                fontSize: '20px',
-                boxShadow: '0 4px 12px rgba(124, 110, 230, 0.3)'
+                fontSize: '18px',
+                boxShadow: '0 4px 12px rgba(124, 110, 230, 0.3)',
+                flexShrink: 0
               }}
             >
               {getInitials(user.name)}
             </div>
 
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '800' }}>{user.name}</h3>
-                <span className="badge badge-success" style={{ fontSize: '11px' }}>
-                  <CheckCircle2 size={12} /> Verified Owner
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '800', margin: 0, wordBreak: 'break-word' }}>{user.name}</h3>
+                <span className="badge badge-success" style={{ fontSize: '10px', padding: '2px 6px', whiteSpace: 'nowrap' }}>
+                  <CheckCircle2 size={11} /> Verified Owner
                 </span>
               </div>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Mail size={13} /> {user.email}
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <Mail size={12} style={{ flexShrink: 0 }} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Quick Authentication Actions: Biometrics & MPIN */}
-        <div style={{ marginBottom: '20px' }}>
-          <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', marginBottom: '10px', fontWeight: '700' }}>
+        <div style={{ marginBottom: '16px' }}>
+          <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: '700' }}>
             Fast Authentication Options
           </h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="user-profile-grid-2">
             <button
               className="btn btn-secondary"
-              style={{ fontSize: '13px', justifyContent: 'flex-start', padding: '12px 14px' }}
+              style={{ fontSize: '13px', justifyContent: 'flex-start', padding: '10px 12px' }}
               onClick={handleEnableBiometrics}
             >
-              <Fingerprint size={18} style={{ color: 'var(--primary)' }} />
-              <div style={{ textAlign: 'left' }}>
+              <Fingerprint size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+              <div style={{ textAlign: 'left', minWidth: 0 }}>
                 <div style={{ fontWeight: '700' }}>Face ID / Biometrics</div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Enable Touch ID / Passkey</div>
               </div>
@@ -122,14 +123,14 @@ export default function UserProfileModal({
 
             <button
               className="btn btn-secondary"
-              style={{ fontSize: '13px', justifyContent: 'flex-start', padding: '12px 14px' }}
+              style={{ fontSize: '13px', justifyContent: 'flex-start', padding: '10px 12px' }}
               onClick={() => {
                 onClose();
                 onOpenMpinModal('set');
               }}
             >
-              <KeyRound size={18} style={{ color: 'var(--success)' }} />
-              <div style={{ textAlign: 'left' }}>
+              <KeyRound size={18} style={{ color: 'var(--success)', flexShrink: 0 }} />
+              <div style={{ textAlign: 'left', minWidth: 0 }}>
                 <div style={{ fontWeight: '700' }}>4-Digit MPIN</div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Set Quick Mobile Pin</div>
               </div>
@@ -137,33 +138,33 @@ export default function UserProfileModal({
           </div>
 
           {bioMessage && (
-            <div style={{ marginTop: '10px', padding: '8px 12px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ marginTop: '8px', padding: '8px 12px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Sparkles size={14} /> {bioMessage}
             </div>
           )}
 
           {bioError && (
-            <div style={{ marginTop: '10px', padding: '8px 12px', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 'var(--radius-md)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ marginTop: '8px', padding: '8px 12px', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 'var(--radius-md)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <ShieldAlert size={14} /> {bioError}
             </div>
           )}
         </div>
 
-        {/* Financial Portfolio Summary */}
-        <div style={{ marginBottom: '20px' }}>
-          <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', marginBottom: '10px', fontWeight: '700' }}>
+        {/* Portfolio Quick Summary */}
+        <div style={{ marginBottom: '16px' }}>
+          <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: '700' }}>
             Financial Portfolio Summary
           </h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div className="card" style={{ padding: '14px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Net Worth Valuation</div>
+          <div className="user-profile-grid-2">
+            <div className="card" style={{ padding: '12px', marginBottom: 0 }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Net Worth Valuation</div>
               <div style={{ fontSize: '18px', fontWeight: '800', color: netWorth >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                {settings.netWorthConfigured ? `₹${netWorth.toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : 'Not set'}
+                ₹{netWorth.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </div>
             </div>
 
-            <div className="card" style={{ padding: '14px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>Managed Transactions</div>
+            <div className="card" style={{ padding: '12px', marginBottom: 0 }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Managed Transactions</div>
               <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary)' }}>
                 {transactionCount} records
               </div>
@@ -171,43 +172,46 @@ export default function UserProfileModal({
           </div>
         </div>
 
-        {/* Security Architecture */}
-        <div style={{ marginBottom: '24px' }}>
-          <h4 style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', marginBottom: '10px', fontWeight: '700' }}>
+        {/* Security Info */}
+        <div style={{ marginBottom: '20px' }}>
+          <h4 style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: '700' }}>
             Security Architecture
           </h4>
-          <div className="card" style={{ padding: '14px', background: 'var(--bg-app)', fontSize: '12px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div className="card" style={{ padding: '12px', marginBottom: 0, fontSize: '12px' }}>
+            <div className="user-profile-grid-2">
               <div>
                 <span style={{ color: 'var(--text-muted)' }}>Password Hashing:</span>
-                <div style={{ fontWeight: '600', color: 'var(--text-main)', marginTop: '2px' }}>bcrypt (10 rounds)</div>
+                <div style={{ fontWeight: '700', marginTop: '2px' }}>bcrypt (10 rounds)</div>
               </div>
               <div>
                 <span style={{ color: 'var(--text-muted)' }}>Passkeys & Biometrics:</span>
-                <div style={{ fontWeight: '600', color: 'var(--text-main)', marginTop: '2px' }}>W3C WebAuthn Hardware</div>
+                <div style={{ fontWeight: '700', marginTop: '2px' }}>W3C WebAuthn Hardware</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Modal Actions */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+        {/* Actions Footer */}
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '16px', flexWrap: 'wrap' }}>
           <button
+            type="button"
             className="btn btn-secondary btn-sm"
             onClick={() => {
               onClose();
               onOpenForgotPassword();
             }}
+            style={{ fontSize: '12px' }}
           >
-            <KeyRound size={14} /> Change Password
+            <Lock size={14} /> Change Password
           </button>
 
           <button
+            type="button"
             className="btn btn-danger btn-sm"
             onClick={handleLogoutAnimated}
-            disabled={isLoggingOut}
+            style={{ fontSize: '12px' }}
           >
-            <LogOut size={14} /> {isLoggingOut ? 'Signing Out...' : 'Sign Out'}
+            <LogOut size={14} /> Sign Out
           </button>
         </div>
       </div>

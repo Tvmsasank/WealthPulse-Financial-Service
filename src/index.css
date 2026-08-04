@@ -671,10 +671,11 @@ body {
   gap: 12px;
   margin-bottom: 12px;
 }
-.settings-manage-grid {
+.settings-manage-grid,
+.user-profile-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 12px;
 }
 
 /* Responsive Media Queries */
@@ -784,7 +785,8 @@ body {
   .transaction-filter-grid,
   .settings-grid-3,
   .settings-grid-2,
-  .settings-manage-grid {
+  .settings-manage-grid,
+  .user-profile-grid-2 {
     grid-template-columns: 1fr !important;
   }
 }
