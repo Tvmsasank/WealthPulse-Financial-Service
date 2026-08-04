@@ -24,7 +24,7 @@ export default function ConfirmWipeModal({ isOpen, onClose, onConfirmWipe }) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '460px' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--danger)' }}>

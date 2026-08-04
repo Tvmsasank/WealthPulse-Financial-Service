@@ -31,7 +31,7 @@ export default function GoalModal({ isOpen, onClose, initialGoal, onSave }) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '440px' }}>
         <div className="modal-header">
           <h2>{initialGoal ? 'Edit Goal' : 'Create Financial Goal'}</h2>

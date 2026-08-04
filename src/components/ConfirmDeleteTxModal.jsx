@@ -7,7 +7,7 @@ export default function ConfirmDeleteTxModal({ isOpen, onClose, transaction, onC
   const amtStr = `${transaction.type === 'income' ? '+' : '-'}₹${Math.abs(transaction.amount).toFixed(2)}`;
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '440px' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--danger)' }}>

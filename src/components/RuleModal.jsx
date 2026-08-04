@@ -27,7 +27,7 @@ export default function RuleModal({ isOpen, onClose, categories = [], tags = [],
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '440px' }}>
         <div className="modal-header">
           <h2>Create Categorization Rule</h2>

@@ -77,7 +77,7 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Add Financial Entry</h2>

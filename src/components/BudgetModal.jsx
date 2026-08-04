@@ -25,7 +25,7 @@ export default function BudgetModal({ isOpen, onClose, categories = [], initialB
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
         <div className="modal-header">
           <h2>{initialBudget ? 'Adjust Budget' : 'Create Monthly Budget'}</h2>

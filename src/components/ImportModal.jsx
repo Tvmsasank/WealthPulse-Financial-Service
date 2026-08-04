@@ -128,7 +128,7 @@ export default function ImportModal({ isOpen, onClose, onImportCompleted, accoun
   };
 
   return (
-    <div className="modal-backdrop" onClick={resetModal}>
+    <div className="modal-backdrop">
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
         <div className="modal-header">
           <h2>Import Statements & Documents</h2>

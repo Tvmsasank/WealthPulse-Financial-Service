@@ -37,7 +37,7 @@ export default function TagModal({ isOpen, onClose, transaction, allTags = [], o
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop">
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px' }}>
         <div className="modal-header">
           <h2>Manage Tags</h2>
