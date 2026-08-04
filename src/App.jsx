@@ -104,6 +104,30 @@ export default function App() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
+  // Cross-Tab Multi-Session Synchronization
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'ledgerly_token') {
+        if (!e.newValue) {
+          // Logged out or password reset in another tab
+          setUser(null);
+          setToken('');
+          setActiveTab('dashboard');
+        } else {
+          // Logged in or token updated in another tab
+          setToken(e.newValue);
+          try {
+            const savedUser = localStorage.getItem('ledgerly_user');
+            if (savedUser) setUser(JSON.parse(savedUser));
+          } catch (err) {}
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
 
   const fetchState = async () => {
@@ -121,6 +145,9 @@ export default function App() {
             ...data.settings
           }));
         }
+      } else if (res.status === 401) {
+        // Active token is unauthorized/invalid -> Auto logout this tab
+        handleLogout();
       }
     } catch (err) {
       console.error('Failed to fetch state:', err);
