@@ -276,14 +276,21 @@ export default function App() {
 
   // Preferences Saver Helper
   const savePreferences = async (updates) => {
-    const res = await fetch('/api/preferences', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify(updates)
-    });
-    if (res.ok) {
-      const updatedSettings = await res.json();
-      setSettings(prev => ({ ...prev, ...updatedSettings }));
+    // Optimistic update so Dashboard net worth reflects instantly
+    setSettings(prev => ({ ...prev, ...updates }));
+
+    try {
+      const res = await fetch('/api/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify(updates)
+      });
+      if (res.ok) {
+        const updatedSettings = await res.json();
+        setSettings(prev => ({ ...prev, ...updatedSettings }));
+      }
+    } catch (err) {
+      console.error('Failed to save preferences:', err);
     }
   };
 

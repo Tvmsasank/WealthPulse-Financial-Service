@@ -447,6 +447,10 @@ export const dbEngine = {
     return db.userSettings[userId];
   },
 
+  updatePreferences(userId, updates) {
+    return this.saveUserSettings(userId, updates);
+  },
+
   // Completely wipe data for a single user ONLY
   wipeAllData(userId) {
     const db = loadDb();
