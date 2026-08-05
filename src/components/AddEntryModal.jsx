@@ -1,8 +1,18 @@
-import React, { useState } from 'react';
-import { X, Plus, Upload } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Plus, Upload, Edit3 } from 'lucide-react';
 
-export default function AddEntryModal({ isOpen, onClose, onSave, categories = [], accounts = [], tags = [] }) {
+export default function AddEntryModal({
+  isOpen,
+  onClose,
+  onSave,
+  editTransaction = null,
+  categories = [],
+  accounts = [],
+  tags = []
+}) {
   if (!isOpen) return null;
+
+  const isEditing = !!editTransaction;
 
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
@@ -16,6 +26,29 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
   const [receiptFile, setReceiptFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (editTransaction) {
+      setType(editTransaction.type || 'expense');
+      setAmount(editTransaction.amount ? String(editTransaction.amount) : '');
+      setMerchant(editTransaction.merchant || '');
+      setDate(editTransaction.date || new Date().toISOString().split('T')[0]);
+      setCategory(editTransaction.category || categories[0] || 'Needs review');
+      setAccount(editTransaction.account || accounts[0] || 'Main Checking');
+      setSelectedTags(parseTags(editTransaction.tags));
+      setHasReceipt(editTransaction.receipt === 1);
+    } else {
+      setType('expense');
+      setAmount('');
+      setMerchant('');
+      setDate(new Date().toISOString().split('T')[0]);
+      setCategory(categories[0] || 'Needs review');
+      setAccount(accounts[0] || 'Main Checking');
+      setSelectedTags([]);
+      setHasReceipt(false);
+    }
+    setError('');
+  }, [editTransaction, isOpen]);
 
   const handleAddTag = () => {
     if (!newTagInput.trim()) return;
@@ -58,6 +91,7 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
     setSaving(true);
     try {
       await onSave({
+        ...(isEditing ? { id: editTransaction.id } : {}),
         type,
         amount: parsedAmount,
         merchant: merchant.trim(),
@@ -67,7 +101,7 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
         tags: finalTags,
         receipt: hasReceipt ? 1 : 0,
         receiptFile: hasReceipt ? receiptFile : null,
-        source: 'manual'
+        source: isEditing ? (editTransaction.source || 'manual') : 'manual'
       });
       setSaving(false);
       onClose();
@@ -81,7 +115,10 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
     <div className="modal-backdrop">
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Add Financial Entry</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {isEditing ? <Edit3 size={20} style={{ color: 'var(--primary)' }} /> : <Plus size={20} style={{ color: 'var(--primary)' }} />}
+            <h2>{isEditing ? 'Edit Financial Entry' : 'Add Financial Entry'}</h2>
+          </div>
           <button className="modal-close" onClick={onClose} aria-label="Close">
             <X size={20} />
           </button>
@@ -205,28 +242,32 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
             <div style={{ display: 'flex', gap: '8px' }}>
               <input
                 type="text"
-                placeholder="Type tag name..."
+                placeholder="Add custom tag..."
                 className="form-control"
-                style={{ flex: 1 }}
                 value={newTagInput}
                 onChange={e => setNewTagInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
               />
-              <button type="button" className="btn btn-secondary btn-sm" onClick={handleAddTag}>
-                <Plus size={16} /> Add Tag
+              <button type="button" className="btn btn-secondary" onClick={handleAddTag}>
+                <Plus size={16} /> Add
               </button>
             </div>
           </div>
 
-          {/* Receipt Attachment */}
-          <div className="form-group" style={{ marginTop: '16px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px' }}>
+          {/* Optional Receipt Checkbox */}
+          <div className="form-group">
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px' }}>
               <input
                 type="checkbox"
                 checked={hasReceipt}
                 onChange={e => setHasReceipt(e.target.checked)}
               />
-              I have a receipt or document to attach
+              <span>Attach Receipt or Invoice Document</span>
             </label>
 
             {hasReceipt && (
@@ -249,11 +290,22 @@ export default function AddEntryModal({ isOpen, onClose, onSave, categories = []
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Saving...' : 'Save Entry'}
+              {saving ? 'Saving...' : (isEditing ? 'Update Entry' : 'Save Entry')}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
+}
+
+function parseTags(tagsVal) {
+  if (!tagsVal) return [];
+  if (Array.isArray(tagsVal)) return tagsVal;
+  try {
+    const parsed = JSON.parse(tagsVal);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
 }

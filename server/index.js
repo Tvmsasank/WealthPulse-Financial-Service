@@ -390,11 +390,11 @@ app.post('/api/transactions', (req, res) => {
 app.patch('/api/transactions', (req, res) => {
   try {
     const userId = getUserIdFromReq(req);
-    const { id, category, tags } = req.body;
+    const { id, merchant, amount, type, date, category, account, tags } = req.body;
     if (!id) {
       return res.status(400).json({ error: 'Transaction ID required' });
     }
-    const updated = dbEngine.updateTransaction(userId, id, { category, tags });
+    const updated = dbEngine.updateTransaction(userId, id, { merchant, amount, type, date, category, account, tags });
     if (!updated) {
       return res.status(404).json({ error: 'Transaction not found' });
     }

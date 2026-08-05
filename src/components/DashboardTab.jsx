@@ -338,10 +338,21 @@ export default function DashboardTab({
 
 // Helpers
 function filterByPeriod(txs = [], period) {
-  if (period === 'all-time' || !period) return txs;
+  const sortedInput = [...txs].sort((a, b) => {
+    const dateDiff = new Date(b.date || 0) - new Date(a.date || 0);
+    if (dateDiff !== 0) return dateDiff;
+
+    const createdA = new Date(a.createdAt || 0).getTime();
+    const createdB = new Date(b.createdAt || 0).getTime();
+    if (createdB !== createdA) return createdB - createdA;
+
+    return String(b.id).localeCompare(String(a.id));
+  });
+
+  if (period === 'all-time' || !period) return sortedInput;
   const now = new Date();
   
-  return txs.filter(t => {
+  return sortedInput.filter(t => {
     const txDate = new Date(t.date);
     if (isNaN(txDate.getTime())) return false;
 

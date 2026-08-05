@@ -111,6 +111,7 @@ export default function App() {
 
   // Modal Visibility States
   const [isAddEntryOpen, setIsAddEntryOpen] = useState(false);
+  const [editingTx, setEditingTx] = useState(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [tagModalTx, setTagModalTx] = useState(null);
   const [budgetModalTarget, setBudgetModalTarget] = useState(null);
@@ -212,14 +213,28 @@ export default function App() {
 
   // Transaction API Actions
   const handleSaveEntry = async (entryData) => {
-    const res = await fetch('/api/transactions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify(entryData)
-    });
-    if (!res.ok) {
-      const json = await res.json();
-      throw new Error(json.error || 'Failed to save transaction');
+    if (entryData.id) {
+      // Update existing transaction
+      const res = await fetch('/api/transactions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify(entryData)
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error || 'Failed to update transaction');
+      }
+    } else {
+      // Add new transaction
+      const res = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify(entryData)
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error || 'Failed to save transaction');
+      }
     }
     await fetchState();
   };
@@ -469,6 +484,7 @@ export default function App() {
           onLogout={handleLogout}
           onOpenAddEntry={() => {
             if (!user) { setAuthModalMode('login'); setIsAuthModalOpen(true); return; }
+            setEditingTx(null);
             setIsAddEntryOpen(true);
           }}
           onOpenImport={() => {
@@ -555,7 +571,8 @@ export default function App() {
                   onUpdateCategory={handleUpdateCategory}
                   onUpdateTags={handleUpdateTags}
                   onDeleteTransaction={handleDeleteTransaction}
-                  onOpenAddEntry={() => setIsAddEntryOpen(true)}
+                  onOpenAddEntry={() => { setEditingTx(null); setIsAddEntryOpen(true); }}
+                  onOpenEditEntry={tx => { setEditingTx(tx); setIsAddEntryOpen(true); }}
                   onOpenTagModal={tx => setTagModalTx(tx)}
                 />
               )}
@@ -733,8 +750,12 @@ export default function App() {
       {/* Action Modals */}
       <AddEntryModal
         isOpen={isAddEntryOpen}
-        onClose={() => setIsAddEntryOpen(false)}
+        onClose={() => {
+          setIsAddEntryOpen(false);
+          setEditingTx(null);
+        }}
         onSave={handleSaveEntry}
+        editTransaction={editingTx}
         categories={settings.categories || []}
         accounts={settings.accounts || []}
         tags={allTagNames}

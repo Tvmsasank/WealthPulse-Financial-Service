@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Plus, FileText, Trash2, Tag, ChevronDown } from 'lucide-react';
+import { Search, Filter, Plus, FileText, Trash2, Tag, ChevronDown, Edit3 } from 'lucide-react';
 import ConfirmDeleteTxModal from './ConfirmDeleteTxModal';
 
 export default function TransactionsTab({
@@ -13,6 +13,7 @@ export default function TransactionsTab({
   onUpdateTags,
   onDeleteTransaction,
   onOpenAddEntry,
+  onOpenEditEntry,
   onOpenTagModal
 }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -194,17 +195,29 @@ export default function TransactionsTab({
                         {tx.type === 'income' ? '+' : '-'}₹{Math.abs(tx.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </td>
 
-                      {/* Actions: Delete Trash Icon */}
+                      {/* Actions: Edit Pencil & Delete Trash Icons */}
                       <td style={{ textAlign: 'center' }}>
-                        <button
-                          type="button"
-                          className="btn btn-ghost btn-sm"
-                          style={{ padding: '6px', color: 'var(--danger)' }}
-                          title="Delete Transaction"
-                          onClick={() => setDeleteTargetTx(tx)}
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            style={{ padding: '6px', color: 'var(--primary)' }}
+                            title="Edit Full Entry"
+                            onClick={() => onOpenEditEntry && onOpenEditEntry(tx)}
+                          >
+                            <Edit3 size={16} />
+                          </button>
+
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            style={{ padding: '6px', color: 'var(--danger)' }}
+                            title="Delete Transaction"
+                            onClick={() => setDeleteTargetTx(tx)}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -219,7 +232,7 @@ export default function TransactionsTab({
               const txTags = parseTags(tx.tags);
               return (
                 <div key={tx.id} className="card" style={{ padding: '14px', marginBottom: '10px' }}>
-                  {/* Top Row: Merchant + Amount + Delete */}
+                  {/* Top Row: Merchant + Amount + Edit + Delete */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                     <div style={{ minWidth: 0, flex: 1, paddingRight: '8px' }}>
                       <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -231,11 +244,26 @@ export default function TransactionsTab({
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                       <div style={{ fontWeight: '800', fontSize: '16px', color: tx.type === 'income' ? 'var(--success)' : 'var(--text-main)' }}>
                         {tx.type === 'income' ? '+' : '-'}₹{Math.abs(tx.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </div>
-                      <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '4px' }} onClick={() => setDeleteTargetTx(tx)}>
+
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        style={{ color: 'var(--primary)', padding: '4px' }}
+                        title="Edit Entry"
+                        onClick={() => onOpenEditEntry && onOpenEditEntry(tx)}
+                      >
+                        <Edit3 size={16} />
+                      </button>
+
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        style={{ color: 'var(--danger)', padding: '4px' }}
+                        title="Delete Entry"
+                        onClick={() => setDeleteTargetTx(tx)}
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -321,7 +349,19 @@ function filterTransactions(transactions, period, searchQuery, account, category
   const now = new Date();
   const lowerSearch = searchQuery.toLowerCase().trim();
 
-  return transactions.filter(tx => {
+  // Deterministic 3-Tier Sort: Primary Date Desc, Secondary Created Timestamp Desc, Tertiary ID Desc
+  const sortedInput = [...transactions].sort((a, b) => {
+    const dateDiff = new Date(b.date || 0) - new Date(a.date || 0);
+    if (dateDiff !== 0) return dateDiff;
+
+    const createdA = new Date(a.createdAt || 0).getTime();
+    const createdB = new Date(b.createdAt || 0).getTime();
+    if (createdB !== createdA) return createdB - createdA;
+
+    return String(b.id).localeCompare(String(a.id));
+  });
+
+  return sortedInput.filter(tx => {
     const txDate = new Date(tx.date);
 
     // Period filter

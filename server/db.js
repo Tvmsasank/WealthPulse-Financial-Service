@@ -291,7 +291,16 @@ export const dbEngine = {
     const userTags = (db.tags || []).filter(t => t.userId === userId);
     const userDocs = (db.documents || []).filter(d => d.userId === userId);
 
-    const sortedTx = [...userTx].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).slice(0, 5000);
+    const sortedTx = [...userTx].sort((a, b) => {
+      const dateDiff = new Date(b.date || 0) - new Date(a.date || 0);
+      if (dateDiff !== 0) return dateDiff;
+
+      const createdA = new Date(a.createdAt || 0).getTime();
+      const createdB = new Date(b.createdAt || 0).getTime();
+      if (createdB !== createdA) return createdB - createdA;
+
+      return String(b.id).localeCompare(String(a.id));
+    }).slice(0, 5000);
     const sortedDocs = [...userDocs].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 100);
 
     const settings = db.userSettings[userId] || getInitialUserSettings();
