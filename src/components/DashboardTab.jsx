@@ -14,9 +14,10 @@ export default function DashboardTab({
 }) {
   const { assets = 0, liabilities = 0, netWorthConfigured = false, recurring = [], subscriptions = [] } = settings;
 
-  // Live Investments Total Valuation
-  const totalInvestmentsValuation = investments.reduce((sum, i) => sum + (Number(i.currentValuation) || 0), 0);
-  const totalInvestmentsCost = investments.reduce((sum, i) => sum + ((Number(i.buyPrice) || 0) * (Number(i.quantity) || 1)), 0);
+  // Live Investments Total Valuation (Safe array check)
+  const safeInvestments = Array.isArray(investments) ? investments : [];
+  const totalInvestmentsValuation = safeInvestments.reduce((sum, i) => sum + (Number(i.currentValuation) || 0), 0);
+  const totalInvestmentsCost = safeInvestments.reduce((sum, i) => sum + ((Number(i.buyPrice) || 0) * (Number(i.quantity) || 1)), 0);
   const totalInvestmentsPnL = totalInvestmentsValuation - totalInvestmentsCost;
 
   // Filter transactions by selectedPeriod

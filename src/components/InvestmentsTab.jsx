@@ -12,15 +12,16 @@ export default function InvestmentsTab({
 }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // Compute portfolio statistics
-  const totalValuation = investments.reduce((sum, i) => sum + (Number(i.currentValuation) || 0), 0);
-  const totalCost = investments.reduce((sum, i) => sum + ((Number(i.buyPrice) || 0) * (Number(i.quantity) || 1)), 0);
+  // Compute portfolio statistics (Safe array check)
+  const safeInvestments = Array.isArray(investments) ? investments : [];
+  const totalValuation = safeInvestments.reduce((sum, i) => sum + (Number(i.currentValuation) || 0), 0);
+  const totalCost = safeInvestments.reduce((sum, i) => sum + ((Number(i.buyPrice) || 0) * (Number(i.quantity) || 1)), 0);
   const totalPnL = totalValuation - totalCost;
   const totalPnLPercentage = totalCost > 0 ? (totalPnL / totalCost) * 100 : 0;
 
   // Breakdown by Asset Type for Pie Chart
   const typeMap = {};
-  for (const i of investments) {
+  for (const i of safeInvestments) {
     const t = i.type || 'other';
     const label = t === 'stock' ? 'Equity Stocks' : t === 'mutual_fund' ? 'Mutual Funds' : t === 'gold' ? 'Gold' : t === 'fd' ? 'Fixed Deposits' : 'Other Assets';
     typeMap[label] = (typeMap[label] || 0) + (Number(i.currentValuation) || 0);
