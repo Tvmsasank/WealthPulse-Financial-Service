@@ -526,7 +526,10 @@ export default function App() {
   };
 
   const activeNav = NAV_ITEMS.find(n => n.id === activeTab) || NAV_ITEMS[0];
-  const allTagNames = Array.from(new Set([...tags.map(t => t.name), ...(settings.tags || [])]));
+  const safeTags = Array.isArray(tags) ? tags : [];
+  const safeSettingsTags = Array.isArray(settings?.tags) ? settings.tags : [];
+  const tagList = safeTags.map(t => typeof t === 'object' && t ? (t.name || '') : String(t)).filter(Boolean);
+  const allTagNames = Array.from(new Set([...tagList, ...safeSettingsTags]));
 
   return (
     <div className="app-container">
