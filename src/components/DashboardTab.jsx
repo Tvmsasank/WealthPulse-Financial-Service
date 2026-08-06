@@ -1,5 +1,20 @@
 import React from 'react';
-import { Wallet, TrendingUp, TrendingDown, PiggyBank, ArrowUpRight, ArrowDownRight, AlertCircle, Calendar, Plus, Upload } from 'lucide-react';
+import {
+  Wallet,
+  TrendingUp,
+  TrendingDown,
+  PiggyBank,
+  ArrowUpRight,
+  ArrowDownRight,
+  AlertCircle,
+  Calendar,
+  Plus,
+  Upload,
+  Building2,
+  Briefcase,
+  Activity,
+  ChevronRight
+} from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from 'recharts';
 
 export default function DashboardTab({
@@ -19,6 +34,7 @@ export default function DashboardTab({
   const totalInvestmentsValuation = safeInvestments.reduce((sum, i) => sum + (Number(i.currentValuation) || 0), 0);
   const totalInvestmentsCost = safeInvestments.reduce((sum, i) => sum + ((Number(i.buyPrice) || 0) * (Number(i.quantity) || 1)), 0);
   const totalInvestmentsPnL = totalInvestmentsValuation - totalInvestmentsCost;
+  const totalInvestmentsPnLPct = totalInvestmentsCost > 0 ? (totalInvestmentsPnL / totalInvestmentsCost) * 100 : 0;
 
   // Filter transactions by selectedPeriod
   const filteredTransactions = filterByPeriod(transactions, selectedPeriod);
@@ -47,8 +63,8 @@ export default function DashboardTab({
   // Needs review count
   const needsReviewCount = transactions.filter(t => t.category === 'Needs review').length;
 
-  // Recent activity (5 newest)
-  const recentTx = [...filteredTransactions].slice(0, 5);
+  // Recent activity (Up to 10 items)
+  const recentTx = [...filteredTransactions].slice(0, 10);
 
   // Coming up recurring/subscriptions
   const comingUp = [...recurring, ...subscriptions].slice(0, 3);
@@ -58,8 +74,8 @@ export default function DashboardTab({
       {/* Date Period Selector */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '700' }}>Financial Overview</h2>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Track real cash flow, budgets, and net worth</p>
+          <h2 style={{ fontSize: '20px', fontWeight: '700' }}>Financial Overview & Ledger</h2>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Complete view of transactions, live investments, and net worth</p>
         </div>
 
         <div className="period-selector">
@@ -133,7 +149,7 @@ export default function DashboardTab({
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
             <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Spending</span>
-            <div style={{ padding: '8px', background: 'var(--warning-light)', color: 'var(--warning)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ padding: '8px', background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444', borderRadius: 'var(--radius-md)' }}>
               <TrendingDown size={18} />
             </div>
           </div>
@@ -162,20 +178,92 @@ export default function DashboardTab({
         </div>
       </div>
 
-      {/* Charts Section */}
+      {/* Real-Time Investment Portfolio Live Widget on Dashboard */}
+      {safeInvestments.length > 0 && (
+        <div className="card" style={{ marginBottom: '28px', padding: '20px', background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)', border: '1px solid var(--primary-light)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: 'white' }}>
+                <TrendingUp style={{ color: '#10B981' }} size={20} /> Live Stock & Investment Portfolio
+              </h3>
+              <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Activity size={13} className="spin" style={{ color: '#10B981' }} /> Real-time market prices auto-updating continuously
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: '#94A3B8' }}>Portfolio Value</div>
+                <div style={{ fontSize: '20px', fontWeight: '800', color: '#F8FAFC' }}>
+                  ₹{totalInvestmentsValuation.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontSize: '13px',
+                  fontWeight: '800',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: totalInvestmentsPnL >= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                  color: totalInvestmentsPnL >= 0 ? '#34D399' : '#FCA5A5',
+                  border: `1px solid ${totalInvestmentsPnL >= 0 ? '#10B981' : '#EF4444'}`
+                }}
+              >
+                {totalInvestmentsPnL >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                {totalInvestmentsPnL >= 0 ? '+' : ''}₹{Math.abs(totalInvestmentsPnL).toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({totalInvestmentsPnLPct >= 0 ? '+' : ''}{totalInvestmentsPnLPct.toFixed(2)}%)
+              </div>
+
+              <button className="btn btn-primary btn-sm" onClick={() => onNavigateTab('investments')} style={{ fontSize: '12px', padding: '6px 12px' }}>
+                Open Portfolio <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Holding Cards Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', marginTop: '12px' }}>
+            {safeInvestments.slice(0, 4).map(item => {
+              const buyPrice = Number(item.buyPrice || 0);
+              const currentPrice = Number(item.currentPrice || buyPrice);
+              const valuation = Number(item.currentValuation || (currentPrice * (item.quantity || 1)));
+              const pnl = Number(item.unrealizedPnL || (valuation - (buyPrice * (item.quantity || 1))));
+              const pnlPct = Number(item.pnlPercentage || (buyPrice > 0 ? (pnl / (buyPrice * item.quantity)) * 100 : 0));
+
+              return (
+                <div key={item.id} style={{ padding: '12px', borderRadius: '8px', background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                  <div style={{ fontWeight: '700', fontSize: '13px', color: '#F8FAFC', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {item.name}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', fontSize: '12px' }}>
+                    <span style={{ color: '#94A3B8' }}>Live: <strong style={{ color: 'white' }}>₹{currentPrice.toLocaleString('en-IN')}</strong></span>
+                    <span style={{ fontWeight: '700', color: pnl >= 0 ? '#34D399' : '#FCA5A5' }}>
+                      {pnl >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Cash Flow Line Chart & Category Pie Chart */}
       <div className="grid-2" style={{ marginBottom: '28px' }}>
-        {/* Cash Flow Line Chart */}
+        {/* Cash Flow Trend Line Chart */}
         <div className="card">
           <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>Cash Flow Trend</h3>
           {cashFlowData.length > 0 ? (
             <div style={{ width: '100%', height: '240px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={cashFlowData}>
-                  <XAxis dataKey="month" stroke="#94A3B8" fontSize={12} />
-                  <YAxis stroke="#94A3B8" fontSize={12} />
-                  <Tooltip formatter={(val) => `₹${Number(val).toFixed(2)}`} />
-                  <Line type="monotone" dataKey="Income" stroke="#10B981" strokeWidth={2.5} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="Expenses" stroke="#F97316" strokeWidth={2.5} dot={{ r: 4 }} />
+                  <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} />
+                  <YAxis stroke="var(--text-muted)" fontSize={12} />
+                  <Tooltip formatter={(value) => `₹${Number(value).toFixed(2)}`} />
+                  <Line type="monotone" dataKey="income" stroke="#10B981" strokeWidth={2} name="Income" />
+                  <Line type="monotone" dataKey="spending" stroke="#F97316" strokeWidth={2} name="Spending" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -227,10 +315,10 @@ export default function DashboardTab({
 
       {/* Bottom Grid: Recent Activity & Ledgerly Insight */}
       <div className="grid-2">
-        {/* Recent Activity */}
+        {/* Recent Activity (All Ledger Transactions Displayed) */}
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '600' }}>Recent Activity</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: '600' }}>Recent Ledger Transactions</h3>
             <button className="btn btn-ghost btn-sm" onClick={() => onNavigateTab('transactions')}>
               View all ({filteredTransactions.length}) →
             </button>
@@ -320,21 +408,24 @@ export default function DashboardTab({
                 Manage →
               </button>
             </div>
+
             {comingUp.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {comingUp.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)' }}>
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--bg-app)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: '600' }}>{item.merchant || item.serviceName}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Due: {item.nextDate || item.nextRenewalDate || 'Soon'}</div>
+                      <div style={{ fontWeight: '600', fontSize: '13px' }}>{item.merchant || item.name}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.frequency || 'Monthly'}</div>
                     </div>
-                    <div style={{ fontSize: '14px', fontWeight: '600' }}>₹{Number(item.amount || item.averageAmount || 0).toFixed(2)}</div>
+                    <div style={{ fontWeight: '600', fontSize: '13px' }}>
+                      ₹{Math.abs(item.amount).toFixed(2)}
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
               <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                No upcoming confirmed recurring bills. Add or confirm items in <button className="btn btn-ghost btn-sm" style={{ padding: '0 4px', color: 'var(--primary)' }} onClick={() => onNavigateTab('recurring')}>Recurring</button>.
+                No upcoming confirmed recurring bills. Add or confirm items in <strong>Recurring</strong>.
               </div>
             )}
           </div>
@@ -345,67 +436,52 @@ export default function DashboardTab({
 }
 
 // Helpers
-function filterByPeriod(txs = [], period) {
-  const sortedInput = [...txs].sort((a, b) => {
-    const dateDiff = new Date(b.date || 0) - new Date(a.date || 0);
-    if (dateDiff !== 0) return dateDiff;
-
-    const createdA = new Date(a.createdAt || 0).getTime();
-    const createdB = new Date(b.createdAt || 0).getTime();
-    if (createdB !== createdA) return createdB - createdA;
-
-    return String(b.id).localeCompare(String(a.id));
-  });
-
-  if (period === 'all-time' || !period) return sortedInput;
+function filterByPeriod(txs, period) {
+  if (period === 'all-time') return txs;
   const now = new Date();
-  
-  return sortedInput.filter(t => {
-    const txDate = new Date(t.date);
-    if (isNaN(txDate.getTime())) return false;
+  const year = now.getFullYear();
+  const month = now.getMonth();
 
-    if (period === 'this-month') {
-      return txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
-    }
-    if (period === 'last-month') {
-      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      return txDate.getMonth() === lastMonth.getMonth() && txDate.getFullYear() === lastMonth.getFullYear();
-    }
+  return txs.filter(t => {
+    const d = new Date(t.date);
+    if (period === 'this-month') return d.getFullYear() === year && d.getMonth() === month;
+    if (period === 'last-month') return d.getFullYear() === year && d.getMonth() === month - 1;
     if (period === 'last-3-months') {
-      const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-      return txDate >= threeMonthsAgo;
+      const threeMonthsAgo = new Date(year, month - 3, 1);
+      return d >= threeMonthsAgo;
     }
     if (period === 'last-6-months') {
-      const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
-      return txDate >= sixMonthsAgo;
+      const sixMonthsAgo = new Date(year, month - 6, 1);
+      return d >= sixMonthsAgo;
     }
-    if (period === 'this-year') {
-      return txDate.getFullYear() === now.getFullYear();
-    }
+    if (period === 'this-year') return d.getFullYear() === year;
     return true;
   });
 }
 
-function getCashFlowChartData(txs = []) {
-  if (txs.length === 0) return [];
+function getCashFlowChartData(txs) {
   const map = {};
   for (const t of txs) {
-    const month = (t.date || '').substring(0, 7);
-    if (!month) continue;
-    if (!map[month]) map[month] = { month, Income: 0, Expenses: 0 };
-    if (t.type === 'income') map[month].Income += Math.abs(t.amount);
-    else map[month].Expenses += Math.abs(t.amount);
+    const key = t.date ? t.date.substring(0, 7) : 'Unknown';
+    if (!map[key]) map[key] = { month: key, income: 0, spending: 0 };
+    if (t.type === 'income') map[key].income += Math.abs(t.amount);
+    else if (t.type === 'expense') map[key].spending += Math.abs(t.amount);
   }
-  return Object.values(map).sort((a, b) => a.month.localeCompare(b.month)).slice(-7);
+  const keys = Object.keys(map).sort();
+  return keys.slice(-7).map(k => ({
+    month: k,
+    income: Math.round(map[k].income),
+    spending: Math.round(map[k].spending)
+  }));
 }
 
-function getSpendingByCategoryData(txs = []) {
-  const expenses = txs.filter(t => t.type === 'expense');
-  if (expenses.length === 0) return [];
+function getSpendingByCategoryData(txs) {
   const map = {};
-  for (const t of expenses) {
-    const cat = t.category || 'Other';
-    map[cat] = (map[cat] || 0) + Math.abs(t.amount);
+  for (const t of txs) {
+    if (t.type === 'expense') {
+      const cat = t.category || 'Other';
+      map[cat] = (map[cat] || 0) + Math.abs(t.amount);
+    }
   }
-  return Object.keys(map).map(cat => ({ name: cat, value: parseFloat(map[cat].toFixed(2)) }));
+  return Object.keys(map).map(k => ({ name: k, value: Math.round(map[k]) }));
 }
