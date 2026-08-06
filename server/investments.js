@@ -6,13 +6,60 @@
 const priceCache = new Map();
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
+// Popular Indian stock mapper (Company Name -> NSE Ticker)
+const INDIAN_STOCK_MAP = {
+  'CANARA BANK': 'CANBK.NS',
+  'CANARA': 'CANBK.NS',
+  'CANBK': 'CANBK.NS',
+  'RELIANCE': 'RELIANCE.NS',
+  'RELIANCE INDUSTRIES': 'RELIANCE.NS',
+  'TATA MOTORS': 'TATAMOTORS.NS',
+  'TATAMOTORS': 'TATAMOTORS.NS',
+  'INFOSYS': 'INFY.NS',
+  'INFY': 'INFY.NS',
+  'TCS': 'TCS.NS',
+  'TATA CONSULTANCY SERVICES': 'TCS.NS',
+  'HDFC BANK': 'HDFCBANK.NS',
+  'HDFCBANK': 'HDFCBANK.NS',
+  'ICICI BANK': 'ICICIBANK.NS',
+  'ICICIBANK': 'ICICIBANK.NS',
+  'TATA STEEL': 'TATASTEEL.NS',
+  'TATASTEEL': 'TATASTEEL.NS',
+  'SBI': 'SBIN.NS',
+  'STATE BANK OF INDIA': 'SBIN.NS',
+  'SBIN': 'SBIN.NS',
+  'ITC': 'ITC.NS',
+  'BAJAJ HOUSING': 'BAJAJHFL.NS',
+  'BAJAJHFL': 'BAJAJHFL.NS',
+  'ZOMATO': 'ZOMATO.NS',
+  'PAYTM': 'PAYTM.NS',
+  'JIO FINANCIAL': 'JIOFIN.NS',
+  'JIOFIN': 'JIOFIN.NS',
+  'WIPRO': 'WIPRO.NS',
+  'BHARTI AIRTEL': 'BHARTIARTL.NS',
+  'AIRTEL': 'BHARTIARTL.NS',
+  'L&T': 'LT.NS',
+  'LARSEN': 'LT.NS',
+  'AXIS BANK': 'AXISBANK.NS',
+  'KOTAK BANK': 'KOTAKBANK.NS'
+};
+
 /**
- * Fetch live stock price using Yahoo Finance API (supports NSE/BSE e.g. RELIANCE.NS, TATAMOTORS.NS)
+ * Fetch live stock price using Yahoo Finance API (supports NSE/BSE e.g. CANBK.NS, RELIANCE.NS, TATAMOTORS.NS)
  */
-export async function fetchStockPrice(symbol) {
-  if (!symbol) return null;
-  const cleanSymbol = symbol.trim().toUpperCase();
-  const formattedSymbol = cleanSymbol.includes('.') ? cleanSymbol : `${cleanSymbol}.NS`;
+export async function fetchStockPrice(symbolOrName) {
+  if (!symbolOrName) return null;
+  const rawInput = symbolOrName.trim().toUpperCase();
+
+  // 1. Check Indian stock map dictionary
+  let formattedSymbol = INDIAN_STOCK_MAP[rawInput];
+
+  if (!formattedSymbol) {
+    // 2. Clean input (remove spaces / special characters)
+    const cleanSymbol = rawInput.replace(/[^A-Z0-9\.]/g, '');
+    if (!cleanSymbol) return null;
+    formattedSymbol = cleanSymbol.includes('.') ? cleanSymbol : `${cleanSymbol}.NS`;
+  }
 
   const cacheKey = `stock_${formattedSymbol}`;
   const cached = priceCache.get(cacheKey);
@@ -29,8 +76,9 @@ export async function fetchStockPrice(symbol) {
     if (res.ok) {
       const data = await res.json();
       const meta = data?.chart?.result?.[0]?.meta;
+      // regularMarketPrice or chartPreviousClose (Last Traded Price when market is closed)
       const regularMarketPrice = meta?.regularMarketPrice || meta?.chartPreviousClose;
-      if (regularMarketPrice && typeof regularMarketPrice === 'number') {
+      if (regularMarketPrice && typeof regularMarketPrice === 'number' && regularMarketPrice > 0) {
         priceCache.set(cacheKey, { price: regularMarketPrice, timestamp: Date.now() });
         return regularMarketPrice;
       }
@@ -186,7 +234,7 @@ export async function refreshHoldingsPrices(holdings = []) {
 
       updatedHoldings.push({
         ...h,
-        symbol: (typeof liveData === 'object' && liveData?.schemeCode) ? liveData.schemeCode : (h.symbol || ''),
+        symbol: h.type === 'stock' ? (INDIAN_STOCK_MAP[h.name.toUpperCase()] || h.symbol || '') : ((typeof liveData === 'object' && liveData?.schemeCode) ? liveData.schemeCode : (h.symbol || '')),
         currentPrice: livePrice,
         currentValuation,
         unrealizedPnL,

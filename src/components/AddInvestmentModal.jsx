@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { X, TrendingUp, Search, Plus, Check } from 'lucide-react';
 
 const POPULAR_SUGGESTIONS = [
+  { name: 'Canara Bank', symbol: 'CANBK.NS', type: 'stock', defaultPrice: 131.70 },
   { name: 'Reliance Industries Ltd', symbol: 'RELIANCE.NS', type: 'stock', defaultPrice: 2950 },
   { name: 'Tata Motors Ltd', symbol: 'TATAMOTORS.NS', type: 'stock', defaultPrice: 1020 },
   { name: 'Infosys Ltd', symbol: 'INFY.NS', type: 'stock', defaultPrice: 1820 },
   { name: 'HDFC Bank Ltd', symbol: 'HDFCBANK.NS', type: 'stock', defaultPrice: 1650 },
   { name: 'TCS - Tata Consultancy Services', symbol: 'TCS.NS', type: 'stock', defaultPrice: 4200 },
-  { name: 'Parag Parikh Flexi Cap Direct Fund', symbol: 'Parag Parikh Flexi Cap', type: 'mutual_fund', defaultPrice: 78.50 },
-  { name: 'UTI Nifty 50 Index Direct Fund', symbol: 'UTI Nifty 50 Index', type: 'mutual_fund', defaultPrice: 165.20 },
-  { name: 'SBI Small Cap Direct Fund', symbol: 'SBI Small Cap', type: 'mutual_fund', defaultPrice: 152.40 },
+  { name: 'Parag Parikh Flexi Cap Direct Fund', symbol: '122639', type: 'mutual_fund', defaultPrice: 92.83 },
+  { name: 'Nippon India Multi Asset Direct Fund', symbol: '148457', type: 'mutual_fund', defaultPrice: 27.22 },
   { name: 'Sovereign Gold Bond (SGB)', symbol: 'SGB', type: 'gold', defaultPrice: 7250 },
   { name: 'Bank Fixed Deposit (FD)', symbol: 'FD', type: 'fd', defaultPrice: 100000 }
 ];

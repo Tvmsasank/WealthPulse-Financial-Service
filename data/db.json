@@ -309,7 +309,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:08:46.650Z",
       "updatedAt": "2026-08-06T09:11:11.764Z",
-      "lastPriceSyncAt": "2026-08-06T10:03:55.905Z"
+      "lastPriceSyncAt": "2026-08-06T10:26:28.899Z"
     },
     {
       "id": "inv_1786007547082_bsd4ii",
@@ -326,13 +326,13 @@
       "notes": "",
       "createdAt": "2026-08-06T09:12:27.082Z",
       "updatedAt": "2026-08-06T09:13:21.916Z",
-      "lastPriceSyncAt": "2026-08-06T10:03:55.905Z"
+      "lastPriceSyncAt": "2026-08-06T10:26:28.899Z"
     },
     {
       "id": "inv_1786009340816_80lfez",
       "userId": "usr_1785755811844_crbzz5",
       "name": "BAJAJHFL",
-      "symbol": "",
+      "symbol": "BAJAJHFL.NS",
       "type": "stock",
       "quantity": 14,
       "buyPrice": 107.19,
@@ -343,7 +343,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:42:20.816Z",
       "updatedAt": "2026-08-06T09:42:20.816Z",
-      "lastPriceSyncAt": "2026-08-06T10:03:55.905Z"
+      "lastPriceSyncAt": "2026-08-06T10:26:28.899Z"
     },
     {
       "id": "inv_1786009517335_67nt18",
@@ -376,13 +376,13 @@
       "notes": "",
       "createdAt": "2026-08-06T09:46:12.245Z",
       "updatedAt": "2026-08-06T09:46:12.245Z",
-      "lastPriceSyncAt": "2026-08-06T10:03:55.997Z"
+      "lastPriceSyncAt": "2026-08-06T10:26:29.027Z"
     },
     {
       "id": "inv_1786009695487_vjrjl6",
       "userId": "usr_1785755811844_crbzz5",
       "name": "INFY",
-      "symbol": "",
+      "symbol": "INFY.NS",
       "type": "stock",
       "quantity": 1,
       "buyPrice": 1208.7,
@@ -393,7 +393,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:48:15.487Z",
       "updatedAt": "2026-08-06T09:48:15.487Z",
-      "lastPriceSyncAt": "2026-08-06T10:03:55.997Z"
+      "lastPriceSyncAt": "2026-08-06T10:26:29.027Z"
     },
     {
       "id": "inv_1786009740060_g54xv8",
@@ -410,13 +410,13 @@
       "notes": "",
       "createdAt": "2026-08-06T09:49:00.061Z",
       "updatedAt": "2026-08-06T09:49:00.061Z",
-      "lastPriceSyncAt": "2026-08-06T10:03:55.997Z"
+      "lastPriceSyncAt": "2026-08-06T10:26:29.027Z"
     },
     {
       "id": "inv_1786009761172_85yn0v",
       "userId": "usr_1785755811844_crbzz5",
       "name": "JIOFIN",
-      "symbol": "",
+      "symbol": "JIOFIN.NS",
       "type": "stock",
       "quantity": 5,
       "buyPrice": 310.45,
@@ -427,7 +427,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:49:21.172Z",
       "updatedAt": "2026-08-06T09:49:21.172Z",
-      "lastPriceSyncAt": "2026-08-06T10:03:55.997Z"
+      "lastPriceSyncAt": "2026-08-06T10:26:29.027Z"
     },
     {
       "id": "inv_1786009786157_eu1unx",
@@ -444,7 +444,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:49:46.157Z",
       "updatedAt": "2026-08-06T09:49:46.157Z",
-      "lastPriceSyncAt": "2026-08-06T10:03:55.997Z"
+      "lastPriceSyncAt": "2026-08-06T10:26:29.027Z"
     },
     {
       "id": "inv_1786009807825_pil7i9",
@@ -461,7 +461,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:50:07.825Z",
       "updatedAt": "2026-08-06T09:50:07.825Z",
-      "lastPriceSyncAt": "2026-08-06T10:03:55.997Z"
+      "lastPriceSyncAt": "2026-08-06T10:26:29.027Z"
     },
     {
       "id": "inv_1786009827253_deqeiz",
@@ -478,7 +478,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:50:27.253Z",
       "updatedAt": "2026-08-06T09:50:27.253Z",
-      "lastPriceSyncAt": "2026-08-06T10:03:55.997Z"
+      "lastPriceSyncAt": "2026-08-06T10:26:29.027Z"
     },
     {
       "id": "inv_1786009841805_rt6mp3",
@@ -495,13 +495,13 @@
       "notes": "",
       "createdAt": "2026-08-06T09:50:41.805Z",
       "updatedAt": "2026-08-06T09:50:41.805Z",
-      "lastPriceSyncAt": "2026-08-06T10:03:55.997Z"
+      "lastPriceSyncAt": "2026-08-06T10:26:29.027Z"
     },
     {
       "id": "inv_1786009851200_0fwodf",
       "userId": "usr_1785755811844_crbzz5",
       "name": "WIPRO",
-      "symbol": "",
+      "symbol": "WIPRO.NS",
       "type": "stock",
       "quantity": 16,
       "buyPrice": 235,
@@ -512,7 +512,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:50:51.200Z",
       "updatedAt": "2026-08-06T09:50:51.200Z",
-      "lastPriceSyncAt": "2026-08-06T10:03:55.997Z"
+      "lastPriceSyncAt": "2026-08-06T10:26:29.027Z"
     }
   ]
 }
