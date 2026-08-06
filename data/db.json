@@ -13,6 +13,21 @@
   ],
   "transactions": [
     {
+      "id": "tx_1785818900000_isroexam",
+      "userId": "usr_1785755811844_crbzz5",
+      "date": "2026-08-05",
+      "merchant": "ISRO Exam",
+      "category": "Exams",
+      "amount": 500,
+      "type": "expense",
+      "account": "Main Checking",
+      "tags": "[\"Personal\"]",
+      "receipt": 0,
+      "source": "manual",
+      "fingerprint": "2026-08-05|isro exam|500.00|main checking",
+      "createdAt": "2026-08-05T04:45:00.000Z"
+    },
+    {
       "id": "tx_1785818160348_2fkoulo4i",
       "userId": "usr_1785755811844_crbzz5",
       "date": "2026-08-04",
@@ -277,5 +292,6 @@
         "home"
       ]
     }
-  }
+  },
+  "investments": []
 }
