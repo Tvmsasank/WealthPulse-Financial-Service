@@ -309,7 +309,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:08:46.650Z",
       "updatedAt": "2026-08-06T09:11:11.764Z",
-      "lastPriceSyncAt": "2026-08-06T09:25:53.788Z"
+      "lastPriceSyncAt": "2026-08-06T09:46:57.845Z"
     },
     {
       "id": "inv_1786007547082_bsd4ii",
@@ -326,7 +326,57 @@
       "notes": "",
       "createdAt": "2026-08-06T09:12:27.082Z",
       "updatedAt": "2026-08-06T09:13:21.916Z",
-      "lastPriceSyncAt": "2026-08-06T09:25:53.841Z"
+      "lastPriceSyncAt": "2026-08-06T09:46:57.904Z"
+    },
+    {
+      "id": "inv_1786009340816_80lfez",
+      "userId": "usr_1785755811844_crbzz5",
+      "name": "BAJAJHFL",
+      "symbol": "",
+      "type": "stock",
+      "quantity": 14,
+      "buyPrice": 107.19,
+      "currentPrice": 86.55,
+      "currentValuation": 1211.7,
+      "unrealizedPnL": -288.96,
+      "pnlPercentage": -19.26,
+      "notes": "",
+      "createdAt": "2026-08-06T09:42:20.816Z",
+      "updatedAt": "2026-08-06T09:42:20.816Z",
+      "lastPriceSyncAt": "2026-08-06T09:46:58.187Z"
+    },
+    {
+      "id": "inv_1786009517335_67nt18",
+      "userId": "usr_1785755811844_crbzz5",
+      "name": "DEBIL",
+      "symbol": "",
+      "type": "stock",
+      "quantity": 10,
+      "buyPrice": 9.42,
+      "currentPrice": 9.42,
+      "currentValuation": 94.2,
+      "unrealizedPnL": 0,
+      "pnlPercentage": 0,
+      "notes": "",
+      "createdAt": "2026-08-06T09:45:17.335Z",
+      "updatedAt": "2026-08-06T09:45:30.445Z"
+    },
+    {
+      "id": "inv_1786009572245_nknwut",
+      "userId": "usr_1785755811844_crbzz5",
+      "name": "GLAND",
+      "symbol": "",
+      "type": "stock",
+      "quantity": 5,
+      "buyPrice": 919,
+      "currentPrice": 2618,
+      "currentValuation": 13090,
+      "unrealizedPnL": 8495,
+      "pnlPercentage": 184.87,
+      "notes": "",
+      "createdAt": "2026-08-06T09:46:12.245Z",
+      "updatedAt": "2026-08-06T09:46:12.245Z",
+      "lastPriceSyncAt": "2026-08-06T09:46:58.432Z"
     }
   ]
 }
