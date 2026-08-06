@@ -115,6 +115,9 @@ export default function App() {
   // Modal Visibility States
   const [isAddEntryOpen, setIsAddEntryOpen] = useState(false);
   const [editingTx, setEditingTx] = useState(null);
+  const [isAddInvestmentOpen, setIsAddInvestmentOpen] = useState(false);
+  const [editingInvestment, setEditingInvestment] = useState(null);
+  const [isSyncingPrices, setIsSyncingPrices] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [tagModalTx, setTagModalTx] = useState(null);
   const [budgetModalTarget, setBudgetModalTarget] = useState(null);
