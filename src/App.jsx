@@ -328,7 +328,7 @@ export default function App() {
     if (!user) return;
     const interval = setInterval(() => {
       handleRefreshPrices();
-    }, 15000);
+    }, 3000);
     return () => clearInterval(interval);
   }, [user]);
 

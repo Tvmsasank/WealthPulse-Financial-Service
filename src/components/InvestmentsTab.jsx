@@ -304,7 +304,7 @@ export default function InvestmentsTab({
           </h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10B981', background: 'rgba(16, 185, 129, 0.12)', padding: '3px 8px', borderRadius: '12px', fontWeight: '700' }}>
-              <Activity size={14} className="spin" /> Live Ticker Active (Auto 15s Sync)
+              <Activity size={14} className="spin" /> Live Ticker Active (3s Fast Market Feed)
             </span>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
               AMFI & Yahoo Finance Live APIs
