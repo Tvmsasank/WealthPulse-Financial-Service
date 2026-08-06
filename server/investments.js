@@ -43,38 +43,57 @@ export async function fetchStockPrice(symbol) {
 }
 
 /**
+ * Clean complex fund names for accurate API search
+ */
+function cleanMFSearchQuery(rawText) {
+  if (!rawText) return '';
+  const trimmed = rawText.trim();
+  if (/^\d+$/.test(trimmed)) return trimmed;
+
+  return trimmed
+    .replace(/\(.*?\)/g, '')
+    .replace(/\[.*?\]/g, '')
+    .replace(/\|/g, '')
+    .replace(/inida/gi, 'India')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * Fetch live Mutual Fund NAV from mfapi.in (100% accurate Indian MF API down to 4 decimal places)
  */
 export async function fetchMutualFundNav(schemeNameOrCode) {
   if (!schemeNameOrCode) return null;
-  const query = schemeNameOrCode.trim();
-  const cacheKey = `mf_${query.toLowerCase()}`;
+  const rawQuery = schemeNameOrCode.trim();
+  const cacheKey = `mf_${rawQuery.toLowerCase()}`;
 
   const cached = priceCache.get(cacheKey);
   if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
-    return cached.price;
+    return cached;
   }
 
   // 1. If numeric scheme code (e.g., 122639 for Parag Parikh, 148457 for Nippon India)
-  if (/^\d+$/.test(query)) {
+  if (/^\d+$/.test(rawQuery)) {
     try {
-      const res = await fetch(`https://api.mfapi.in/mf/${query}`);
+      const res = await fetch(`https://api.mfapi.in/mf/${rawQuery}`);
       if (res.ok) {
         const data = await res.json();
         const latestNav = parseFloat(data?.data?.[0]?.nav);
         if (!isNaN(latestNav) && latestNav > 0) {
-          priceCache.set(cacheKey, { price: latestNav, timestamp: Date.now() });
-          return latestNav;
+          const result = { price: latestNav, schemeCode: rawQuery, schemeName: data?.meta?.scheme_name };
+          priceCache.set(cacheKey, { ...result, timestamp: Date.now() });
+          return result;
         }
       }
     } catch (err) {
-      console.error(`mfapi code lookup error for ${query}:`, err.message);
+      console.error(`mfapi code lookup error for ${rawQuery}:`, err.message);
     }
   }
 
-  // 2. Search by Fund Name on mfapi.in
+  // 2. Search by Cleaned Fund Name on mfapi.in
+  const searchQuery = cleanMFSearchQuery(rawQuery);
   try {
-    const searchRes = await fetch(`https://api.mfapi.in/mf/search?q=${encodeURIComponent(query)}`);
+    const searchRes = await fetch(`https://api.mfapi.in/mf/search?q=${encodeURIComponent(searchQuery)}`);
     if (searchRes.ok) {
       const results = await searchRes.json();
       if (Array.isArray(results) && results.length > 0) {
@@ -95,15 +114,16 @@ export async function fetchMutualFundNav(schemeNameOrCode) {
             const detailData = await detailRes.json();
             const latestNav = parseFloat(detailData?.data?.[0]?.nav);
             if (!isNaN(latestNav) && latestNav > 0) {
-              priceCache.set(cacheKey, { price: latestNav, timestamp: Date.now() });
-              return latestNav;
+              const result = { price: latestNav, schemeCode: String(bestMatch.schemeCode), schemeName: bestMatch.schemeName };
+              priceCache.set(cacheKey, { ...result, timestamp: Date.now() });
+              return result;
             }
           }
         }
       }
     }
   } catch (err) {
-    console.error(`mfapi search error for ${query}:`, err.message);
+    console.error(`mfapi search error for ${searchQuery}:`, err.message);
   }
 
   // 3. Fallback to AMFI NAVAll.txt
@@ -123,18 +143,19 @@ export async function fetchMutualFundNav(schemeNameOrCode) {
           const name = parts[3]?.trim();
           const navStr = parts[4]?.trim();
 
-          if (code === query || (name && name.toLowerCase().includes(query.toLowerCase()))) {
+          if (code === searchQuery || (name && name.toLowerCase().includes(searchQuery.toLowerCase()))) {
             const nav = parseFloat(navStr);
             if (!isNaN(nav) && nav > 0) {
-              priceCache.set(cacheKey, { price: nav, timestamp: Date.now() });
-              return nav;
+              const result = { price: nav, schemeCode: code, schemeName: name };
+              priceCache.set(cacheKey, { ...result, timestamp: Date.now() });
+              return result;
             }
           }
         }
       }
     }
   } catch (err) {
-    console.error(`Failed to fetch AMFI MF NAV for ${schemeNameOrCode}:`, err.message);
+    console.error(`Failed to fetch AMFI MF NAV for ${rawQuery}:`, err.message);
   }
 
   return null;
@@ -147,12 +168,14 @@ export async function refreshHoldingsPrices(holdings = []) {
   const updatedHoldings = [];
 
   for (const h of holdings) {
+    let liveData = null;
     let livePrice = null;
 
     if (h.type === 'stock') {
       livePrice = await fetchStockPrice(h.symbol || h.name);
     } else if (h.type === 'mutual_fund') {
-      livePrice = await fetchMutualFundNav(h.symbol || h.name);
+      liveData = await fetchMutualFundNav(h.symbol || h.name);
+      livePrice = typeof liveData === 'object' && liveData ? liveData.price : liveData;
     }
 
     if (livePrice !== null && !isNaN(livePrice) && livePrice > 0) {
@@ -163,6 +186,7 @@ export async function refreshHoldingsPrices(holdings = []) {
 
       updatedHoldings.push({
         ...h,
+        symbol: (typeof liveData === 'object' && liveData?.schemeCode) ? liveData.schemeCode : (h.symbol || ''),
         currentPrice: livePrice,
         currentValuation,
         unrealizedPnL,

@@ -298,33 +298,35 @@
       "id": "inv_1786007326649_yzzipl",
       "userId": "usr_1785755811844_crbzz5",
       "name": "Parag Parikh Flexi Cap Fund ( Growth | Equity - Flexi Cap )",
-      "symbol": "",
+      "symbol": "122639",
       "type": "mutual_fund",
       "quantity": 270.602,
       "buyPrice": 92.38,
-      "currentPrice": 92.38,
-      "currentValuation": 24998.21,
-      "unrealizedPnL": 0,
-      "pnlPercentage": 0,
+      "currentPrice": 92.8329,
+      "currentValuation": 25120.77,
+      "unrealizedPnL": 122.56,
+      "pnlPercentage": 0.49,
       "notes": "",
       "createdAt": "2026-08-06T09:08:46.650Z",
-      "updatedAt": "2026-08-06T09:11:11.764Z"
+      "updatedAt": "2026-08-06T09:11:11.764Z",
+      "lastPriceSyncAt": "2026-08-06T09:25:53.788Z"
     },
     {
       "id": "inv_1786007547082_bsd4ii",
       "userId": "usr_1785755811844_crbzz5",
       "name": "Nippon Inida Multi Asset Allocation Fund ( Direct | Growth | Hybrid - Multi Asset Allocation )",
-      "symbol": "",
+      "symbol": "148457",
       "type": "mutual_fund",
       "quantity": 964.703,
       "buyPrice": 25.91,
-      "currentPrice": 25.91,
-      "currentValuation": 24995.45,
-      "unrealizedPnL": 0,
-      "pnlPercentage": 0,
+      "currentPrice": 27.2207,
+      "currentValuation": 26259.89,
+      "unrealizedPnL": 1264.44,
+      "pnlPercentage": 5.06,
       "notes": "",
       "createdAt": "2026-08-06T09:12:27.082Z",
-      "updatedAt": "2026-08-06T09:13:21.916Z"
+      "updatedAt": "2026-08-06T09:13:21.916Z",
+      "lastPriceSyncAt": "2026-08-06T09:25:53.841Z"
     }
   ]
 }

@@ -34,7 +34,8 @@ export default function DashboardTab({
 
   const savingsRate = totalIncome > 0 ? (((totalIncome - totalSpending) / totalIncome) * 100).toFixed(1) : '0';
 
-  const netWorthValue = (assets || 0) + totalInvestmentsValuation - (liabilities || 0);
+  // Net Worth strictly follows user configured Assets minus Liabilities
+  const netWorthValue = (assets || 0) - (liabilities || 0);
 
   // Cash flow chart data (up to 7 monthly points)
   const cashFlowData = getCashFlowChartData(filteredTransactions);
