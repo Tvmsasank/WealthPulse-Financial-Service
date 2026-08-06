@@ -43,18 +43,70 @@ export async function fetchStockPrice(symbol) {
 }
 
 /**
- * Fetch live Mutual Fund NAV from AMFI India official public NAV feed
+ * Fetch live Mutual Fund NAV from mfapi.in (100% accurate Indian MF API down to 4 decimal places)
  */
 export async function fetchMutualFundNav(schemeNameOrCode) {
   if (!schemeNameOrCode) return null;
-  const query = schemeNameOrCode.trim().toLowerCase();
-  const cacheKey = `mf_${query}`;
+  const query = schemeNameOrCode.trim();
+  const cacheKey = `mf_${query.toLowerCase()}`;
 
   const cached = priceCache.get(cacheKey);
   if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
     return cached.price;
   }
 
+  // 1. If numeric scheme code (e.g., 122639 for Parag Parikh, 148457 for Nippon India)
+  if (/^\d+$/.test(query)) {
+    try {
+      const res = await fetch(`https://api.mfapi.in/mf/${query}`);
+      if (res.ok) {
+        const data = await res.json();
+        const latestNav = parseFloat(data?.data?.[0]?.nav);
+        if (!isNaN(latestNav) && latestNav > 0) {
+          priceCache.set(cacheKey, { price: latestNav, timestamp: Date.now() });
+          return latestNav;
+        }
+      }
+    } catch (err) {
+      console.error(`mfapi code lookup error for ${query}:`, err.message);
+    }
+  }
+
+  // 2. Search by Fund Name on mfapi.in
+  try {
+    const searchRes = await fetch(`https://api.mfapi.in/mf/search?q=${encodeURIComponent(query)}`);
+    if (searchRes.ok) {
+      const results = await searchRes.json();
+      if (Array.isArray(results) && results.length > 0) {
+        // Prioritize Direct Plan Growth > Growth > First Match
+        let bestMatch = results.find(r => 
+          r.schemeName.toLowerCase().includes('direct') && r.schemeName.toLowerCase().includes('growth')
+        );
+        if (!bestMatch) {
+          bestMatch = results.find(r => r.schemeName.toLowerCase().includes('growth'));
+        }
+        if (!bestMatch) {
+          bestMatch = results[0];
+        }
+
+        if (bestMatch && bestMatch.schemeCode) {
+          const detailRes = await fetch(`https://api.mfapi.in/mf/${bestMatch.schemeCode}`);
+          if (detailRes.ok) {
+            const detailData = await detailRes.json();
+            const latestNav = parseFloat(detailData?.data?.[0]?.nav);
+            if (!isNaN(latestNav) && latestNav > 0) {
+              priceCache.set(cacheKey, { price: latestNav, timestamp: Date.now() });
+              return latestNav;
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error(`mfapi search error for ${query}:`, err.message);
+  }
+
+  // 3. Fallback to AMFI NAVAll.txt
   try {
     const res = await fetch('https://www.amfiindia.com/spages/NAVAll.txt', {
       headers: { 'User-Agent': 'Mozilla/5.0' }
@@ -71,7 +123,7 @@ export async function fetchMutualFundNav(schemeNameOrCode) {
           const name = parts[3]?.trim();
           const navStr = parts[4]?.trim();
 
-          if (code === query || (name && name.toLowerCase().includes(query))) {
+          if (code === query || (name && name.toLowerCase().includes(query.toLowerCase()))) {
             const nav = parseFloat(navStr);
             if (!isNaN(nav) && nav > 0) {
               priceCache.set(cacheKey, { price: nav, timestamp: Date.now() });

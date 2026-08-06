@@ -293,5 +293,38 @@
       ]
     }
   },
-  "investments": []
+  "investments": [
+    {
+      "id": "inv_1786007326649_yzzipl",
+      "userId": "usr_1785755811844_crbzz5",
+      "name": "Parag Parikh Flexi Cap Fund ( Growth | Equity - Flexi Cap )",
+      "symbol": "",
+      "type": "mutual_fund",
+      "quantity": 270.602,
+      "buyPrice": 92.38,
+      "currentPrice": 92.38,
+      "currentValuation": 24998.21,
+      "unrealizedPnL": 0,
+      "pnlPercentage": 0,
+      "notes": "",
+      "createdAt": "2026-08-06T09:08:46.650Z",
+      "updatedAt": "2026-08-06T09:11:11.764Z"
+    },
+    {
+      "id": "inv_1786007547082_bsd4ii",
+      "userId": "usr_1785755811844_crbzz5",
+      "name": "Nippon Inida Multi Asset Allocation Fund ( Direct | Growth | Hybrid - Multi Asset Allocation )",
+      "symbol": "",
+      "type": "mutual_fund",
+      "quantity": 964.703,
+      "buyPrice": 25.91,
+      "currentPrice": 25.91,
+      "currentValuation": 24995.45,
+      "unrealizedPnL": 0,
+      "pnlPercentage": 0,
+      "notes": "",
+      "createdAt": "2026-08-06T09:12:27.082Z",
+      "updatedAt": "2026-08-06T09:13:21.916Z"
+    }
+  ]
 }
