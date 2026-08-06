@@ -4,6 +4,7 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, PieChart, 
 
 export default function DashboardTab({
   transactions = [],
+  investments = [],
   settings = {},
   selectedPeriod,
   onPeriodChange,
@@ -12,6 +13,11 @@ export default function DashboardTab({
   onNavigateTab
 }) {
   const { assets = 0, liabilities = 0, netWorthConfigured = false, recurring = [], subscriptions = [] } = settings;
+
+  // Live Investments Total Valuation
+  const totalInvestmentsValuation = investments.reduce((sum, i) => sum + (Number(i.currentValuation) || 0), 0);
+  const totalInvestmentsCost = investments.reduce((sum, i) => sum + ((Number(i.buyPrice) || 0) * (Number(i.quantity) || 1)), 0);
+  const totalInvestmentsPnL = totalInvestmentsValuation - totalInvestmentsCost;
 
   // Filter transactions by selectedPeriod
   const filteredTransactions = filterByPeriod(transactions, selectedPeriod);
@@ -27,7 +33,7 @@ export default function DashboardTab({
 
   const savingsRate = totalIncome > 0 ? (((totalIncome - totalSpending) / totalIncome) * 100).toFixed(1) : '0';
 
-  const netWorthValue = (assets || 0) - (liabilities || 0);
+  const netWorthValue = (assets || 0) + totalInvestmentsValuation - (liabilities || 0);
 
   // Cash flow chart data (up to 7 monthly points)
   const cashFlowData = getCashFlowChartData(filteredTransactions);

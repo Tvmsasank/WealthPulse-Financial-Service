@@ -2,6 +2,7 @@ import React from 'react';
 import {
   LayoutDashboard,
   Receipt,
+  TrendingUp,
   RefreshCw,
   CreditCard,
   PieChart,
@@ -15,6 +16,7 @@ import {
 export const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'transactions', label: 'Transactions', icon: Receipt },
+  { id: 'investments', label: 'Investments', icon: TrendingUp },
   { id: 'recurring', label: 'Recurring', icon: RefreshCw },
   { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
   { id: 'budgets', label: 'Budgets', icon: PieChart },

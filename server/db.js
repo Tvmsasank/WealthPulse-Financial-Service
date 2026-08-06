@@ -82,6 +82,7 @@ function loadDb() {
       memoryDb = JSON.parse(raw);
       if (!memoryDb.users) memoryDb.users = [];
       if (!memoryDb.userSettings) memoryDb.userSettings = {};
+      if (!memoryDb.investments) memoryDb.investments = [];
     } catch (e) {
       console.error('Failed to parse database file, reinitializing', e);
       memoryDb = getInitialDb();
@@ -305,12 +306,15 @@ export const dbEngine = {
 
     const settings = db.userSettings[userId] || getInitialUserSettings();
 
+    const userInvestments = (db.investments || []).filter(i => i.userId === userId);
+
     return {
       transactions: sortedTx,
       tags: userTags,
       rules: userRules,
       settings,
-      documents: sortedDocs
+      documents: sortedDocs,
+      investments: userInvestments
     };
   },
 
@@ -461,8 +465,102 @@ export const dbEngine = {
     db.tags = db.tags.filter(t => t.userId !== userId);
     db.documents = db.documents.filter(d => d.userId !== userId);
     db.userSettings[userId] = getInitialUserSettings();
+    db.investments = (db.investments || []).filter(i => i.userId !== userId);
 
     saveDb();
     return true;
+  },
+
+  // Investments Management
+  getInvestments(userId) {
+    const db = loadDb();
+    if (!userId) return [];
+    return (db.investments || []).filter(i => i.userId === userId);
+  },
+
+  addInvestment(userId, holding) {
+    const db = loadDb();
+    if (!userId) throw new Error('User ID required');
+    if (!db.investments) db.investments = [];
+
+    const buyPrice = Math.abs(parseFloat(holding.buyPrice) || 0);
+    const currentPrice = Math.abs(parseFloat(holding.currentPrice || holding.buyPrice) || 0);
+    const quantity = Math.abs(parseFloat(holding.quantity) || 1);
+
+    const currentValuation = Math.round((currentPrice * quantity) * 100) / 100;
+    const totalCost = Math.round((buyPrice * quantity) * 100) / 100;
+    const unrealizedPnL = Math.round((currentValuation - totalCost) * 100) / 100;
+    const pnlPercentage = totalCost > 0 ? Math.round(((unrealizedPnL / totalCost) * 100) * 100) / 100 : 0;
+
+    const newHolding = {
+      id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      userId,
+      name: (holding.name || 'Investment Asset').trim(),
+      symbol: (holding.symbol || '').trim().toUpperCase(),
+      type: holding.type || 'stock',
+      quantity,
+      buyPrice,
+      currentPrice,
+      currentValuation,
+      unrealizedPnL,
+      pnlPercentage,
+      notes: (holding.notes || '').trim(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    db.investments.push(newHolding);
+    saveDb();
+    return newHolding;
+  },
+
+  updateInvestment(userId, id, updates) {
+    const db = loadDb();
+    if (!userId) throw new Error('User ID required');
+    if (!db.investments) db.investments = [];
+
+    const holding = db.investments.find(i => i.id === id && i.userId === userId);
+    if (!holding) throw new Error('Investment holding not found');
+
+    if (updates.name !== undefined) holding.name = updates.name.trim();
+    if (updates.symbol !== undefined) holding.symbol = updates.symbol.trim().toUpperCase();
+    if (updates.type !== undefined) holding.type = updates.type;
+    if (updates.quantity !== undefined) holding.quantity = Math.abs(parseFloat(updates.quantity) || 0);
+    if (updates.buyPrice !== undefined) holding.buyPrice = Math.abs(parseFloat(updates.buyPrice) || 0);
+    if (updates.currentPrice !== undefined) holding.currentPrice = Math.abs(parseFloat(updates.currentPrice) || 0);
+    if (updates.notes !== undefined) holding.notes = updates.notes;
+
+    holding.currentValuation = Math.round((holding.currentPrice * holding.quantity) * 100) / 100;
+    const totalCost = Math.round((holding.buyPrice * holding.quantity) * 100) / 100;
+    holding.unrealizedPnL = Math.round((holding.currentValuation - totalCost) * 100) / 100;
+    holding.pnlPercentage = totalCost > 0 ? Math.round(((holding.unrealizedPnL / totalCost) * 100) * 100) / 100 : 0;
+    holding.updatedAt = new Date().toISOString();
+
+    saveDb();
+    return holding;
+  },
+
+  saveInvestments(userId, updatedList) {
+    const db = loadDb();
+    if (!userId) throw new Error('User ID required');
+
+    db.investments = (db.investments || []).filter(i => i.userId !== userId).concat(updatedList);
+    saveDb();
+    return updatedList;
+  },
+
+  deleteInvestment(userId, id) {
+    const db = loadDb();
+    if (!userId) throw new Error('User ID required');
+    if (!db.investments) db.investments = [];
+
+    const initialLen = db.investments.length;
+    db.investments = db.investments.filter(i => !(i.id === id && i.userId === userId));
+
+    if (db.investments.length !== initialLen) {
+      saveDb();
+      return true;
+    }
+    return false;
   }
 };

@@ -13,9 +13,11 @@ import GoalsTab from './components/GoalsTab';
 import DocumentsTab from './components/DocumentsTab';
 import RulesTagsTab from './components/RulesTagsTab';
 import SettingsTab from './components/SettingsTab';
+import InvestmentsTab from './components/InvestmentsTab';
 
 // Modals
 import AddEntryModal from './components/AddEntryModal';
+import AddInvestmentModal from './components/AddInvestmentModal';
 import ImportModal from './components/ImportModal';
 import TagModal from './components/TagModal';
 import BudgetModal from './components/BudgetModal';
@@ -92,6 +94,7 @@ export default function App() {
 
   // App Data State
   const [transactions, setTransactions] = useState([]);
+  const [investments, setInvestments] = useState([]);
   const [tags, setTags] = useState([]);
   const [rules, setRules] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -150,6 +153,7 @@ export default function App() {
         setTags(data.tags || []);
         setRules(data.rules || []);
         setDocuments(data.documents || []);
+        setInvestments(data.investments || []);
         if (data.settings) {
           setSettings(prev => ({
             ...prev,
@@ -273,6 +277,57 @@ export default function App() {
     await fetch(`/api/transactions?id=${txId}`, { method: 'DELETE', headers: authHeaders });
     await fetchState();
   };
+
+  // Investment Actions & Auto-Sync
+  const handleSaveInvestment = async (holdingData) => {
+    if (holdingData.id) {
+      const res = await fetch('/api/investments', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify(holdingData)
+      });
+      if (!res.ok) throw new Error('Failed to update investment');
+    } else {
+      const res = await fetch('/api/investments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify(holdingData)
+      });
+      if (!res.ok) throw new Error('Failed to add investment');
+    }
+    await fetchState();
+  };
+
+  const handleDeleteInvestment = async (id) => {
+    await fetch(`/api/investments?id=${id}`, { method: 'DELETE', headers: authHeaders });
+    await fetchState();
+  };
+
+  const handleRefreshPrices = async () => {
+    setIsSyncingPrices(true);
+    try {
+      const res = await fetch('/api/investments/refresh-prices', {
+        method: 'POST',
+        headers: { ...authHeaders }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setInvestments(data.investments || []);
+      }
+    } catch (err) {
+      console.error('Failed to sync live prices:', err);
+    } finally {
+      setIsSyncingPrices(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => {
+      handleRefreshPrices();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Preferences Saver Helper
   const savePreferences = async (updates) => {
@@ -558,6 +613,7 @@ export default function App() {
               {activeTab === 'dashboard' && (
                 <DashboardTab
                   transactions={transactions}
+                  investments={investments}
                   settings={settings}
                   selectedPeriod={settings.selectedPeriod || 'all-time'}
                   onPeriodChange={handlePeriodChange}
@@ -581,6 +637,17 @@ export default function App() {
                   onOpenAddEntry={() => { setEditingTx(null); setIsAddEntryOpen(true); }}
                   onOpenEditEntry={tx => { setEditingTx(tx); setIsAddEntryOpen(true); }}
                   onOpenTagModal={tx => setTagModalTx(tx)}
+                />
+              )}
+
+              {activeTab === 'investments' && (
+                <InvestmentsTab
+                  investments={investments}
+                  onOpenAddInvestment={() => { setEditingInvestment(null); setIsAddInvestmentOpen(true); }}
+                  onOpenEditInvestment={item => { setEditingInvestment(item); setIsAddInvestmentOpen(true); }}
+                  onDeleteInvestment={handleDeleteInvestment}
+                  onRefreshPrices={handleRefreshPrices}
+                  isSyncing={isSyncingPrices}
                 />
               )}
 
@@ -766,6 +833,16 @@ export default function App() {
         categories={settings.categories || []}
         accounts={settings.accounts || []}
         tags={allTagNames}
+      />
+
+      <AddInvestmentModal
+        isOpen={isAddInvestmentOpen}
+        onClose={() => {
+          setIsAddInvestmentOpen(false);
+          setEditingInvestment(null);
+        }}
+        onSave={handleSaveInvestment}
+        editInvestment={editingInvestment}
       />
 
       <ImportModal

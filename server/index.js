@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import 'dotenv/config';
 import { dbEngine } from './db.js';
+import { refreshHoldingsPrices } from './investments.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -437,6 +438,84 @@ app.put('/api/preferences', (req, res) => {
   } catch (err) {
     console.error('PUT /api/preferences error:', err);
     res.status(500).json({ error: 'Failed to update preferences' });
+  }
+});
+
+// ==========================================
+// INVESTMENT & PORTFOLIO ENDPOINTS
+// ==========================================
+
+// GET /api/investments
+app.get('/api/investments', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    const investments = dbEngine.getInvestments(userId);
+    res.json(investments);
+  } catch (err) {
+    console.error('GET /api/investments error:', err);
+    res.status(500).json({ error: 'Failed to fetch investments' });
+  }
+});
+
+// POST /api/investments
+app.post('/api/investments', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    const holding = req.body;
+    if (!holding || !holding.name) {
+      return res.status(400).json({ error: 'Asset name required' });
+    }
+    const created = dbEngine.addInvestment(userId, holding);
+    res.json(created);
+  } catch (err) {
+    console.error('POST /api/investments error:', err);
+    res.status(500).json({ error: 'Failed to add investment' });
+  }
+});
+
+// PATCH /api/investments
+app.patch('/api/investments', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    const { id, ...updates } = req.body;
+    if (!id) {
+      return res.status(400).json({ error: 'Investment ID required' });
+    }
+    const updated = dbEngine.updateInvestment(userId, id, updates);
+    res.json(updated);
+  } catch (err) {
+    console.error('PATCH /api/investments error:', err);
+    res.status(500).json({ error: 'Failed to update investment' });
+  }
+});
+
+// DELETE /api/investments
+app.delete('/api/investments', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    const id = req.query.id || req.body.id;
+    if (!id) {
+      return res.status(400).json({ error: 'Investment ID required' });
+    }
+    const deleted = dbEngine.deleteInvestment(userId, id);
+    res.json({ success: true, deletedId: id });
+  } catch (err) {
+    console.error('DELETE /api/investments error:', err);
+    res.status(500).json({ error: 'Failed to delete investment' });
+  }
+});
+
+// POST /api/investments/refresh-prices (Live market price sync)
+app.post('/api/investments/refresh-prices', async (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    const currentInvestments = dbEngine.getInvestments(userId);
+    const updatedInvestments = await refreshHoldingsPrices(currentInvestments);
+    dbEngine.saveInvestments(userId, updatedInvestments);
+    res.json({ success: true, investments: updatedInvestments });
+  } catch (err) {
+    console.error('POST /api/investments/refresh-prices error:', err);
+    res.status(500).json({ error: 'Failed to refresh investment prices' });
   }
 });
 
