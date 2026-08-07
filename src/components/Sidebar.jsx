@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Home,
   LayoutDashboard,
   Receipt,
   TrendingUp,
@@ -9,11 +10,11 @@ import {
   Target,
   FileText,
   Sliders,
-  Settings,
-  ShieldCheck
+  Settings
 } from 'lucide-react';
 
 export const NAV_ITEMS = [
+  { id: 'home', label: 'Home', icon: Home },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'transactions', label: 'Transactions', icon: Receipt },
   { id: 'investments', label: 'Investments', icon: TrendingUp },
@@ -34,8 +35,8 @@ export default function Sidebar({ activeTab, onSelectTab }) {
           type="button"
           className="sidebar-logo"
           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'left' }}
-          onClick={() => onSelectTab('dashboard')}
-          title="Go to Dashboard"
+          onClick={() => onSelectTab('home')}
+          title="Go to Home / Landing Page"
         >
           <TrendingUp size={28} style={{ color: 'var(--primary)' }} />
           <span>WealthPulse</span>
@@ -50,7 +51,7 @@ export default function Sidebar({ activeTab, onSelectTab }) {
             <button
               key={item.id}
               className={`nav-item ${isActive ? 'active' : ''}`}
-              onClick={() => onSelectTab('dashboard' === item.id ? 'dashboard' : item.id)}
+              onClick={() => onSelectTab(item.id)}
             >
               <Icon size={18} />
               <span>{item.label}</span>

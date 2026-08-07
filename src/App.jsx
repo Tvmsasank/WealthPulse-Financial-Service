@@ -4,6 +4,7 @@ import Sidebar, { NAV_ITEMS } from './components/Sidebar';
 import MobileNav from './components/MobileNav';
 
 // Tab Views
+import HomeTab from './components/HomeTab';
 import DashboardTab from './components/DashboardTab';
 import TransactionsTab from './components/TransactionsTab';
 import RecurringTab from './components/RecurringTab';
@@ -618,6 +619,14 @@ export default function App() {
             </div>
           ) : (
             <>
+              {activeTab === 'home' && (
+                <HomeTab
+                  onNavigateTab={setActiveTab}
+                  onOpenRegister={() => { setAuthModalMode('register'); setIsAuthModalOpen(true); }}
+                  user={user}
+                />
+              )}
+
               {activeTab === 'dashboard' && (
                 <DashboardTab
                   transactions={transactions}
