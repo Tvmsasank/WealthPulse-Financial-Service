@@ -315,10 +315,10 @@ export default function DashboardTab({
 
       {/* Bottom Grid: Recent Activity & Ledgerly Insight */}
       <div className="grid-2">
-        {/* Recent Activity (All Ledger Transactions Displayed) */}
+        {/* Recent Activity (All Account Transactions Displayed) */}
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '600' }}>Recent Ledger Transactions</h3>
+            <h3 style={{ fontSize: '16px', fontWeight: '600' }}>Recent Account Transactions</h3>
             <button className="btn btn-ghost btn-sm" onClick={() => onNavigateTab('transactions')}>
               View all ({filteredTransactions.length}) →
             </button>
@@ -383,10 +383,10 @@ export default function DashboardTab({
 
         {/* Ledgerly Insights & Coming Up */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Ledgerly Insight Panel */}
+          {/* WealthPulse Insight Panel */}
           <div className="card card-navy">
             <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px', color: 'white' }}>
-              Ledgerly Insight
+              WealthPulse Insight
             </h3>
             {needsReviewCount > 0 ? (
               <div style={{ fontSize: '14px', color: '#CBD5E1', display: 'flex', alignItems: 'center', gap: '8px' }}>

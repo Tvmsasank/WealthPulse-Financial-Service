@@ -600,14 +600,14 @@ app.delete('/api/state', (req, res) => {
   try {
     const userId = getUserIdFromReq(req);
     const { confirmation } = req.body;
-    if (confirmation !== 'DELETE ALL LEDGERLY DATA') {
+    if (confirmation !== 'DELETE ALL WEALTHPULSE DATA' && confirmation !== 'DELETE ALL LEDGERLY DATA') {
       return res.status(400).json({ error: 'Exact confirmation phrase required' });
     }
 
     dbEngine.wipeAllData(userId);
     res.json({
       success: true,
-      message: 'All Ledgerly data erased successfully.'
+      message: 'All WealthPulse data erased successfully.'
     });
   } catch (err) {
     console.error('DELETE /api/state error:', err);
@@ -630,5 +630,5 @@ if (fs.existsSync(DIST_DIR)) {
 }
 
 app.listen(PORT, () => {
-  console.log(`[Ledgerly] API Server running on port ${PORT}`);
+  console.log(`[WealthPulse] API Server running on port ${PORT}`);
 });

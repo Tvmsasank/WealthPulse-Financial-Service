@@ -26,10 +26,10 @@ export default function SettingsTab({
   const [catAccMessage, setCatAccMessage] = useState('');
 
   const driveFolder = settings.driveFolder || {
-    name: 'Ledgerly Financial Inbox',
+    name: 'WealthPulse Financial Inbox',
     url: 'https://drive.google.com/drive/my-drive'
   };
-  const [driveNameInput, setDriveNameInput] = useState(driveFolder.name || 'Ledgerly Financial Inbox');
+  const [driveNameInput, setDriveNameInput] = useState(driveFolder.name || 'WealthPulse Financial Inbox');
   const [driveUrlInput, setDriveUrlInput] = useState(driveFolder.url || 'https://drive.google.com/drive/my-drive');
   const [driveMessage, setDriveMessage] = useState('');
 

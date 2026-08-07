@@ -24,7 +24,7 @@ export async function registerBiometricPasskey(user, token) {
 
   const creationOptions = {
     publicKey: {
-      rp: { name: 'Ledgerly Financial Portfolio' },
+      rp: { name: 'WealthPulse Financial Portfolio' },
       user: {
         id: userIdBuffer,
         name: user.email,
@@ -75,13 +75,13 @@ export async function registerBiometricPasskey(user, token) {
 
   if (!res.ok) throw new Error(json.error || 'Failed to register biometrics');
 
-  localStorage.setItem('ledgerly_biometric_credential', credentialId);
-  localStorage.setItem('ledgerly_has_biometrics', 'true');
+  localStorage.setItem('wealthpulse_biometric_credential', credentialId);
+  localStorage.setItem('wealthpulse_has_biometrics', 'true');
   return json;
 }
 
 export async function authenticateWithBiometrics() {
-  const credentialId = localStorage.getItem('ledgerly_biometric_credential');
+  const credentialId = localStorage.getItem('wealthpulse_biometric_credential') || localStorage.getItem('ledgerly_biometric_credential');
   if (!credentialId) {
     throw new Error('No Biometric Face ID / Fingerprint registered on this device yet.');
   }

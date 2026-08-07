@@ -1,8 +1,6 @@
-# 🛡️ Ledgerly — Private Personal Financial Dashboard
+# 📈 WealthPulse — Real-Time Wealth & Investment Portfolio Dashboard
 
-Ledgerly is a complete, private, mobile-friendly personal financial dashboard for tracking expenses, income, budgets, goals, recurring bills, and documents in **₹ (INR)** with custom dark mode aesthetics.
-
-![Ledgerly Financial Dashboard](https://raw.githubusercontent.com/placeholder/ledgerly/main/preview.png)
+WealthPulse is a complete, private, mobile-friendly personal financial & stock portfolio dashboard for tracking live stock prices, AMFI mutual fund NAVs, expenses, income, budgets, goals, recurring bills, and documents in **₹ (INR)** with custom dark mode aesthetics.
 
 ---
 

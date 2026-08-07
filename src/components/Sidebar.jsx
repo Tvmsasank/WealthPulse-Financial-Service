@@ -37,8 +37,8 @@ export default function Sidebar({ activeTab, onSelectTab }) {
           onClick={() => onSelectTab('dashboard')}
           title="Go to Dashboard"
         >
-          <ShieldCheck size={28} />
-          <span>Ledgerly</span>
+          <TrendingUp size={28} style={{ color: 'var(--primary)' }} />
+          <span>WealthPulse</span>
         </button>
       </div>
 

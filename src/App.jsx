@@ -33,19 +33,19 @@ import { CheckCircle2, FolderSync, X, Shield, Lock, UserPlus, LogIn, Fingerprint
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState(() => localStorage.getItem('ledgerly_theme') || 'dark');
+  const [theme, setTheme] = useState(() => localStorage.getItem('wealthpulse_theme') || localStorage.getItem('ledgerly_theme') || 'dark');
 
   // Auth State
   const [user, setUser] = useState(() => {
     try {
-      const saved = localStorage.getItem('ledgerly_user');
+      const saved = localStorage.getItem('wealthpulse_user') || localStorage.getItem('ledgerly_user');
       return saved ? JSON.parse(saved) : null;
     } catch (e) {
       return null;
     }
   });
 
-  const [token, setToken] = useState(() => localStorage.getItem('ledgerly_token') || '');
+  const [token, setToken] = useState(() => localStorage.getItem('wealthpulse_token') || localStorage.getItem('ledgerly_token') || '');
 
   // Auth Modals State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -182,25 +182,25 @@ export default function App() {
     setUser(userData);
     setToken(userToken);
     if (rememberMe) {
-      localStorage.setItem('ledgerly_token', userToken);
-      localStorage.setItem('ledgerly_user', JSON.stringify(userData));
+      localStorage.setItem('wealthpulse_token', userToken);
+      localStorage.setItem('wealthpulse_user', JSON.stringify(userData));
     } else {
-      sessionStorage.setItem('ledgerly_token', userToken);
+      sessionStorage.setItem('wealthpulse_token', userToken);
     }
   };
 
   const handleLogout = () => {
     setUser(null);
     setToken('');
-    localStorage.removeItem('ledgerly_token');
-    localStorage.removeItem('ledgerly_user');
-    sessionStorage.removeItem('ledgerly_token');
+    localStorage.removeItem('wealthpulse_token');
+    localStorage.removeItem('wealthpulse_user');
+    sessionStorage.removeItem('wealthpulse_token');
     setActiveTab('dashboard');
   };
 
   const handleOpenMpinModal = (mode = 'verify', emailOverride = '') => {
     setMpinModalMode(mode);
-    setMpinModalEmail(emailOverride || (user ? user.email : localStorage.getItem('ledgerly_remembered_email') || ''));
+    setMpinModalEmail(emailOverride || (user ? user.email : localStorage.getItem('wealthpulse_remembered_email') || localStorage.getItem('ledgerly_remembered_email') || ''));
     setIsMpinModalOpen(true);
   };
 
@@ -508,7 +508,7 @@ export default function App() {
     } catch (err) {
       setDriveSyncStatus({
         syncState: 'success',
-        message: 'Checked Ledgerly Financial Inbox. No new files pending import.'
+        message: 'Checked WealthPulse Financial Inbox. No new files pending import.'
       });
     }
   };
@@ -518,7 +518,7 @@ export default function App() {
     const res = await fetch('/api/state', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify({ confirmation: 'DELETE ALL LEDGERLY DATA' })
+      body: JSON.stringify({ confirmation: 'DELETE ALL WEALTHPULSE DATA' })
     });
     if (!res.ok) {
       const json = await res.json();
@@ -568,7 +568,7 @@ export default function App() {
         <main className="page-body">
           {loading ? (
             <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
-              Loading Ledgerly state...
+              Loading WealthPulse state...
             </div>
           ) : !user ? (
             /* Public Welcome / Resume Showcase Banner when Logged Out */
@@ -579,10 +579,10 @@ export default function App() {
                 </div>
 
                 <h2 style={{ fontSize: '26px', fontWeight: '800', marginBottom: '12px' }}>
-                  Secure Personal Financial Portfolio & Dashboard
+                  Real-Time Wealth & Investment Portfolio Tracker
                 </h2>
                 <p style={{ fontSize: '15px', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '28px', maxWidth: '600px', margin: '0 auto 28px auto' }}>
-                  Ledgerly provides encrypted multi-user financial tracking with Face ID, 4-digit MPIN, bcrypt password security, and Google Drive integration in <strong>₹ (INR)</strong>.
+                  WealthPulse provides live stock market tracking, AMFI mutual fund NAVs, encrypted multi-user financial tracking with Face ID, 4-digit MPIN, and Google Drive integration in <strong>₹ (INR)</strong>.
                 </p>
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
@@ -814,7 +814,7 @@ export default function App() {
                     {driveSyncStatus.message}
                   </p>
                   <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px' }}>
-                    Dedicated Folder: <strong>Ledgerly Financial Inbox</strong> • Scheduled daily at 8:00 AM IST
+                    Dedicated Folder: <strong>WealthPulse Financial Inbox</strong> • Scheduled daily at 8:00 AM IST
                   </p>
                 </div>
               )}

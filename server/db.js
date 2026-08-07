@@ -43,8 +43,8 @@ const getInitialUserSettings = () => ({
   netWorthConfigured: false,
   selectedPeriod: 'all-time',
   driveFolder: {
-    name: 'Ledgerly Financial Inbox',
-    id: 'folder-ledgerly-inbox-01',
+    name: 'WealthPulse Financial Inbox',
+    id: 'folder-wealthpulse-inbox-01',
     url: 'https://drive.google.com/drive/my-drive'
   },
   driveSync: {
