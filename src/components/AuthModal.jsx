@@ -12,14 +12,10 @@ export default function AuthModal({
 }) {
   if (!isOpen) return null;
 
-  const rememberedEmail = localStorage.getItem('ledgerly_remembered_email') || '';
-  const hasMpin = localStorage.getItem('ledgerly_has_mpin') === 'true';
-  const hasBiometrics = localStorage.getItem('ledgerly_has_biometrics') === 'true';
+  const rememberedEmail = localStorage.getItem('wealthpulse_remembered_email') || localStorage.getItem('ledgerly_remembered_email') || '';
+  const hasMpin = localStorage.getItem('wealthpulse_has_mpin') === 'true' || localStorage.getItem('ledgerly_has_mpin') === 'true';
+  const hasBiometrics = localStorage.getItem('wealthpulse_has_biometrics') === 'true' || localStorage.getItem('ledgerly_has_biometrics') === 'true';
 
-  // Zerodha Kite Smart Auth Method Priority:
-  // 1. Biometrics (if registered and remembered email exists)
-  // 2. MPIN (if MPIN set and remembered email exists)
-  // 3. Password (initial/default)
   const getInitialAuthMethod = () => {
     if (initialMode === 'register') return 'register';
     if (hasBiometrics && rememberedEmail) return 'biometrics';
@@ -38,10 +34,10 @@ export default function AuthModal({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [biometricSupported, setBiometricSupported] = useState(false);
+  const [emailHasMpin, setEmailHasMpin] = useState(false);
 
-  // Sync remembered state & Auto-trigger Biometrics on Modal Open like Zerodha Kite
   useEffect(() => {
-    const savedEmail = localStorage.getItem('ledgerly_remembered_email') || '';
+    const savedEmail = localStorage.getItem('wealthpulse_remembered_email') || localStorage.getItem('ledgerly_remembered_email') || '';
     setEmail(savedEmail);
     setMpin('');
     setError('');
@@ -55,7 +51,6 @@ export default function AuthModal({
     }
 
     if (savedEmail) {
-      // Query server for MPIN / Biometrics status for this email across all domains
       fetch('/api/auth/check-methods', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,12 +58,9 @@ export default function AuthModal({
       })
         .then(res => res.json())
         .then(data => {
-          if (data.hasBiometrics && localStorage.getItem('ledgerly_biometric_credential')) {
-            localStorage.setItem('ledgerly_has_biometrics', 'true');
-            setAuthMethod('biometrics');
-            handleBiometricLogin(savedEmail);
-          } else if (data.hasMpin) {
-            localStorage.setItem('ledgerly_has_mpin', 'true');
+          if (data.hasMpin) {
+            localStorage.setItem('wealthpulse_has_mpin', 'true');
+            setEmailHasMpin(true);
             setAuthMethod('mpin');
           } else {
             setAuthMethod('password');
@@ -81,33 +73,49 @@ export default function AuthModal({
     } else {
       setAuthMethod('password');
     }
-  }, [isOpen, initialMode]);
+  }, [initialMode, isOpen]);
 
-  const handleKeyPress = useCallback((numStr) => {
-    if (loading || authMethod !== 'mpin') return;
-    setError('');
-
-    if (mpin.length < 4) {
-      const next = mpin + numStr;
-      setMpin(next);
-      if (next.length === 4) handleVerifyMpin(next);
+  // Dynamically check if typed email has MPIN set
+  const handleEmailChange = (val) => {
+    setEmail(val);
+    setEmailHasMpin(false);
+    if (val && val.includes('@')) {
+      fetch('/api/auth/check-methods', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: val.trim() })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.hasMpin) {
+            setEmailHasMpin(true);
+          }
+        })
+        .catch(() => {});
     }
-  }, [loading, authMethod, mpin]);
+  };
+
+  const handleKeyPress = useCallback((digit) => {
+    if (loading || authMethod !== 'mpin') return;
+    if (mpin.length < 4) {
+      const nextMpin = mpin + digit;
+      setMpin(nextMpin);
+      if (nextMpin.length === 4) {
+        handleVerifyMpin(nextMpin);
+      }
+    }
+  }, [mpin, loading, authMethod]);
 
   const handleDeleteMpin = useCallback(() => {
     if (loading || authMethod !== 'mpin') return;
-    setError('');
     setMpin(prev => prev.slice(0, -1));
   }, [loading, authMethod]);
 
-  // Physical Keyboard Listener for Zerodha MPIN mode
   useEffect(() => {
     if (!isOpen || authMethod !== 'mpin') return;
     const handleKeyDown = (e) => {
       const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-      if (tag === 'input' || tag === 'textarea' || tag === 'select') {
-        return; // Allow natural typing & backspace inside input fields!
-      }
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
       if (e.key >= '0' && e.key <= '9') {
         e.preventDefault();
         handleKeyPress(e.key);
@@ -138,16 +146,18 @@ export default function AuthModal({
       try {
         json = JSON.parse(responseText);
       } catch (e) {
-        throw new Error('API server connection lost. Please check node server.');
+        throw new Error('API server connection lost.');
       }
 
       if (!res.ok) throw new Error(json.error || 'Invalid 4-Digit MPIN');
 
+      localStorage.setItem('wealthpulse_remembered_email', targetEmail);
+      localStorage.setItem('wealthpulse_has_mpin', 'true');
       setSuccess('MPIN Verified! Logging in...');
       setTimeout(() => {
         onLoginSuccess(json.user, json.token, true);
         onClose();
-      }, 500);
+      }, 400);
     } catch (err) {
       setError(err.message || 'MPIN verification failed');
       setMpin('');
@@ -165,9 +175,8 @@ export default function AuthModal({
       setTimeout(() => {
         onLoginSuccess(result.user, result.token, true);
         onClose();
-      }, 500);
+      }, 400);
     } catch (err) {
-      // Zerodha Fallback: If biometrics is cancelled or failed, fallback to MPIN
       if (hasMpin) {
         setAuthMethod('mpin');
         setError('Biometric scan cancelled. Enter your 4-Digit MPIN.');
@@ -180,74 +189,78 @@ export default function AuthModal({
     }
   };
 
-  const handlePasswordSubmit = async (e) => {
+  const handlePasswordLogin = async (e) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
-
-    if (authMethod === 'register') {
-      if (!name.trim()) {
-        setError('Please enter your name');
-        return;
-      }
-      if (password !== confirmPassword) {
-        setError('Passwords do not match');
-        return;
-      }
-      if (password.length < 6) {
-        setError('Password must be at least 6 characters');
-        return;
-      }
-    }
-
     setLoading(true);
-    const endpoint = authMethod === 'register' ? '/api/auth/register' : '/api/auth/login';
-    const trimmedEmail = email.trim();
-    const payload = authMethod === 'register'
-      ? { name: name.trim(), email: trimmedEmail, password }
-      : { email: trimmedEmail, password, rememberMe };
-
     try {
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ email: email.trim(), password })
       });
 
-      const responseText = await res.text();
-      let json = {};
-      try {
-        json = JSON.parse(responseText);
-      } catch (e) {}
-
-      if (!res.ok) {
-        throw new Error(json.error || 'Invalid email or password. If this is a fresh Render deployment, please click "Create Account" first.');
-      }
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Sign in failed');
 
       if (rememberMe) {
-        localStorage.setItem('ledgerly_remembered_email', trimmedEmail);
-      } else {
-        localStorage.removeItem('ledgerly_remembered_email');
+        localStorage.setItem('wealthpulse_remembered_email', email.trim());
       }
 
-      setSuccess(json.message || 'Authenticated successfully!');
+      setSuccess('Sign in successful!');
       setTimeout(() => {
         onLoginSuccess(json.user, json.token, rememberMe);
         onClose();
-      }, 500);
+      }, 400);
     } catch (err) {
-      setError(err.message || 'An error occurred');
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), password })
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Registration failed');
+
+      localStorage.setItem('wealthpulse_remembered_email', email.trim());
+      setSuccess('Account created successfully!');
+      setTimeout(() => {
+        onLoginSuccess(json.user, json.token, true);
+        onClose();
+      }, 400);
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSwitchAccount = () => {
+    localStorage.removeItem('wealthpulse_remembered_email');
     localStorage.removeItem('ledgerly_remembered_email');
-    localStorage.removeItem('ledgerly_has_mpin');
-    localStorage.removeItem('ledgerly_has_biometrics');
     setEmail('');
     setMpin('');
+    setEmailHasMpin(false);
     setAuthMethod('password');
   };
 
@@ -259,30 +272,54 @@ export default function AuthModal({
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '440px' }}>
-        <div className="modal-header" style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Lock size={20} style={{ color: 'var(--primary)' }} />
-            <h2 style={{ fontSize: '18px' }}>
-              {authMethod === 'register' ? 'Create Account' : 'Sign In to Ledgerly'}
-            </h2>
+      <div
+        className="modal-content"
+        onClick={e => e.stopPropagation()}
+        style={{
+          maxWidth: '480px',
+          width: '100%',
+          padding: '28px',
+          borderRadius: '24px',
+          background: 'var(--bg-card)',
+          backdropFilter: 'blur(28px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+          border: '1px solid var(--border-glass)',
+          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.6)'
+        }}
+      >
+        {/* Modal Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ padding: '8px', borderRadius: '12px', background: 'var(--primary-light)', color: 'var(--primary)' }}>
+              <Lock size={20} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+                {authMethod === 'register' ? 'Create WealthPulse Account' : 'Sign In to WealthPulse'}
+              </h2>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                {authMethod === 'mpin' ? 'Enter 4-Digit MPIN to unlock' : 'Secure financial dashboard access'}
+              </div>
+            </div>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close">
+          <button className="modal-close" onClick={onClose} aria-label="Close" style={{ padding: '6px' }}>
             <X size={20} />
           </button>
         </div>
 
         {/* Tab Toggle for Register / Sign In */}
         {authMethod !== 'register' && !rememberedEmail && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: 'var(--bg-app)', padding: '4px', borderRadius: 'var(--radius-md)', marginBottom: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', background: 'var(--bg-app)', padding: '5px', borderRadius: '14px', marginBottom: '20px', border: '1px solid var(--border-color)' }}>
             <button
               type="button"
               className="btn"
               style={{
+                padding: '8px',
+                borderRadius: '10px',
                 background: authMethod !== 'register' ? 'var(--primary)' : 'transparent',
-                color: authMethod !== 'register' ? 'white' : 'var(--text-muted)',
+                color: authMethod !== 'register' ? '#000000' : 'var(--text-muted)',
                 fontSize: '13px',
-                fontWeight: '600'
+                fontWeight: '700'
               }}
               onClick={() => { setAuthMethod('password'); setError(''); }}
             >
@@ -292,10 +329,12 @@ export default function AuthModal({
               type="button"
               className="btn"
               style={{
+                padding: '8px',
+                borderRadius: '10px',
                 background: authMethod === 'register' ? 'var(--primary)' : 'transparent',
-                color: authMethod === 'register' ? 'white' : 'var(--text-muted)',
+                color: authMethod === 'register' ? '#000000' : 'var(--text-muted)',
                 fontSize: '13px',
-                fontWeight: '600'
+                fontWeight: '700'
               }}
               onClick={() => { setAuthMethod('register'); setError(''); }}
             >
@@ -304,16 +343,44 @@ export default function AuthModal({
           </div>
         )}
 
-        {/* User Identity Header Card (Zerodha Kite Style) */}
+        {/* Remembered User Card */}
         {rememberedEmail && authMethod !== 'register' && (
-          <div className="card" style={{ padding: '14px 16px', background: 'linear-gradient(135deg, rgba(124, 110, 230, 0.12) 0%, rgba(79, 70, 229, 0.04) 100%)', border: '1px solid var(--primary-light)', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '15px' }}>
+          <div
+            style={{
+              padding: '14px 16px',
+              borderRadius: '16px',
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(10, 25, 47, 0.8) 100%)',
+              border: '1px solid var(--border-glass)',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+              <div
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--primary) 0%, #059669 100%)',
+                  color: '#000000',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: '900',
+                  fontSize: '15px',
+                  flexShrink: 0
+                }}
+              >
                 {getInitials(rememberedEmail)}
               </div>
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-main)' }}>{rememberedEmail}</div>
-                <div style={{ fontSize: '11px', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {rememberedEmail}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <CheckCircle2 size={12} /> Remembered Account
                 </div>
               </div>
@@ -321,8 +388,8 @@ export default function AuthModal({
 
             <button
               type="button"
-              className="btn btn-ghost btn-sm"
-              style={{ fontSize: '11px', color: 'var(--text-muted)', gap: '4px' }}
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: '12px', padding: '6px 12px', flexShrink: 0, gap: '6px', borderRadius: '10px' }}
               onClick={handleSwitchAccount}
               title="Switch Account"
             >
@@ -332,18 +399,18 @@ export default function AuthModal({
         )}
 
         {error && (
-          <div style={{ padding: '10px 14px', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ padding: '10px 14px', background: 'rgba(239, 68, 68, 0.15)', color: '#FCA5A5', border: '1px solid #EF4444', borderRadius: '12px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <AlertCircle size={16} /> {error}
           </div>
         )}
 
         {success && (
-          <div style={{ padding: '10px 14px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ padding: '10px 14px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: '12px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CheckCircle2 size={16} /> {success}
           </div>
         )}
 
-        {/* MODE 1: ZERODHA KITE 4-DIGIT MPIN VIEW */}
+        {/* MODE 1: 4-DIGIT MPIN VIEW */}
         {authMethod === 'mpin' && (
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
@@ -431,7 +498,7 @@ export default function AuthModal({
               </button>
             </div>
 
-            {/* Bottom Actions Bar (Zerodha Kite Style) */}
+            {/* Bottom Actions Bar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid var(--border-color)', fontSize: '13px' }}>
               {hasBiometrics && (
                 <button
@@ -450,199 +517,137 @@ export default function AuthModal({
                 style={{ color: 'var(--text-muted)', gap: '6px', marginLeft: 'auto' }}
                 onClick={() => setAuthMethod('password')}
               >
-                <Lock size={15} /> Use Password instead
+                <Lock size={14} /> Use Password instead
               </button>
             </div>
           </div>
         )}
 
-        {/* MODE 2: ZERODHA KITE BIOMETRICS VIEW */}
-        {authMethod === 'biometrics' && (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div
-              style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                background: 'var(--primary-light)',
-                color: 'var(--primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 20px auto',
-                boxShadow: '0 0 24px var(--primary-glow)',
-                animation: 'pulse 2s infinite'
-              }}
-            >
-              <Fingerprint size={42} />
-            </div>
-
-            <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '8px' }}>
-              Touch Sensor to Unlock
-            </h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>
-              Verifying Face ID / Touch ID Biometrics for {rememberedEmail}
-            </p>
-
-            <button
-              type="button"
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '12px', fontSize: '15px', marginBottom: '16px' }}
-              onClick={() => handleBiometricLogin(rememberedEmail)}
-              disabled={loading}
-            >
-              {loading ? 'Scanning Biometrics...' : 'Touch Sensor to Scan'}
-            </button>
-
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', fontSize: '13px' }}>
-              {hasMpin && (
-                <button
-                  type="button"
-                  style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: '600' }}
-                  onClick={() => setAuthMethod('mpin')}
-                >
-                  Use 4-Digit MPIN
-                </button>
-              )}
-              <button
-                type="button"
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                onClick={() => setAuthMethod('password')}
-              >
-                Use Password instead
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* MODE 3 & 4: TRADITIONAL PASSWORD / REGISTER FORM */}
-        {(authMethod === 'password' || authMethod === 'register') && (
-          <form onSubmit={handlePasswordSubmit}>
-            {authMethod === 'register' && (
-              <div className="form-group">
-                <label className="form-label">Full Name</label>
-                <div style={{ position: 'relative' }}>
-                  <User size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
-                  <input
-                    type="text"
-                    placeholder="e.g. Alex Morgan"
-                    className="form-control"
-                    style={{ paddingLeft: '36px' }}
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
+        {/* MODE 2: STANDARD EMAIL + PASSWORD LOGIN */}
+        {authMethod === 'password' && (
+          <form onSubmit={handlePasswordLogin}>
             <div className="form-group">
               <label className="form-label">Email Address</label>
               <div style={{ position: 'relative' }}>
-                <Mail size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
                 <input
                   type="email"
-                  placeholder="name@example.com"
                   className="form-control"
-                  style={{ paddingLeft: '36px' }}
+                  placeholder="name@example.com"
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={e => handleEmailChange(e.target.value)}
                   required
                 />
               </div>
+
+              {emailHasMpin && (
+                <div style={{ marginTop: '8px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ width: '100%', fontSize: '12px', padding: '8px', color: 'var(--primary)', borderColor: 'var(--primary)' }}
+                    onClick={() => setAuthMethod('mpin')}
+                  >
+                    <KeyRound size={14} /> Sign In with 4-Digit MPIN
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="form-group">
               <label className="form-label">Password</label>
-              <div style={{ position: 'relative' }}>
-                <Lock size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  className="form-control"
-                  style={{ paddingLeft: '36px' }}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                />
-              </div>
+              <input
+                type="password"
+                className="form-control"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
             </div>
 
-            {authMethod === 'register' && (
-              <div className="form-group">
-                <label className="form-label">Confirm Password</label>
-                <div style={{ position: 'relative' }}>
-                  <Lock size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    className="form-control"
-                    style={{ paddingLeft: '36px' }}
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', fontSize: '13px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                  style={{ accentColor: 'var(--primary)' }}
+                />
+                <span>Remember me</span>
+              </label>
 
-            {authMethod === 'password' && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', fontSize: '13px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}>
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={e => setRememberMe(e.target.checked)}
-                  />
-                  Remember me
-                </label>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ padding: 0, color: 'var(--primary)' }}
+                onClick={() => {
+                  onClose();
+                  onOpenForgotPassword();
+                }}
+              >
+                Forgot Password?
+              </button>
+            </div>
 
-                <button
-                  type="button"
-                  style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: '500' }}
-                  onClick={() => {
-                    onClose();
-                    onOpenForgotPassword();
-                  }}
-                >
-                  Forgot Password?
-                </button>
-              </div>
-            )}
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '15px' }} disabled={loading}>
+              {loading ? 'Signing In...' : 'Sign In'}
+            </button>
+          </form>
+        )}
 
-            {/* Quick Switch to MPIN / Biometrics if set */}
-            {authMethod === 'password' && (hasMpin || hasBiometrics) && (
-              <div style={{ marginBottom: '16px', display: 'flex', gap: '10px' }}>
-                {hasMpin && (
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    style={{ flex: 1, fontSize: '12px', gap: '6px' }}
-                    onClick={() => setAuthMethod('mpin')}
-                  >
-                    <KeyRound size={14} style={{ color: 'var(--success)' }} /> Use 4-Digit MPIN
-                  </button>
-                )}
-                {hasBiometrics && (
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
-                    style={{ flex: 1, fontSize: '12px', gap: '6px' }}
-                    onClick={() => handleBiometricLogin(rememberedEmail)}
-                  >
-                    <Fingerprint size={14} style={{ color: 'var(--primary)' }} /> Touch Face ID
-                  </button>
-                )}
-              </div>
-            )}
+        {/* MODE 3: CREATE ACCOUNT */}
+        {authMethod === 'register' && (
+          <form onSubmit={handleRegisterSubmit}>
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Tadepalli Venkatamani Sasank"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                required
+              />
+            </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary"
-              style={{ width: '100%', marginTop: authMethod === 'register' ? '12px' : '0' }}
-              disabled={loading}
-            >
-              {loading ? 'Processing...' : (authMethod === 'password' ? 'Sign In' : 'Create Account')}
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <input
+                type="email"
+                className="form-control"
+                placeholder="name@example.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <input
+                type="password"
+                className="form-control"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Confirm Password</label>
+              <input
+                type="password"
+                className="form-control"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '15px' }} disabled={loading}>
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
         )}
