@@ -1,10 +1,10 @@
 import React from 'react';
-import { FolderSync, Upload, Plus, Sun, Moon, LogIn, UserPlus, LogOut } from 'lucide-react';
+import { FolderSync, Upload, Plus, Sun, Moon, LogIn, UserPlus, LogOut, Palette } from 'lucide-react';
 
 export default function Header({
   activeTabTitle,
   theme,
-  onToggleTheme,
+  onSelectTheme,
   user,
   onOpenLogin,
   onOpenRegister,
@@ -28,14 +28,90 @@ export default function Header({
       </div>
 
       <div className="top-actions">
-        <button
-          className="btn btn-ghost btn-sm"
-          onClick={onToggleTheme}
-          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          style={{ padding: '6px 8px' }}
+        {/* Apple Liquid Glass Theme Selector */}
+        <div
+          title="Liquid Glass Theme Selector"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'rgba(0, 0, 0, 0.35)',
+            padding: '5px 10px',
+            borderRadius: '24px',
+            border: '1px solid var(--border-glass)',
+            backdropFilter: 'blur(16px)'
+          }}
         >
-          {theme === 'dark' ? <Sun size={18} style={{ color: '#FDE047' }} /> : <Moon size={18} />}
-        </button>
+          <Palette size={14} style={{ color: 'var(--primary)', marginRight: '2px' }} />
+
+          {/* Cyber Emerald */}
+          <button
+            type="button"
+            onClick={() => onSelectTheme('emerald')}
+            title="Cyber Emerald & Obsidian Glass"
+            style={{
+              width: '18px',
+              height: '18px',
+              borderRadius: '50%',
+              background: '#10B981',
+              border: (theme === 'emerald' || theme === 'dark') ? '2px solid white' : '1px solid rgba(255,255,255,0.3)',
+              cursor: 'pointer',
+              boxShadow: (theme === 'emerald' || theme === 'dark') ? '0 0 12px #10B981' : 'none',
+              transition: 'all 0.2s ease'
+            }}
+          />
+
+          {/* Aurora Cyan */}
+          <button
+            type="button"
+            onClick={() => onSelectTheme('cyan')}
+            title="Aurora Cyan & Sapphire Glass"
+            style={{
+              width: '18px',
+              height: '18px',
+              borderRadius: '50%',
+              background: '#00F2FE',
+              border: theme === 'cyan' ? '2px solid white' : '1px solid rgba(255,255,255,0.3)',
+              cursor: 'pointer',
+              boxShadow: theme === 'cyan' ? '0 0 12px #00F2FE' : 'none',
+              transition: 'all 0.2s ease'
+            }}
+          />
+
+          {/* Golden Champagne */}
+          <button
+            type="button"
+            onClick={() => onSelectTheme('gold')}
+            title="Golden Champagne & Onyx Velvet"
+            style={{
+              width: '18px',
+              height: '18px',
+              borderRadius: '50%',
+              background: '#F59E0B',
+              border: theme === 'gold' ? '2px solid white' : '1px solid rgba(255,255,255,0.3)',
+              cursor: 'pointer',
+              boxShadow: theme === 'gold' ? '0 0 12px #F59E0B' : 'none',
+              transition: 'all 0.2s ease'
+            }}
+          />
+
+          {/* Light Glass */}
+          <button
+            type="button"
+            onClick={() => onSelectTheme('light')}
+            title="Apple Crystal Light Mode"
+            style={{
+              width: '18px',
+              height: '18px',
+              borderRadius: '50%',
+              background: '#FFFFFF',
+              border: theme === 'light' ? '2px solid var(--primary)' : '1px solid rgba(255,255,255,0.3)',
+              cursor: 'pointer',
+              boxShadow: theme === 'light' ? '0 0 12px #FFFFFF' : 'none',
+              transition: 'all 0.2s ease'
+            }}
+          />
+        </div>
 
         {user ? (
           <>
@@ -51,62 +127,48 @@ export default function Header({
               <Plus size={16} /> <span className="btn-text-desktop">Add entry</span>
             </button>
 
-            <div className="header-divider" />
-
-            {/* Clickable Profile Avatar Badge */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <button
-                type="button"
+            <button
+              type="button"
+              className="btn btn-ghost"
+              style={{ padding: '4px', borderRadius: '50%' }}
+              onClick={onOpenProfileModal}
+              title="Account Settings"
+            >
+              <div
                 style={{
-                  width: '34px',
-                  height: '34px',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #7C6EE6 0%, #4F46E5 100%)',
-                  color: 'white',
+                  background: 'var(--primary-light)',
+                  color: 'var(--primary)',
+                  fontWeight: '700',
+                  fontSize: '14px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontWeight: '700',
-                  fontSize: '12px',
-                  letterSpacing: '0.5px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(124, 110, 230, 0.3)',
-                  flexShrink: 0
+                  border: '1px solid var(--border-glass)'
                 }}
-                className="profile-avatar-btn"
-                title={`${user.name} (${user.email}) - Click to view profile`}
-                onClick={onOpenProfileModal}
               >
-                {getInitials(user.name)}
-              </button>
-
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={onLogout}
-                title="Sign Out"
-                style={{ color: 'var(--danger)', padding: '6px' }}
-              >
-                <LogOut size={16} />
-              </button>
-            </div>
-          </>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={onOpenLogin}
-              style={{ fontSize: '12px', padding: '6px 10px' }}
-            >
-              <LogIn size={14} /> <span>Sign In</span>
+                {getInitials(user.name || user.email)}
+              </div>
             </button>
 
             <button
-              className="btn btn-primary btn-sm"
-              onClick={onOpenRegister}
-              style={{ fontSize: '12px', padding: '6px 10px' }}
+              className="btn btn-ghost btn-sm"
+              onClick={onLogout}
+              title="Sign Out"
+              style={{ color: '#EF4444', padding: '6px 8px' }}
             >
-              <UserPlus size={14} /> <span className="btn-text-desktop">Create Account</span><span className="btn-text-mobile">Join</span>
+              <LogOut size={18} />
+            </button>
+          </>
+        ) : (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="btn btn-secondary btn-sm" onClick={onOpenLogin}>
+              <LogIn size={15} /> Sign In
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={onOpenRegister}>
+              <UserPlus size={15} /> Register
             </button>
           </div>
         )}

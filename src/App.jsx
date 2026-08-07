@@ -132,11 +132,13 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('ledgerly_theme', theme);
+    localStorage.setItem('wealthpulse_theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  const handleSelectTheme = (newTheme) => {
+    setTheme(newTheme);
+    localStorage.setItem('wealthpulse_theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
   };
 
   const rememberedEmail = localStorage.getItem('ledgerly_remembered_email') || (user ? user.email : '');
@@ -544,7 +546,7 @@ export default function App() {
         <Header
           activeTabTitle={activeNav.label}
           theme={theme}
-          onToggleTheme={toggleTheme}
+          onSelectTheme={handleSelectTheme}
           user={user}
           onOpenLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
           onOpenRegister={() => { setAuthModalMode('register'); setIsAuthModalOpen(true); }}

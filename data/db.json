@@ -20,11 +20,11 @@
       "category": "Exams",
       "amount": 500,
       "type": "expense",
-      "account": "Main Checking",
+      "account": "HDFC Account",
       "tags": "[\"Personal\"]",
       "receipt": 0,
       "source": "manual",
-      "fingerprint": "2026-08-05|isro exam|500.00|main checking",
+      "fingerprint": "2026-08-05|isro exam|500.00|hdfc account",
       "createdAt": "2026-08-05T04:45:00.000Z"
     },
     {
@@ -35,11 +35,11 @@
       "category": "Utilities",
       "amount": 600,
       "type": "expense",
-      "account": "Main Checking",
+      "account": "HDFC Account",
       "tags": "[\"Water tanker\"]",
       "receipt": 0,
       "source": "manual",
-      "fingerprint": "2026-08-04|hmwssb|600.00|main checking",
+      "fingerprint": "2026-08-04|hmwssb|600.00|hdfc account",
       "createdAt": "2026-08-04T04:36:00.348Z"
     },
     {
@@ -50,11 +50,11 @@
       "category": "Dining",
       "amount": 80,
       "type": "expense",
-      "account": "Main Checking",
+      "account": "HDFC Account",
       "tags": "[\"Tiffins\"]",
       "receipt": 0,
       "source": "manual",
-      "fingerprint": "2026-08-04|tiffins (swathi hotel jpts)|80.00|main checking",
+      "fingerprint": "2026-08-04|tiffins (swathi hotel jpts)|80.00|hdfc account",
       "createdAt": "2026-08-04T04:20:10.490Z"
     },
     {
@@ -65,11 +65,11 @@
       "category": "Transportation",
       "amount": 570.36,
       "type": "expense",
-      "account": "Main Checking",
+      "account": "HDFC Account",
       "tags": "[\"Personal\"]",
       "receipt": 0,
       "source": "manual",
-      "fingerprint": "2026-08-03|parivaahan llr telangana|570.36|main checking",
+      "fingerprint": "2026-08-03|parivaahan llr telangana|570.36|hdfc account",
       "createdAt": "2026-08-03T09:45:52.806Z"
     },
     {
@@ -80,11 +80,11 @@
       "category": "Utilities",
       "amount": 63.13,
       "type": "expense",
-      "account": "Main Checking",
+      "account": "HDFC Account",
       "tags": "[\"Services\"]",
       "receipt": 0,
       "source": "manual",
-      "fingerprint": "2026-08-03|aws (monthly payment sae)|63.13|main checking",
+      "fingerprint": "2026-08-03|aws (monthly payment sae)|63.13|hdfc account",
       "createdAt": "2026-08-03T09:45:08.622Z"
     },
     {
@@ -95,11 +95,11 @@
       "category": "Groceries",
       "amount": 10,
       "type": "expense",
-      "account": "Main Checking",
+      "account": "HDFC Account",
       "tags": "[\"home\"]",
       "receipt": 0,
       "source": "manual",
-      "fingerprint": "2026-08-02|coriander|10.00|main checking",
+      "fingerprint": "2026-08-02|coriander|10.00|hdfc account",
       "createdAt": "2026-08-03T09:44:04.243Z"
     },
     {
@@ -110,11 +110,11 @@
       "category": "Groceries",
       "amount": 20,
       "type": "expense",
-      "account": "Main Checking",
+      "account": "HDFC Account",
       "tags": "[\"home\"]",
       "receipt": 0,
       "source": "manual",
-      "fingerprint": "2026-08-01|general provision (bru packets)|20.00|main checking",
+      "fingerprint": "2026-08-01|general provision (bru packets)|20.00|hdfc account",
       "createdAt": "2026-08-03T09:43:04.243Z"
     },
     {
@@ -125,11 +125,11 @@
       "category": "Dining",
       "amount": 477,
       "type": "expense",
-      "account": "Main Checking",
+      "account": "HDFC Account",
       "tags": "[\"Office\"]",
       "receipt": 0,
       "source": "manual",
-      "fingerprint": "2026-07-31|dinner at hotel kass (office)|477.00|main checking",
+      "fingerprint": "2026-07-31|dinner at hotel kass (office)|477.00|hdfc account",
       "createdAt": "2026-08-03T09:42:04.243Z"
     },
     {
@@ -140,12 +140,42 @@
       "category": "Income",
       "amount": 23803,
       "type": "income",
-      "account": "Main Checking",
+      "account": "HDFC Account",
       "tags": "[\"Salary\"]",
       "receipt": 0,
       "source": "manual",
-      "fingerprint": "2026-07-31|salaries the icfai foundation for highereducation|23803.00|main checking",
+      "fingerprint": "2026-07-31|salaries the icfai foundation for highereducation|23803.00|hdfc account",
       "createdAt": "2026-08-03T09:39:29.071Z"
+    },
+    {
+      "id": "tx_1786077132637_3wlhos71f",
+      "userId": "usr_1785755811844_crbzz5",
+      "date": "2026-08-06",
+      "merchant": "Phone Screen Guards",
+      "category": "Entertainment",
+      "amount": 600,
+      "type": "expense",
+      "account": "HDFC Account",
+      "tags": "[\"Personal\"]",
+      "receipt": 0,
+      "source": "manual",
+      "fingerprint": "2026-08-06|phone screen guards|600.00|hdfc account",
+      "createdAt": "2026-08-07T04:32:12.637Z"
+    },
+    {
+      "id": "tx_1786077175747_gzgwsis8h",
+      "userId": "usr_1785755811844_crbzz5",
+      "date": "2026-08-06",
+      "merchant": "Auto to Home from Habsiguda",
+      "category": "Transportation",
+      "amount": 155,
+      "type": "expense",
+      "account": "HDFC Account",
+      "tags": "[\"Personal\"]",
+      "receipt": 0,
+      "source": "manual",
+      "fingerprint": "2026-08-06|auto to home from habsiguda|155.00|hdfc account",
+      "createdAt": "2026-08-07T04:32:55.747Z"
     }
   ],
   "tags": [
@@ -251,10 +281,9 @@
         "Housing"
       ],
       "accounts": [
-        "Main Checking",
-        "Everyday Visa",
-        "Rewards Card",
-        "Cash"
+        "Cash",
+        "HDFC Account",
+        "SBI Account"
       ],
       "goals": [],
       "budgets": [],
@@ -283,7 +312,7 @@
       "processedDriveFileIds": [],
       "driveResetAt": "2026-08-03T09:17:51.855Z",
       "freshStart": false,
-      "updatedAt": "2026-08-04T05:06:42.545Z",
+      "updatedAt": "2026-08-07T04:32:31.051Z",
       "tags": [
         "Personal",
         "Services",
@@ -302,14 +331,14 @@
       "type": "mutual_fund",
       "quantity": 270.602,
       "buyPrice": 92.38,
-      "currentPrice": 92.8329,
-      "currentValuation": 25120.77,
-      "unrealizedPnL": 122.56,
-      "pnlPercentage": 0.49,
+      "currentPrice": 92.3083,
+      "currentValuation": 24978.81,
+      "unrealizedPnL": -19.4,
+      "pnlPercentage": -0.08,
       "notes": "",
       "createdAt": "2026-08-06T09:08:46.650Z",
       "updatedAt": "2026-08-06T09:11:11.764Z",
-      "lastPriceSyncAt": "2026-08-06T10:28:28.890Z"
+      "lastPriceSyncAt": "2026-08-07T04:38:50.480Z"
     },
     {
       "id": "inv_1786007547082_bsd4ii",
@@ -319,14 +348,14 @@
       "type": "mutual_fund",
       "quantity": 964.703,
       "buyPrice": 25.91,
-      "currentPrice": 27.2207,
-      "currentValuation": 26259.89,
-      "unrealizedPnL": 1264.44,
-      "pnlPercentage": 5.06,
+      "currentPrice": 27.3195,
+      "currentValuation": 26355.2,
+      "unrealizedPnL": 1359.75,
+      "pnlPercentage": 5.44,
       "notes": "",
       "createdAt": "2026-08-06T09:12:27.082Z",
       "updatedAt": "2026-08-06T09:13:21.916Z",
-      "lastPriceSyncAt": "2026-08-06T10:28:28.890Z"
+      "lastPriceSyncAt": "2026-08-07T04:38:50.480Z"
     },
     {
       "id": "inv_1786009340816_80lfez",
@@ -336,14 +365,14 @@
       "type": "stock",
       "quantity": 14,
       "buyPrice": 107.19,
-      "currentPrice": 86.41,
-      "currentValuation": 1209.74,
-      "unrealizedPnL": -290.92,
-      "pnlPercentage": -19.39,
+      "currentPrice": 86.21,
+      "currentValuation": 1206.94,
+      "unrealizedPnL": -293.72,
+      "pnlPercentage": -19.57,
       "notes": "",
       "createdAt": "2026-08-06T09:42:20.816Z",
       "updatedAt": "2026-08-06T09:42:20.816Z",
-      "lastPriceSyncAt": "2026-08-06T10:28:28.890Z"
+      "lastPriceSyncAt": "2026-08-07T04:38:50.480Z"
     },
     {
       "id": "inv_1786009517335_67nt18",
@@ -369,14 +398,14 @@
       "type": "stock",
       "quantity": 5,
       "buyPrice": 919,
-      "currentPrice": 2608.3,
-      "currentValuation": 13041.5,
-      "unrealizedPnL": 8446.5,
-      "pnlPercentage": 183.82,
+      "currentPrice": 2604.8,
+      "currentValuation": 13024,
+      "unrealizedPnL": 8429,
+      "pnlPercentage": 183.44,
       "notes": "",
       "createdAt": "2026-08-06T09:46:12.245Z",
       "updatedAt": "2026-08-06T09:46:12.245Z",
-      "lastPriceSyncAt": "2026-08-06T10:28:29.505Z"
+      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
     },
     {
       "id": "inv_1786009695487_vjrjl6",
@@ -386,14 +415,14 @@
       "type": "stock",
       "quantity": 1,
       "buyPrice": 1208.7,
-      "currentPrice": 1165,
-      "currentValuation": 1165,
-      "unrealizedPnL": -43.7,
-      "pnlPercentage": -3.62,
+      "currentPrice": 1176.6,
+      "currentValuation": 1176.6,
+      "unrealizedPnL": -32.1,
+      "pnlPercentage": -2.66,
       "notes": "",
       "createdAt": "2026-08-06T09:48:15.487Z",
       "updatedAt": "2026-08-06T09:48:15.487Z",
-      "lastPriceSyncAt": "2026-08-06T10:28:29.505Z"
+      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
     },
     {
       "id": "inv_1786009740060_g54xv8",
@@ -403,14 +432,14 @@
       "type": "stock",
       "quantity": 58,
       "buyPrice": 27.5,
-      "currentPrice": 89.29,
-      "currentValuation": 5178.82,
-      "unrealizedPnL": 3583.82,
-      "pnlPercentage": 224.69,
+      "currentPrice": 89.3,
+      "currentValuation": 5179.4,
+      "unrealizedPnL": 3584.4,
+      "pnlPercentage": 224.73,
       "notes": "",
       "createdAt": "2026-08-06T09:49:00.061Z",
       "updatedAt": "2026-08-06T09:49:00.061Z",
-      "lastPriceSyncAt": "2026-08-06T10:28:29.505Z"
+      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
     },
     {
       "id": "inv_1786009761172_85yn0v",
@@ -420,14 +449,14 @@
       "type": "stock",
       "quantity": 5,
       "buyPrice": 310.45,
-      "currentPrice": 263.1,
-      "currentValuation": 1315.5,
-      "unrealizedPnL": -236.75,
-      "pnlPercentage": -15.25,
+      "currentPrice": 261,
+      "currentValuation": 1305,
+      "unrealizedPnL": -247.25,
+      "pnlPercentage": -15.93,
       "notes": "",
       "createdAt": "2026-08-06T09:49:21.172Z",
       "updatedAt": "2026-08-06T09:49:21.172Z",
-      "lastPriceSyncAt": "2026-08-06T10:28:29.505Z"
+      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
     },
     {
       "id": "inv_1786009786157_eu1unx",
@@ -437,14 +466,14 @@
       "type": "stock",
       "quantity": 34,
       "buyPrice": 516.3,
-      "currentPrice": 1830,
-      "currentValuation": 62220,
-      "unrealizedPnL": 44665.8,
-      "pnlPercentage": 254.45,
+      "currentPrice": 1843.4,
+      "currentValuation": 62675.6,
+      "unrealizedPnL": 45121.4,
+      "pnlPercentage": 257.04,
       "notes": "",
       "createdAt": "2026-08-06T09:49:46.157Z",
       "updatedAt": "2026-08-06T09:49:46.157Z",
-      "lastPriceSyncAt": "2026-08-06T10:28:29.505Z"
+      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
     },
     {
       "id": "inv_1786009807825_pil7i9",
@@ -454,14 +483,14 @@
       "type": "stock",
       "quantity": 36,
       "buyPrice": 42.5,
-      "currentPrice": 41.44,
-      "currentValuation": 1491.84,
-      "unrealizedPnL": -38.16,
-      "pnlPercentage": -2.49,
+      "currentPrice": 41.34,
+      "currentValuation": 1488.24,
+      "unrealizedPnL": -41.76,
+      "pnlPercentage": -2.73,
       "notes": "",
       "createdAt": "2026-08-06T09:50:07.825Z",
       "updatedAt": "2026-08-06T09:50:07.825Z",
-      "lastPriceSyncAt": "2026-08-06T10:28:29.505Z"
+      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
     },
     {
       "id": "inv_1786009827253_deqeiz",
@@ -471,14 +500,14 @@
       "type": "stock",
       "quantity": 16,
       "buyPrice": 251.44,
-      "currentPrice": 459.65,
-      "currentValuation": 7354.4,
-      "unrealizedPnL": 3331.36,
-      "pnlPercentage": 82.81,
+      "currentPrice": 455.15,
+      "currentValuation": 7282.4,
+      "unrealizedPnL": 3259.36,
+      "pnlPercentage": 81.02,
       "notes": "",
       "createdAt": "2026-08-06T09:50:27.253Z",
       "updatedAt": "2026-08-06T09:50:27.253Z",
-      "lastPriceSyncAt": "2026-08-06T10:28:29.505Z"
+      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
     },
     {
       "id": "inv_1786009841805_rt6mp3",
@@ -488,14 +517,14 @@
       "type": "stock",
       "quantity": 10,
       "buyPrice": 276.96,
-      "currentPrice": 345.35,
-      "currentValuation": 3453.5,
-      "unrealizedPnL": 683.9,
-      "pnlPercentage": 24.69,
+      "currentPrice": 348.25,
+      "currentValuation": 3482.5,
+      "unrealizedPnL": 712.9,
+      "pnlPercentage": 25.74,
       "notes": "",
       "createdAt": "2026-08-06T09:50:41.805Z",
       "updatedAt": "2026-08-06T09:50:41.805Z",
-      "lastPriceSyncAt": "2026-08-06T10:28:29.505Z"
+      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
     },
     {
       "id": "inv_1786009851200_0fwodf",
@@ -505,14 +534,14 @@
       "type": "stock",
       "quantity": 16,
       "buyPrice": 235,
-      "currentPrice": 186.12,
-      "currentValuation": 2977.92,
-      "unrealizedPnL": -782.08,
-      "pnlPercentage": -20.8,
+      "currentPrice": 187.65,
+      "currentValuation": 3002.4,
+      "unrealizedPnL": -757.6,
+      "pnlPercentage": -20.15,
       "notes": "",
       "createdAt": "2026-08-06T09:50:51.200Z",
       "updatedAt": "2026-08-06T09:50:51.200Z",
-      "lastPriceSyncAt": "2026-08-06T10:28:29.505Z"
+      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
     }
   ]
 }
