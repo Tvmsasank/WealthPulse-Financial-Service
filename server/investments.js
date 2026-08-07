@@ -2,11 +2,11 @@
  * Live Investment Price Fetcher for Indian Mutual Funds and Stocks
  */
 
-// Memory cache for prices (expires every 5 minutes)
+// Memory cache for prices (expires every 1 minute for fast live updates)
 const priceCache = new Map();
-const CACHE_TTL_MS = 5 * 60 * 1000;
+const CACHE_TTL_MS = 60 * 1000;
 
-// Popular Indian stock mapper (Company Name -> NSE Ticker)
+// Popular Indian stock mapper (Company Name / Short Code -> Official NSE Ticker)
 const INDIAN_STOCK_MAP = {
   'CANARA BANK': 'CANBK.NS',
   'CANARA': 'CANBK.NS',
@@ -41,25 +41,54 @@ const INDIAN_STOCK_MAP = {
   'L&T': 'LT.NS',
   'LARSEN': 'LT.NS',
   'AXIS BANK': 'AXISBANK.NS',
-  'KOTAK BANK': 'KOTAKBANK.NS'
+  'KOTAK BANK': 'KOTAKBANK.NS',
+  'GLAND': 'GLAND.NS',
+  'GLAND PHARMA': 'GLAND.NS',
+  'IRFC': 'IRFC.NS',
+  'INDIAN RAILWAY FINANCE': 'IRFC.NS',
+  'LAURUSLABS': 'LAURUSLABS.NS',
+  'LAURUS LABS': 'LAURUSLABS.NS',
+  'OLAELEC': 'OLAELEC.NS',
+  'OLA ELECTRIC': 'OLAELEC.NS',
+  'TMCV': 'TATAMTRDVR.NS',
+  'TMPV': 'TATAMOTORS.NS',
+  'DEVYANI': 'DEVYANI.NS',
+  'DELHIVERY': 'DELHIVERY.NS',
+  'DEEPAKNTR': 'DEEPAKNTR.NS',
+  'DEEPINDS': 'DEEPINDS.NS',
+  'DELTACORP': 'DELTACORP.NS'
 };
+
+/**
+ * Resolve stock ticker for any Indian stock symbol or name
+ */
+export function resolveStockSymbol(symbolOrName) {
+  if (!symbolOrName) return null;
+  const rawInput = symbolOrName.trim().toUpperCase();
+
+  // 1. Check Indian stock map dictionary
+  if (INDIAN_STOCK_MAP[rawInput]) {
+    return INDIAN_STOCK_MAP[rawInput];
+  }
+
+  // 2. If already ends with .NS or .BO
+  if (rawInput.endsWith('.NS') || rawInput.endsWith('.BO')) {
+    return rawInput;
+  }
+
+  // 3. Clean spaces & special characters (e.g. "IRFC" -> "IRFC.NS")
+  const cleanSymbol = rawInput.replace(/[^A-Z0-9]/g, '');
+  if (!cleanSymbol) return null;
+  return `${cleanSymbol}.NS`;
+}
 
 /**
  * Fetch live stock price using Yahoo Finance API (supports NSE/BSE e.g. CANBK.NS, RELIANCE.NS, TATAMOTORS.NS)
  */
 export async function fetchStockPrice(symbolOrName) {
   if (!symbolOrName) return null;
-  const rawInput = symbolOrName.trim().toUpperCase();
-
-  // 1. Check Indian stock map dictionary
-  let formattedSymbol = INDIAN_STOCK_MAP[rawInput];
-
-  if (!formattedSymbol) {
-    // 2. Clean input (remove spaces / special characters)
-    const cleanSymbol = rawInput.replace(/[^A-Z0-9\.]/g, '');
-    if (!cleanSymbol) return null;
-    formattedSymbol = cleanSymbol.includes('.') ? cleanSymbol : `${cleanSymbol}.NS`;
-  }
+  const formattedSymbol = resolveStockSymbol(symbolOrName);
+  if (!formattedSymbol) return null;
 
   const cacheKey = `stock_${formattedSymbol}`;
   const cached = priceCache.get(cacheKey);
@@ -174,38 +203,6 @@ export async function fetchMutualFundNav(schemeNameOrCode) {
     console.error(`mfapi search error for ${searchQuery}:`, err.message);
   }
 
-  // 3. Fallback to AMFI NAVAll.txt
-  try {
-    const res = await fetch('https://www.amfiindia.com/spages/NAVAll.txt', {
-      headers: { 'User-Agent': 'Mozilla/5.0' }
-    });
-
-    if (res.ok) {
-      const text = await res.text();
-      const lines = text.split('\n');
-
-      for (const line of lines) {
-        const parts = line.split(';');
-        if (parts.length >= 5) {
-          const code = parts[0]?.trim();
-          const name = parts[3]?.trim();
-          const navStr = parts[4]?.trim();
-
-          if (code === searchQuery || (name && name.toLowerCase().includes(searchQuery.toLowerCase()))) {
-            const nav = parseFloat(navStr);
-            if (!isNaN(nav) && nav > 0) {
-              const result = { price: nav, schemeCode: code, schemeName: name };
-              priceCache.set(cacheKey, { ...result, timestamp: Date.now() });
-              return result;
-            }
-          }
-        }
-      }
-    }
-  } catch (err) {
-    console.error(`Failed to fetch AMFI MF NAV for ${rawQuery}:`, err.message);
-  }
-
   return null;
 }
 
@@ -218,12 +215,17 @@ export async function refreshHoldingsPrices(holdings = []) {
   for (const h of holdings) {
     let liveData = null;
     let livePrice = null;
+    let resolvedSymbol = h.symbol || '';
 
     if (h.type === 'stock') {
-      livePrice = await fetchStockPrice(h.symbol || h.name);
+      resolvedSymbol = resolveStockSymbol(h.symbol || h.name) || h.symbol || '';
+      livePrice = await fetchStockPrice(resolvedSymbol || h.name);
     } else if (h.type === 'mutual_fund') {
       liveData = await fetchMutualFundNav(h.symbol || h.name);
       livePrice = typeof liveData === 'object' && liveData ? liveData.price : liveData;
+      if (typeof liveData === 'object' && liveData?.schemeCode) {
+        resolvedSymbol = String(liveData.schemeCode);
+      }
     }
 
     if (livePrice !== null && !isNaN(livePrice) && livePrice > 0) {
@@ -234,7 +236,7 @@ export async function refreshHoldingsPrices(holdings = []) {
 
       updatedHoldings.push({
         ...h,
-        symbol: h.type === 'stock' ? (INDIAN_STOCK_MAP[h.name.toUpperCase()] || h.symbol || '') : ((typeof liveData === 'object' && liveData?.schemeCode) ? liveData.schemeCode : (h.symbol || '')),
+        symbol: resolvedSymbol || h.symbol || '',
         currentPrice: livePrice,
         currentValuation,
         unrealizedPnL,
@@ -251,6 +253,7 @@ export async function refreshHoldingsPrices(holdings = []) {
 
       updatedHoldings.push({
         ...h,
+        symbol: resolvedSymbol || h.symbol || '',
         currentPrice,
         currentValuation,
         unrealizedPnL,
