@@ -595,6 +595,12 @@ body::after {
   100% { transform: rotate(360deg); }
 }
 
+.user-profile-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
 /* Responsive Breakpoints */
 @media (max-width: 1024px) {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
