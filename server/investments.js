@@ -11,10 +11,12 @@ const INDIAN_STOCK_MAP = {
   'CANARA BANK': 'CANBK.NS',
   'CANARA': 'CANBK.NS',
   'CANBK': 'CANBK.NS',
+  'CANBK.NS': 'CANBK.NS',
   'RELIANCE': 'RELIANCE.NS',
   'RELIANCE INDUSTRIES': 'RELIANCE.NS',
   'TATA MOTORS': 'TATAMOTORS.NS',
   'TATAMOTORS': 'TATAMOTORS.NS',
+  'TATAMOTORS.NS': 'TATAMOTORS.NS',
   'INFOSYS': 'INFY.NS',
   'INFY': 'INFY.NS',
   'TCS': 'TCS.NS',
@@ -50,8 +52,15 @@ const INDIAN_STOCK_MAP = {
   'LAURUS LABS': 'LAURUSLABS.NS',
   'OLAELEC': 'OLAELEC.NS',
   'OLA ELECTRIC': 'OLAELEC.NS',
-  'TMCV': 'TATAMTRDVR.NS',
+  'TMCV': 'TATAMOTORS.NS',
   'TMPV': 'TATAMOTORS.NS',
+  'TATAMTRDVR.NS': 'TATAMOTORS.NS',
+  'DEBIL': 'DBEIL.NS',
+  'DEBIL.NS': 'DBEIL.NS',
+  'DBEIL': 'DBEIL.NS',
+  'DBEIL.NS': 'DBEIL.NS',
+  'DEEPAK BUILDERS': 'DBEIL.NS',
+  'DEEPAK BUILDERS & ENGINEERS': 'DBEIL.NS',
   'DEVYANI': 'DEVYANI.NS',
   'DELHIVERY': 'DELHIVERY.NS',
   'DEEPAKNTR': 'DEEPAKNTR.NS',
@@ -68,10 +77,12 @@ export function resolveStockSymbol(symbolOrName) {
   if (!symbolOrName) return null;
   const rawInput = symbolOrName.trim().toUpperCase();
 
+  // 1. Check Indian stock map dictionary FIRST
   if (INDIAN_STOCK_MAP[rawInput]) {
     return INDIAN_STOCK_MAP[rawInput];
   }
 
+  // 2. If already ends with .NS or .BO
   if (rawInput.endsWith('.NS') || rawInput.endsWith('.BO')) {
     return rawInput;
   }
@@ -120,7 +131,7 @@ export async function fetchStockPrice(symbolOrName) {
   if (!symbolOrName) return { price: null, symbol: null };
   const primarySymbol = resolveStockSymbol(symbolOrName);
 
-  // 1. Try Primary Symbol (e.g. CANBK.NS or DELTA.BO)
+  // 1. Try Primary Symbol (e.g. DBEIL.NS, CANBK.NS)
   let price = await querySingleYahooSymbol(primarySymbol);
   if (price !== null) {
     return { price, symbol: primarySymbol };
@@ -278,7 +289,6 @@ export async function refreshHoldingsPrices(holdings = []) {
         lastPriceSyncAt: new Date().toISOString()
       });
     } else {
-      // Flag symbol as needing manual symbol entry if live price could not be fetched
       priceStatus = (h.type === 'stock' || h.type === 'mutual_fund') ? 'invalid_symbol' : 'manual';
       const currentPrice = h.currentPrice || h.buyPrice || 0;
       const currentValuation = Math.round((currentPrice * (h.quantity || 1)) * 100) / 100;

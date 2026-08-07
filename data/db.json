@@ -397,7 +397,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:08:46.650Z",
       "updatedAt": "2026-08-06T09:11:11.764Z",
-      "lastPriceSyncAt": "2026-08-07T09:54:00.625Z",
+      "lastPriceSyncAt": "2026-08-07T09:57:43.053Z",
       "priceStatus": "ok"
     },
     {
@@ -415,7 +415,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:12:27.082Z",
       "updatedAt": "2026-08-06T09:13:21.916Z",
-      "lastPriceSyncAt": "2026-08-07T09:54:00.625Z",
+      "lastPriceSyncAt": "2026-08-07T09:57:43.120Z",
       "priceStatus": "ok"
     },
     {
@@ -426,32 +426,33 @@
       "type": "stock",
       "quantity": 14,
       "buyPrice": 107.19,
-      "currentPrice": 85.8,
-      "currentValuation": 1201.2,
-      "unrealizedPnL": -299.46,
-      "pnlPercentage": -19.96,
+      "currentPrice": 85.73,
+      "currentValuation": 1200.22,
+      "unrealizedPnL": -300.44,
+      "pnlPercentage": -20.02,
       "notes": "",
       "createdAt": "2026-08-06T09:42:20.816Z",
       "updatedAt": "2026-08-06T09:42:20.816Z",
-      "lastPriceSyncAt": "2026-08-07T09:54:00.625Z",
+      "lastPriceSyncAt": "2026-08-07T09:57:43.284Z",
       "priceStatus": "ok"
     },
     {
       "id": "inv_1786009517335_67nt18",
       "userId": "usr_1785755811844_crbzz5",
       "name": "DEBIL",
-      "symbol": "DEBIL.NS",
+      "symbol": "DBEIL.NS",
       "type": "stock",
       "quantity": 10,
       "buyPrice": 9.42,
-      "currentPrice": 9.42,
-      "currentValuation": 94.2,
-      "unrealizedPnL": 0,
-      "pnlPercentage": 0,
+      "currentPrice": 7.28,
+      "currentValuation": 72.8,
+      "unrealizedPnL": -21.4,
+      "pnlPercentage": -22.72,
       "notes": "",
       "createdAt": "2026-08-06T09:45:17.335Z",
       "updatedAt": "2026-08-06T09:45:30.445Z",
-      "priceStatus": "invalid_symbol"
+      "priceStatus": "ok",
+      "lastPriceSyncAt": "2026-08-07T09:57:43.408Z"
     },
     {
       "id": "inv_1786009572245_nknwut",
@@ -461,14 +462,14 @@
       "type": "stock",
       "quantity": 5,
       "buyPrice": 919,
-      "currentPrice": 2604,
-      "currentValuation": 13020,
-      "unrealizedPnL": 8425,
-      "pnlPercentage": 183.35,
+      "currentPrice": 2603.7,
+      "currentValuation": 13018.5,
+      "unrealizedPnL": 8423.5,
+      "pnlPercentage": 183.32,
       "notes": "",
       "createdAt": "2026-08-06T09:46:12.245Z",
       "updatedAt": "2026-08-06T09:46:12.245Z",
-      "lastPriceSyncAt": "2026-08-07T09:54:00.927Z",
+      "lastPriceSyncAt": "2026-08-07T09:57:43.505Z",
       "priceStatus": "ok"
     },
     {
@@ -486,7 +487,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:48:15.487Z",
       "updatedAt": "2026-08-06T09:48:15.487Z",
-      "lastPriceSyncAt": "2026-08-07T09:54:00.927Z",
+      "lastPriceSyncAt": "2026-08-07T09:57:43.644Z",
       "priceStatus": "ok"
     },
     {
@@ -504,7 +505,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:49:00.061Z",
       "updatedAt": "2026-08-06T09:49:00.061Z",
-      "lastPriceSyncAt": "2026-08-07T09:54:00.927Z",
+      "lastPriceSyncAt": "2026-08-07T09:57:43.743Z",
       "priceStatus": "ok"
     },
     {
@@ -522,7 +523,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:49:21.172Z",
       "updatedAt": "2026-08-06T09:49:21.172Z",
-      "lastPriceSyncAt": "2026-08-07T09:54:00.927Z",
+      "lastPriceSyncAt": "2026-08-07T09:57:43.867Z",
       "priceStatus": "ok"
     },
     {
@@ -540,7 +541,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:49:46.157Z",
       "updatedAt": "2026-08-06T09:49:46.157Z",
-      "lastPriceSyncAt": "2026-08-07T09:54:00.927Z",
+      "lastPriceSyncAt": "2026-08-07T09:57:43.969Z",
       "priceStatus": "ok"
     },
     {
@@ -551,21 +552,21 @@
       "type": "stock",
       "quantity": 36,
       "buyPrice": 42.5,
-      "currentPrice": 41,
-      "currentValuation": 1476,
-      "unrealizedPnL": -54,
-      "pnlPercentage": -3.53,
+      "currentPrice": 41.09,
+      "currentValuation": 1479.24,
+      "unrealizedPnL": -50.76,
+      "pnlPercentage": -3.32,
       "notes": "",
       "createdAt": "2026-08-06T09:50:07.825Z",
       "updatedAt": "2026-08-06T09:50:07.825Z",
-      "lastPriceSyncAt": "2026-08-07T09:54:00.927Z",
+      "lastPriceSyncAt": "2026-08-07T09:57:44.067Z",
       "priceStatus": "ok"
     },
     {
       "id": "inv_1786009827253_deqeiz",
       "userId": "usr_1785755811844_crbzz5",
       "name": "TMCV",
-      "symbol": "TATAMTRDVR.NS",
+      "symbol": "TATAMOTORS.NS",
       "type": "stock",
       "quantity": 16,
       "buyPrice": 251.44,
@@ -612,25 +613,26 @@
       "notes": "",
       "createdAt": "2026-08-06T09:50:51.200Z",
       "updatedAt": "2026-08-06T09:50:51.200Z",
-      "lastPriceSyncAt": "2026-08-07T09:54:01.504Z",
+      "lastPriceSyncAt": "2026-08-07T09:57:44.974Z",
       "priceStatus": "ok"
     },
     {
       "id": "inv_1786085620993_mfj34t",
       "userId": "usr_1785755811844_crbzz5",
       "name": "DEBIL",
-      "symbol": "DEBIL.NS",
+      "symbol": "DBEIL.NS",
       "type": "stock",
       "quantity": 110,
       "buyPrice": 8.68,
-      "currentPrice": 8.68,
-      "currentValuation": 954.8,
-      "unrealizedPnL": 0,
-      "pnlPercentage": 0,
+      "currentPrice": 7.28,
+      "currentValuation": 800.8,
+      "unrealizedPnL": -154,
+      "pnlPercentage": -16.13,
       "notes": "",
       "createdAt": "2026-08-07T06:53:40.993Z",
       "updatedAt": "2026-08-07T06:53:40.993Z",
-      "priceStatus": "invalid_symbol"
+      "priceStatus": "ok",
+      "lastPriceSyncAt": "2026-08-07T09:57:44.975Z"
     }
   ]
 }
