@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Upload, Edit3 } from 'lucide-react';
+import { X, Plus, Upload, Edit3, Check, Tag } from 'lucide-react';
 
 export default function AddEntryModal({
   isOpen,
@@ -50,6 +50,20 @@ export default function AddEntryModal({
     setError('');
   }, [editTransaction, isOpen]);
 
+  const parseTags = (rawTags) => {
+    if (!rawTags) return [];
+    if (Array.isArray(rawTags)) return rawTags;
+    if (typeof rawTags === 'string') {
+      try {
+        const parsed = JSON.parse(rawTags);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return rawTags.split(',').map(t => t.trim()).filter(Boolean);
+      }
+    }
+    return [];
+  };
+
   const handleAddTag = () => {
     if (!newTagInput.trim()) return;
     const tag = newTagInput.trim();
@@ -82,7 +96,6 @@ export default function AddEntryModal({
       return;
     }
 
-    // Auto-include any pending typed tag in input field
     let finalTags = [...selectedTags];
     if (newTagInput.trim() && !finalTags.includes(newTagInput.trim())) {
       finalTags.push(newTagInput.trim());
@@ -99,53 +112,92 @@ export default function AddEntryModal({
         category,
         account,
         tags: finalTags,
-        receipt: hasReceipt ? 1 : 0,
-        receiptFile: hasReceipt ? receiptFile : null,
-        source: isEditing ? (editTransaction.source || 'manual') : 'manual'
+        receiptFile
       });
-      setSaving(false);
       onClose();
     } catch (err) {
+      setError(err.message || 'Failed to save entry. Please try again.');
+    } finally {
       setSaving(false);
-      setError(err.message || 'Failed to save entry');
     }
   };
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {isEditing ? <Edit3 size={20} style={{ color: 'var(--primary)' }} /> : <Plus size={20} style={{ color: 'var(--primary)' }} />}
-            <h2>{isEditing ? 'Edit Financial Entry' : 'Add Financial Entry'}</h2>
+      <div
+        className="modal-content"
+        onClick={e => e.stopPropagation()}
+        style={{
+          maxWidth: '540px',
+          width: '100%',
+          padding: '28px',
+          borderRadius: '24px',
+          background: 'var(--bg-card)',
+          backdropFilter: 'blur(28px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+          border: '1px solid var(--border-glass)',
+          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.6)'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ padding: '8px', borderRadius: '12px', background: 'var(--primary-light)', color: 'var(--primary)' }}>
+              {isEditing ? <Edit3 size={20} /> : <Plus size={20} />}
+            </div>
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+                {isEditing ? 'Edit Financial Entry' : 'Add Financial Entry'}
+              </h2>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                Record transaction details & attach receipts
+              </div>
+            </div>
           </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close">
+          <button className="modal-close" onClick={onClose} aria-label="Close" style={{ padding: '6px' }}>
             <X size={20} />
           </button>
         </div>
 
         {error && (
-          <div style={{ padding: '10px 14px', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px' }}>
+          <div style={{ padding: '10px 14px', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: '12px', marginBottom: '16px', fontSize: '13px' }}>
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* Expense / Income Toggle */}
+          {/* Segmented Expense / Income Toggle */}
           <div className="form-group">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: 'var(--bg-app)', padding: '4px', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', background: 'var(--bg-app)', padding: '5px', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
               <button
                 type="button"
-                className={`btn ${type === 'expense' ? 'btn-primary' : 'btn-ghost'}`}
-                style={{ background: type === 'expense' ? 'var(--warning)' : 'transparent', color: type === 'expense' ? 'white' : 'var(--text-muted)' }}
+                className="btn"
+                style={{
+                  padding: '9px',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  background: type === 'expense' ? 'var(--warning)' : 'transparent',
+                  color: type === 'expense' ? '#000000' : 'var(--text-muted)',
+                  boxShadow: type === 'expense' ? '0 2px 10px rgba(245, 158, 11, 0.4)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
                 onClick={() => setType('expense')}
               >
                 Expense
               </button>
               <button
                 type="button"
-                className={`btn ${type === 'income' ? 'btn-primary' : 'btn-ghost'}`}
-                style={{ background: type === 'income' ? 'var(--success)' : 'transparent', color: type === 'income' ? 'white' : 'var(--text-muted)' }}
+                className="btn"
+                style={{
+                  padding: '9px',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  background: type === 'income' ? 'var(--primary)' : 'transparent',
+                  color: type === 'income' ? '#000000' : 'var(--text-muted)',
+                  boxShadow: type === 'income' ? '0 2px 10px var(--primary-glow)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
                 onClick={() => setType('income')}
               >
                 Income
@@ -214,26 +266,24 @@ export default function AddEntryModal({
             </div>
           </div>
 
-          {/* Tags */}
+          {/* Tags Section */}
           <div className="form-group">
-            <label className="form-label">Select or Type Tags</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Tag size={13} style={{ color: 'var(--primary)' }} /> Select or Type Tags
+            </label>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
               {tags.map(t => {
                 const isSelected = selectedTags.includes(t);
                 return (
                   <button
                     key={t}
                     type="button"
-                    className={`pill ${isSelected ? 'selected' : ''}`}
-                    style={{
-                      background: isSelected ? 'var(--primary)' : 'var(--bg-app)',
-                      color: isSelected ? 'white' : 'var(--text-muted)',
-                      border: '1px solid var(--border-color)',
-                      cursor: 'pointer'
-                    }}
+                    className={`tag-pill ${isSelected ? 'active' : ''}`}
                     onClick={() => handleToggleTag(t)}
                   >
-                    {t}
+                    {isSelected && <Check size={12} />}
+                    <span>{t}</span>
                   </button>
                 );
               })}
@@ -253,59 +303,47 @@ export default function AddEntryModal({
                   }
                 }}
               />
-              <button type="button" className="btn btn-secondary" onClick={handleAddTag}>
+              <button type="button" className="btn btn-secondary" onClick={handleAddTag} style={{ flexShrink: 0, padding: '0 16px' }}>
                 <Plus size={16} /> Add
               </button>
             </div>
           </div>
 
           {/* Optional Receipt Checkbox */}
-          <div className="form-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px' }}>
+          <div className="form-group" style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-main)' }}>
               <input
                 type="checkbox"
                 checked={hasReceipt}
                 onChange={e => setHasReceipt(e.target.checked)}
+                style={{ accentColor: 'var(--primary)', width: '16px', height: '16px' }}
               />
               <span>Attach Receipt or Invoice Document</span>
             </label>
 
             {hasReceipt && (
-              <div style={{ marginTop: '12px', padding: '16px', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', background: 'var(--bg-app)' }}>
+              <div style={{ marginTop: '12px', padding: '16px', border: '1px dashed var(--border-glass)', borderRadius: '14px', background: 'var(--bg-app)' }}>
                 <input
                   type="file"
                   accept="image/*,.pdf,.csv"
                   onChange={e => setReceiptFile(e.target.files[0] || null)}
-                  style={{ display: 'block', width: '100%', fontSize: '13px' }}
+                  style={{ display: 'block', width: '100%', fontSize: '13px', color: 'var(--text-muted)' }}
                 />
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  Supported files up to 20MB.
-                </div>
               </div>
             )}
           </div>
 
-          <div style={{ display: 'flex', justifySelf: 'flex-end', gap: '12px', marginTop: '24px' }}>
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={saving}>
+          {/* Modal Actions */}
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '18px' }}>
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={saving} style={{ padding: '9px 18px' }}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Saving...' : (isEditing ? 'Update Entry' : 'Save Entry')}
+            <button type="submit" className="btn btn-primary" disabled={saving} style={{ padding: '9px 24px' }}>
+              {saving ? 'Saving...' : isEditing ? 'Update Entry' : 'Save Entry'}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
-}
-
-function parseTags(tagsVal) {
-  if (!tagsVal) return [];
-  if (Array.isArray(tagsVal)) return tagsVal;
-  try {
-    const parsed = JSON.parse(tagsVal);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    return [];
-  }
 }
