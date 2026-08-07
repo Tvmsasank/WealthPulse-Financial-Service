@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A192F" />
+      <stop offset="100%" stop-color="#06152B" />
+    </linearGradient>
+
+    <!-- Glowing Pulse Line Gradient -->
+    <linearGradient id="pulseGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="50%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+
+    <!-- Glow Filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Outer Rounded Square Container -->
+  <rect x="32" y="32" width="448" height="448" rx="112" fill="url(#bgGrad)" stroke="rgba(16, 185, 129, 0.3)" stroke-width="8" />
+
+  <!-- Inner Subtle Glass Grid Lines -->
+  <line x1="96" y1="360" x2="416" y2="360" stroke="rgba(255, 255, 255, 0.08)" stroke-width="4" stroke-dasharray="8 8" />
+  <line x1="96" y1="256" x2="416" y2="256" stroke="rgba(255, 255, 255, 0.08)" stroke-width="4" stroke-dasharray="8 8" />
+  <line x1="96" y1="152" x2="416" y2="152" stroke="rgba(255, 255, 255, 0.08)" stroke-width="4" stroke-dasharray="8 8" />
+
+  <!-- WealthPulse Financial Growth Waveform Line -->
+  <path d="M 88 340 L 160 340 L 200 240 L 240 380 L 290 180 L 340 260 L 424 120" fill="none" stroke="url(#pulseGrad)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)" />
+
+  <!-- Arrow Growth Tip -->
+  <polygon points="424,120 380,120 424,164" fill="#38BDF8" />
+
+  <!-- Glowing Pulse Nodes -->
+  <circle cx="290" cy="180" r="14" fill="#34D399" filter="url(#glow)" />
+  <circle cx="424" cy="120" r="16" fill="#38BDF8" filter="url(#glow)" />
+</svg>

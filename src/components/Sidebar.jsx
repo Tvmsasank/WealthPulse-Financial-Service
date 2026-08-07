@@ -34,11 +34,11 @@ export default function Sidebar({ activeTab, onSelectTab }) {
         <button
           type="button"
           className="sidebar-logo"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'left' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px' }}
           onClick={() => onSelectTab('home')}
           title="Go to Home / Landing Page"
         >
-          <TrendingUp size={28} style={{ color: 'var(--primary)' }} />
+          <img src="/favicon.svg" alt="WealthPulse" style={{ width: '30px', height: '30px', filter: 'drop-shadow(0 0 8px var(--primary-glow))' }} />
           <span>WealthPulse</span>
         </button>
       </div>
