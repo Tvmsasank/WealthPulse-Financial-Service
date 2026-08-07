@@ -180,6 +180,26 @@ export default function App() {
     fetchState();
   }, [token]);
 
+  // Live Stock Market Ticker Polling Loop (Runs every 3 seconds)
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/investments', { headers: authHeaders });
+        if (res.ok) {
+          const invData = await res.json();
+          if (Array.isArray(invData) && invData.length > 0) {
+            setInvestments(invData);
+          }
+        }
+      } catch (err) {
+        // Silent background tick update
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [user, token]);
+
   // Auth Handlers
   const handleLoginSuccess = (userData, userToken, rememberMe = true) => {
     setUser(userData);

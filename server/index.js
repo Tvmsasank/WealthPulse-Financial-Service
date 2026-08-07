@@ -446,11 +446,13 @@ app.put('/api/preferences', (req, res) => {
 // ==========================================
 
 // GET /api/investments
-app.get('/api/investments', (req, res) => {
+app.get('/api/investments', async (req, res) => {
   try {
     const userId = getUserIdFromReq(req);
     const investments = dbEngine.getInvestments(userId);
-    res.json(investments);
+    const updated = await refreshHoldingsPrices(investments);
+    dbEngine.saveInvestments(userId, updated);
+    res.json(updated);
   } catch (err) {
     console.error('GET /api/investments error:', err);
     res.status(500).json({ error: 'Failed to fetch investments' });
