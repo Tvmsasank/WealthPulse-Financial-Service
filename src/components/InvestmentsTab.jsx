@@ -14,7 +14,8 @@ import {
   Coins,
   Landmark,
   Layers,
-  Activity
+  Activity,
+  AlertCircle
 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
@@ -182,23 +183,46 @@ export default function InvestmentsTab({
 
                     {/* Rich Red / Green P&L Badge */}
                     <td style={{ textAlign: 'right' }}>
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          padding: '4px 10px',
-                          borderRadius: '16px',
-                          fontSize: '12px',
-                          fontWeight: '800',
-                          background: pnl >= 0 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.18)',
-                          color: pnl >= 0 ? '#34D399' : '#FCA5A5',
-                          border: `1px solid ${pnl >= 0 ? '#10B981' : '#EF4444'}`
-                        }}
-                      >
-                        {pnl >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                        {pnl >= 0 ? '+' : ''}₹{Math.abs(pnl).toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%)
-                      </span>
+                      {item.priceStatus === 'invalid_symbol' ? (
+                        <button
+                          type="button"
+                          onClick={() => onOpenEditInvestment(item)}
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            padding: '4px 10px',
+                            borderRadius: '16px',
+                            background: 'rgba(245, 158, 11, 0.16)',
+                            color: '#F59E0B',
+                            border: '1px solid #F59E0B',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            cursor: 'pointer'
+                          }}
+                          title="Click to set official NSE/BSE ticker symbol (e.g. DEVYANI.NS)"
+                        >
+                          <AlertCircle size={13} /> Set Ticker Code
+                        </button>
+                      ) : (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '4px 10px',
+                            borderRadius: '16px',
+                            fontSize: '12px',
+                            fontWeight: '800',
+                            background: pnl >= 0 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.18)',
+                            color: pnl >= 0 ? '#34D399' : '#FCA5A5',
+                            border: `1px solid ${pnl >= 0 ? '#10B981' : '#EF4444'}`
+                          }}
+                        >
+                          {pnl >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                          {pnl >= 0 ? '+' : ''}₹{Math.abs(pnl).toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%)
+                        </span>
+                      )}
                     </td>
 
                     {/* Actions */}

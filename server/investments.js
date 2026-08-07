@@ -56,7 +56,9 @@ const INDIAN_STOCK_MAP = {
   'DELHIVERY': 'DELHIVERY.NS',
   'DEEPAKNTR': 'DEEPAKNTR.NS',
   'DEEPINDS': 'DEEPINDS.NS',
-  'DELTACORP': 'DELTACORP.NS'
+  'DELTACORP': 'DELTACORP.NS',
+  'DELTA': 'DELTA.BO',
+  'DEBOCK': 'DEBOCK.NS'
 };
 
 /**
@@ -66,38 +68,32 @@ export function resolveStockSymbol(symbolOrName) {
   if (!symbolOrName) return null;
   const rawInput = symbolOrName.trim().toUpperCase();
 
-  // 1. Check Indian stock map dictionary
   if (INDIAN_STOCK_MAP[rawInput]) {
     return INDIAN_STOCK_MAP[rawInput];
   }
 
-  // 2. If already ends with .NS or .BO
   if (rawInput.endsWith('.NS') || rawInput.endsWith('.BO')) {
     return rawInput;
   }
 
-  // 3. Clean spaces & special characters (e.g. "IRFC" -> "IRFC.NS")
   const cleanSymbol = rawInput.replace(/[^A-Z0-9]/g, '');
   if (!cleanSymbol) return null;
   return `${cleanSymbol}.NS`;
 }
 
 /**
- * Fetch live stock price using Yahoo Finance API (supports NSE/BSE e.g. CANBK.NS, RELIANCE.NS, TATAMOTORS.NS)
+ * Single symbol price query helper from Yahoo Finance API
  */
-export async function fetchStockPrice(symbolOrName) {
-  if (!symbolOrName) return null;
-  const formattedSymbol = resolveStockSymbol(symbolOrName);
-  if (!formattedSymbol) return null;
-
-  const cacheKey = `stock_${formattedSymbol}`;
+async function querySingleYahooSymbol(symbol) {
+  if (!symbol) return null;
+  const cacheKey = `stock_${symbol}`;
   const cached = priceCache.get(cacheKey);
   if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
     return cached.price;
   }
 
   try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(formattedSymbol)}?interval=1d&range=1d`;
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
     });
@@ -105,18 +101,54 @@ export async function fetchStockPrice(symbolOrName) {
     if (res.ok) {
       const data = await res.json();
       const meta = data?.chart?.result?.[0]?.meta;
-      // regularMarketPrice or chartPreviousClose (Last Traded Price when market is closed)
-      const regularMarketPrice = meta?.regularMarketPrice || meta?.chartPreviousClose;
-      if (regularMarketPrice && typeof regularMarketPrice === 'number' && regularMarketPrice > 0) {
-        priceCache.set(cacheKey, { price: regularMarketPrice, timestamp: Date.now() });
-        return regularMarketPrice;
+      const livePrice = meta?.regularMarketPrice || meta?.chartPreviousClose || meta?.previousClose;
+      if (livePrice && typeof livePrice === 'number' && livePrice > 0) {
+        priceCache.set(cacheKey, { price: livePrice, timestamp: Date.now() });
+        return livePrice;
       }
     }
   } catch (err) {
-    console.error(`Failed to fetch live stock price for ${formattedSymbol}:`, err.message);
+    // Ignore single query error
+  }
+  return null;
+}
+
+/**
+ * Fetch live stock price with dual NSE (.NS) and BSE (.BO) fallback resolution
+ */
+export async function fetchStockPrice(symbolOrName) {
+  if (!symbolOrName) return { price: null, symbol: null };
+  const primarySymbol = resolveStockSymbol(symbolOrName);
+
+  // 1. Try Primary Symbol (e.g. CANBK.NS or DELTA.BO)
+  let price = await querySingleYahooSymbol(primarySymbol);
+  if (price !== null) {
+    return { price, symbol: primarySymbol };
   }
 
-  return null;
+  // 2. Fallback: If .NS failed, try .BO (BSE India)
+  if (primarySymbol && primarySymbol.endsWith('.NS')) {
+    const bseSymbol = primarySymbol.replace(/\.NS$/, '.BO');
+    price = await querySingleYahooSymbol(bseSymbol);
+    if (price !== null) {
+      return { price, symbol: bseSymbol };
+    }
+  }
+
+  // 3. Fallback: If clean name without extension
+  const rawClean = symbolOrName.trim().replace(/[^A-Z0-9]/gi, '').toUpperCase();
+  if (rawClean && rawClean !== primarySymbol.replace(/\.NS$/, '')) {
+    price = await querySingleYahooSymbol(`${rawClean}.NS`);
+    if (price !== null) {
+      return { price, symbol: `${rawClean}.NS` };
+    }
+    price = await querySingleYahooSymbol(`${rawClean}.BO`);
+    if (price !== null) {
+      return { price, symbol: `${rawClean}.BO` };
+    }
+  }
+
+  return { price: null, symbol: primarySymbol };
 }
 
 /**
@@ -149,7 +181,6 @@ export async function fetchMutualFundNav(schemeNameOrCode) {
     return cached;
   }
 
-  // 1. If numeric scheme code (e.g., 122639 for Parag Parikh, 148457 for Nippon India)
   if (/^\d+$/.test(rawQuery)) {
     try {
       const res = await fetch(`https://api.mfapi.in/mf/${rawQuery}`);
@@ -167,14 +198,12 @@ export async function fetchMutualFundNav(schemeNameOrCode) {
     }
   }
 
-  // 2. Search by Cleaned Fund Name on mfapi.in
   const searchQuery = cleanMFSearchQuery(rawQuery);
   try {
     const searchRes = await fetch(`https://api.mfapi.in/mf/search?q=${encodeURIComponent(searchQuery)}`);
     if (searchRes.ok) {
       const results = await searchRes.json();
       if (Array.isArray(results) && results.length > 0) {
-        // Prioritize Direct Plan Growth > Growth > First Match
         let bestMatch = results.find(r => 
           r.schemeName.toLowerCase().includes('direct') && r.schemeName.toLowerCase().includes('growth')
         );
@@ -216,10 +245,14 @@ export async function refreshHoldingsPrices(holdings = []) {
     let liveData = null;
     let livePrice = null;
     let resolvedSymbol = h.symbol || '';
+    let priceStatus = 'ok';
 
     if (h.type === 'stock') {
-      resolvedSymbol = resolveStockSymbol(h.symbol || h.name) || h.symbol || '';
-      livePrice = await fetchStockPrice(resolvedSymbol || h.name);
+      const stockResult = await fetchStockPrice(h.symbol || h.name);
+      livePrice = stockResult.price;
+      if (stockResult.symbol) {
+        resolvedSymbol = stockResult.symbol;
+      }
     } else if (h.type === 'mutual_fund') {
       liveData = await fetchMutualFundNav(h.symbol || h.name);
       livePrice = typeof liveData === 'object' && liveData ? liveData.price : liveData;
@@ -241,10 +274,12 @@ export async function refreshHoldingsPrices(holdings = []) {
         currentValuation,
         unrealizedPnL,
         pnlPercentage,
+        priceStatus: 'ok',
         lastPriceSyncAt: new Date().toISOString()
       });
     } else {
-      // Keep existing price if live API call failed or for manual assets
+      // Flag symbol as needing manual symbol entry if live price could not be fetched
+      priceStatus = (h.type === 'stock' || h.type === 'mutual_fund') ? 'invalid_symbol' : 'manual';
       const currentPrice = h.currentPrice || h.buyPrice || 0;
       const currentValuation = Math.round((currentPrice * (h.quantity || 1)) * 100) / 100;
       const totalCost = Math.round(((h.buyPrice || currentPrice) * (h.quantity || 1)) * 100) / 100;
@@ -257,7 +292,8 @@ export async function refreshHoldingsPrices(holdings = []) {
         currentPrice,
         currentValuation,
         unrealizedPnL,
-        pnlPercentage
+        pnlPercentage,
+        priceStatus
       });
     }
   }
