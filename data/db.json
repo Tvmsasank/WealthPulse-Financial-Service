@@ -338,7 +338,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:08:46.650Z",
       "updatedAt": "2026-08-06T09:11:11.764Z",
-      "lastPriceSyncAt": "2026-08-07T04:38:50.480Z"
+      "lastPriceSyncAt": "2026-08-07T04:53:24.816Z"
     },
     {
       "id": "inv_1786007547082_bsd4ii",
@@ -355,7 +355,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:12:27.082Z",
       "updatedAt": "2026-08-06T09:13:21.916Z",
-      "lastPriceSyncAt": "2026-08-07T04:38:50.480Z"
+      "lastPriceSyncAt": "2026-08-07T04:53:24.874Z"
     },
     {
       "id": "inv_1786009340816_80lfez",
@@ -365,14 +365,14 @@
       "type": "stock",
       "quantity": 14,
       "buyPrice": 107.19,
-      "currentPrice": 86.21,
-      "currentValuation": 1206.94,
-      "unrealizedPnL": -293.72,
-      "pnlPercentage": -19.57,
+      "currentPrice": 86.11,
+      "currentValuation": 1205.54,
+      "unrealizedPnL": -295.12,
+      "pnlPercentage": -19.67,
       "notes": "",
       "createdAt": "2026-08-06T09:42:20.816Z",
       "updatedAt": "2026-08-06T09:42:20.816Z",
-      "lastPriceSyncAt": "2026-08-07T04:38:50.480Z"
+      "lastPriceSyncAt": "2026-08-07T04:53:25.084Z"
     },
     {
       "id": "inv_1786009517335_67nt18",
@@ -398,14 +398,14 @@
       "type": "stock",
       "quantity": 5,
       "buyPrice": 919,
-      "currentPrice": 2604.8,
-      "currentValuation": 13024,
-      "unrealizedPnL": 8429,
-      "pnlPercentage": 183.44,
+      "currentPrice": 2602.6,
+      "currentValuation": 13013,
+      "unrealizedPnL": 8418,
+      "pnlPercentage": 183.2,
       "notes": "",
       "createdAt": "2026-08-06T09:46:12.245Z",
       "updatedAt": "2026-08-06T09:46:12.245Z",
-      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
+      "lastPriceSyncAt": "2026-08-07T04:53:25.406Z"
     },
     {
       "id": "inv_1786009695487_vjrjl6",
@@ -415,14 +415,14 @@
       "type": "stock",
       "quantity": 1,
       "buyPrice": 1208.7,
-      "currentPrice": 1176.6,
-      "currentValuation": 1176.6,
-      "unrealizedPnL": -32.1,
-      "pnlPercentage": -2.66,
+      "currentPrice": 1172.2,
+      "currentValuation": 1172.2,
+      "unrealizedPnL": -36.5,
+      "pnlPercentage": -3.02,
       "notes": "",
       "createdAt": "2026-08-06T09:48:15.487Z",
       "updatedAt": "2026-08-06T09:48:15.487Z",
-      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
+      "lastPriceSyncAt": "2026-08-07T04:53:25.547Z"
     },
     {
       "id": "inv_1786009740060_g54xv8",
@@ -432,14 +432,14 @@
       "type": "stock",
       "quantity": 58,
       "buyPrice": 27.5,
-      "currentPrice": 89.3,
-      "currentValuation": 5179.4,
-      "unrealizedPnL": 3584.4,
-      "pnlPercentage": 224.73,
+      "currentPrice": 89.18,
+      "currentValuation": 5172.44,
+      "unrealizedPnL": 3577.44,
+      "pnlPercentage": 224.29,
       "notes": "",
       "createdAt": "2026-08-06T09:49:00.061Z",
       "updatedAt": "2026-08-06T09:49:00.061Z",
-      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
+      "lastPriceSyncAt": "2026-08-07T04:53:25.666Z"
     },
     {
       "id": "inv_1786009761172_85yn0v",
@@ -449,14 +449,14 @@
       "type": "stock",
       "quantity": 5,
       "buyPrice": 310.45,
-      "currentPrice": 261,
-      "currentValuation": 1305,
-      "unrealizedPnL": -247.25,
-      "pnlPercentage": -15.93,
+      "currentPrice": 259.45,
+      "currentValuation": 1297.25,
+      "unrealizedPnL": -255,
+      "pnlPercentage": -16.43,
       "notes": "",
       "createdAt": "2026-08-06T09:49:21.172Z",
       "updatedAt": "2026-08-06T09:49:21.172Z",
-      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
+      "lastPriceSyncAt": "2026-08-07T04:53:25.787Z"
     },
     {
       "id": "inv_1786009786157_eu1unx",
@@ -466,14 +466,14 @@
       "type": "stock",
       "quantity": 34,
       "buyPrice": 516.3,
-      "currentPrice": 1843.4,
-      "currentValuation": 62675.6,
-      "unrealizedPnL": 45121.4,
-      "pnlPercentage": 257.04,
+      "currentPrice": 1846,
+      "currentValuation": 62764,
+      "unrealizedPnL": 45209.8,
+      "pnlPercentage": 257.54,
       "notes": "",
       "createdAt": "2026-08-06T09:49:46.157Z",
       "updatedAt": "2026-08-06T09:49:46.157Z",
-      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
+      "lastPriceSyncAt": "2026-08-07T04:53:25.910Z"
     },
     {
       "id": "inv_1786009807825_pil7i9",
@@ -483,14 +483,14 @@
       "type": "stock",
       "quantity": 36,
       "buyPrice": 42.5,
-      "currentPrice": 41.34,
-      "currentValuation": 1488.24,
-      "unrealizedPnL": -41.76,
-      "pnlPercentage": -2.73,
+      "currentPrice": 41.17,
+      "currentValuation": 1482.12,
+      "unrealizedPnL": -47.88,
+      "pnlPercentage": -3.13,
       "notes": "",
       "createdAt": "2026-08-06T09:50:07.825Z",
       "updatedAt": "2026-08-06T09:50:07.825Z",
-      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
+      "lastPriceSyncAt": "2026-08-07T04:53:26.016Z"
     },
     {
       "id": "inv_1786009827253_deqeiz",
@@ -500,14 +500,14 @@
       "type": "stock",
       "quantity": 16,
       "buyPrice": 251.44,
-      "currentPrice": 455.15,
-      "currentValuation": 7282.4,
-      "unrealizedPnL": 3259.36,
-      "pnlPercentage": 81.02,
+      "currentPrice": 454.6,
+      "currentValuation": 7273.6,
+      "unrealizedPnL": 3250.56,
+      "pnlPercentage": 80.8,
       "notes": "",
       "createdAt": "2026-08-06T09:50:27.253Z",
       "updatedAt": "2026-08-06T09:50:27.253Z",
-      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
+      "lastPriceSyncAt": "2026-08-07T04:53:26.132Z"
     },
     {
       "id": "inv_1786009841805_rt6mp3",
@@ -517,14 +517,14 @@
       "type": "stock",
       "quantity": 10,
       "buyPrice": 276.96,
-      "currentPrice": 348.25,
-      "currentValuation": 3482.5,
-      "unrealizedPnL": 712.9,
-      "pnlPercentage": 25.74,
+      "currentPrice": 346.75,
+      "currentValuation": 3467.5,
+      "unrealizedPnL": 697.9,
+      "pnlPercentage": 25.2,
       "notes": "",
       "createdAt": "2026-08-06T09:50:41.805Z",
       "updatedAt": "2026-08-06T09:50:41.805Z",
-      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
+      "lastPriceSyncAt": "2026-08-07T04:53:26.170Z"
     },
     {
       "id": "inv_1786009851200_0fwodf",
@@ -534,14 +534,14 @@
       "type": "stock",
       "quantity": 16,
       "buyPrice": 235,
-      "currentPrice": 187.65,
-      "currentValuation": 3002.4,
-      "unrealizedPnL": -757.6,
-      "pnlPercentage": -20.15,
+      "currentPrice": 186.83,
+      "currentValuation": 2989.28,
+      "unrealizedPnL": -770.72,
+      "pnlPercentage": -20.5,
       "notes": "",
       "createdAt": "2026-08-06T09:50:51.200Z",
       "updatedAt": "2026-08-06T09:50:51.200Z",
-      "lastPriceSyncAt": "2026-08-07T04:38:50.653Z"
+      "lastPriceSyncAt": "2026-08-07T04:53:26.217Z"
     }
   ]
 }
