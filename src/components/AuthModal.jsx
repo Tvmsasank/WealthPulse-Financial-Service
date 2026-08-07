@@ -603,7 +603,7 @@ export default function AuthModal({
               <input
                 type="text"
                 className="form-control"
-                placeholder="Tadepalli Venkatamani Sasank"
+                placeholder="e.g. John Doe"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 required

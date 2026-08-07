@@ -1,42 +1,47 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, KeyRound, CheckCircle2, AlertCircle, Delete } from 'lucide-react';
+import { X, KeyRound, CheckCircle2, AlertCircle, Delete, Lock } from 'lucide-react';
 
 export default function MpinModal({
   isOpen,
   onClose,
-  mode = 'verify', // 'verify' | 'set'
+  mode = 'verify', // 'verify' | 'set' | 'change'
   email = '',
   token = '',
   onSuccess
 }) {
   if (!isOpen) return null;
 
+  // Stages for change mode: 'verify_current' -> 'enter_new' -> 'confirm_new'
+  const [stage, setStage] = useState(() => (mode === 'change' ? 'verify_current' : 'enter_pin'));
   const [pin, setPin] = useState('');
+  const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [isConfirming, setIsConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
     setPin('');
+    setNewPin('');
     setConfirmPin('');
-    setIsConfirming(false);
+    setStage(mode === 'change' ? 'verify_current' : 'enter_pin');
     setError('');
     setSuccess('');
   }, [isOpen, mode]);
+
+  const activeDigits = stage === 'confirm_new' ? confirmPin : (stage === 'enter_new' ? newPin : pin);
 
   const handleKeyPress = useCallback((numStr) => {
     if (loading) return;
     setError('');
 
-    if (isConfirming) {
-      if (confirmPin.length < 4) {
-        const next = confirmPin + numStr;
-        setConfirmPin(next);
-        if (next.length === 4) handleFinishSetMpin(pin, next);
+    if (stage === 'verify_current') {
+      if (pin.length < 4) {
+        const next = pin + numStr;
+        setPin(next);
+        if (next.length === 4) handleVerifyCurrentForChange(next);
       }
-    } else {
+    } else if (stage === 'enter_pin') {
       if (pin.length < 4) {
         const next = pin + numStr;
         setPin(next);
@@ -44,31 +49,45 @@ export default function MpinModal({
           if (mode === 'verify') {
             handleVerifyMpin(next);
           } else {
-            setIsConfirming(true);
+            setNewPin(next);
+            setStage('confirm_new');
           }
         }
       }
+    } else if (stage === 'enter_new') {
+      if (newPin.length < 4) {
+        const next = newPin + numStr;
+        setNewPin(next);
+        if (next.length === 4) {
+          setStage('confirm_new');
+        }
+      }
+    } else if (stage === 'confirm_new') {
+      if (confirmPin.length < 4) {
+        const next = confirmPin + numStr;
+        setConfirmPin(next);
+        if (next.length === 4) handleFinishSetMpin(newPin || pin, next);
+      }
     }
-  }, [loading, isConfirming, pin, confirmPin, mode]);
+  }, [loading, stage, pin, newPin, confirmPin, mode]);
 
   const handleDelete = useCallback(() => {
     if (loading) return;
     setError('');
-    if (isConfirming) {
+    if (stage === 'confirm_new') {
       setConfirmPin(prev => prev.slice(0, -1));
+    } else if (stage === 'enter_new') {
+      setNewPin(prev => prev.slice(0, -1));
     } else {
       setPin(prev => prev.slice(0, -1));
     }
-  }, [loading, isConfirming]);
+  }, [loading, stage]);
 
-  // Physical Keyboard Input Listener
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
       const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-      if (tag === 'input' || tag === 'textarea' || tag === 'select') {
-        return; // Allow natural typing & backspace inside input fields!
-      }
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
       if (e.key >= '0' && e.key <= '9') {
         e.preventDefault();
         handleKeyPress(e.key);
@@ -83,10 +102,38 @@ export default function MpinModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, handleKeyPress, handleDelete, onClose]);
 
+  const handleVerifyCurrentForChange = async (currentPin) => {
+    setLoading(true);
+    try {
+      const targetEmail = email || localStorage.getItem('wealthpulse_remembered_email') || localStorage.getItem('ledgerly_remembered_email');
+      const res = await fetch('/api/auth/mpin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail, mpin: currentPin })
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || 'Current 4-Digit MPIN is incorrect');
+      }
+
+      setSuccess('Current MPIN Verified! Enter your new MPIN.');
+      setTimeout(() => {
+        setSuccess('');
+        setStage('enter_new');
+        setLoading(false);
+      }, 600);
+    } catch (err) {
+      setError(err.message || 'Verification failed');
+      setPin('');
+      setLoading(false);
+    }
+  };
+
   const handleVerifyMpin = async (completedPin) => {
     setLoading(true);
     try {
-      const targetEmail = email || localStorage.getItem('ledgerly_remembered_email');
+      const targetEmail = email || localStorage.getItem('wealthpulse_remembered_email') || localStorage.getItem('ledgerly_remembered_email');
       if (!targetEmail) {
         throw new Error('Please enter your account email address first');
       }
@@ -97,21 +144,14 @@ export default function MpinModal({
         body: JSON.stringify({ email: targetEmail, mpin: completedPin })
       });
 
-      const responseText = await res.text();
-      let json = {};
-      try {
-        json = JSON.parse(responseText);
-      } catch (e) {
-        throw new Error(`Server response error (${res.status}). Please check API server.`);
-      }
-
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || 'Invalid 4-Digit MPIN');
 
       setSuccess('MPIN Verified!');
       setTimeout(() => {
-        onSuccess(json.user, json.token);
+        if (onSuccess) onSuccess(json.user, json.token);
         onClose();
-      }, 500);
+      }, 400);
     } catch (err) {
       setError(err.message || 'Verification failed');
       setPin('');
@@ -123,14 +163,14 @@ export default function MpinModal({
   const handleFinishSetMpin = async (firstPin, secondPin) => {
     if (firstPin !== secondPin) {
       setError('MPINs do not match. Try again.');
-      setPin('');
+      setNewPin('');
       setConfirmPin('');
-      setIsConfirming(false);
+      setStage(mode === 'change' ? 'enter_new' : 'enter_pin');
       return;
     }
 
     setLoading(true);
-    const activeToken = token || localStorage.getItem('ledgerly_token') || sessionStorage.getItem('ledgerly_token') || '';
+    const activeToken = token || localStorage.getItem('wealthpulse_token') || sessionStorage.getItem('wealthpulse_token') || localStorage.getItem('ledgerly_token') || '';
 
     try {
       const res = await fetch('/api/auth/mpin/set', {
@@ -142,77 +182,100 @@ export default function MpinModal({
         body: JSON.stringify({ mpin: secondPin })
       });
 
-      const responseText = await res.text();
-      let json = {};
-      try {
-        json = JSON.parse(responseText);
-      } catch (e) {
-        throw new Error(`Server response error (${res.status}). Please check API server.`);
-      }
-
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || 'Failed to set MPIN');
 
+      localStorage.setItem('wealthpulse_has_mpin', 'true');
       localStorage.setItem('ledgerly_has_mpin', 'true');
-      setSuccess('4-Digit Security MPIN Set Successfully!');
+      setSuccess(mode === 'change' ? '4-Digit MPIN Changed Successfully!' : '4-Digit Security MPIN Set Successfully!');
       setTimeout(() => {
         if (onSuccess) onSuccess();
         onClose();
-      }, 1000);
+      }, 800);
     } catch (err) {
       setError(err.message || 'Failed to set MPIN');
-      setPin('');
+      setNewPin('');
       setConfirmPin('');
-      setIsConfirming(false);
+      setStage(mode === 'change' ? 'enter_new' : 'enter_pin');
     } finally {
       setLoading(false);
     }
   };
 
-  const activeDigits = isConfirming ? confirmPin : pin;
+  const getHeaderTitle = () => {
+    if (mode === 'verify') return '4-Digit MPIN Authentication';
+    if (stage === 'verify_current') return 'Verify Current 4-Digit MPIN';
+    if (stage === 'confirm_new') return 'Confirm New 4-Digit MPIN';
+    if (stage === 'enter_new') return 'Enter New 4-Digit MPIN';
+    return 'Set 4-Digit Security MPIN';
+  };
+
+  const getSubtitle = () => {
+    if (mode === 'verify') return `Type or tap your 4-digit MPIN for ${email || 'your account'}`;
+    if (stage === 'verify_current') return 'Type your existing 4-digit MPIN to authorize change';
+    if (stage === 'enter_new') return 'Type your new 4-digit security PIN';
+    if (stage === 'confirm_new') return 'Re-type your new 4-digit PIN to confirm';
+    return 'Type or tap a 4-digit PIN using keyboard or keypad';
+  };
 
   return (
     <div className="modal-backdrop">
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '380px', textAlign: 'center' }}>
-        <div className="modal-header">
+      <div
+        className="modal-content"
+        onClick={e => e.stopPropagation()}
+        style={{
+          maxWidth: '420px',
+          width: '100%',
+          padding: '24px',
+          borderRadius: '24px',
+          background: 'var(--bg-card)',
+          backdropFilter: 'blur(28px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+          border: '1px solid var(--border-glass)',
+          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.6)',
+          textAlign: 'center'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <KeyRound size={20} style={{ color: 'var(--primary)' }} />
-            <h2 style={{ fontSize: '18px' }}>
-              {mode === 'verify' ? '4-Digit MPIN Authentication' : (isConfirming ? 'Confirm 4-Digit MPIN' : 'Set 4-Digit Security MPIN')}
+            <div style={{ padding: '6px', borderRadius: '10px', background: 'var(--primary-light)', color: 'var(--primary)' }}>
+              <KeyRound size={18} />
+            </div>
+            <h2 style={{ fontSize: '16px', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+              {getHeaderTitle()}
             </h2>
           </div>
           <button className="modal-close" onClick={onClose} aria-label="Close">
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-          {mode === 'verify'
-            ? `Type or tap your 4-digit MPIN for ${email || 'your account'}`
-            : (isConfirming ? 'Re-type 4-digit MPIN to confirm' : 'Type or tap a 4-digit PIN using keyboard or key pad')}
+        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+          {getSubtitle()}
         </p>
 
         {error && (
-          <div style={{ padding: '8px 12px', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <div style={{ padding: '8px 12px', background: 'rgba(239, 68, 68, 0.15)', color: '#FCA5A5', border: '1px solid #EF4444', borderRadius: '12px', marginBottom: '14px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
             <AlertCircle size={15} /> {error}
           </div>
         )}
 
         {success && (
-          <div style={{ padding: '8px 12px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <div style={{ padding: '8px 12px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: '12px', marginBottom: '14px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
             <CheckCircle2 size={15} /> {success}
           </div>
         )}
 
         {/* Tactile 4-Dot PIN Indicator */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '20px' }}>
           {[0, 1, 2, 3].map(index => {
             const isFilled = activeDigits.length > index;
             return (
               <div
                 key={index}
                 style={{
-                  width: '20px',
-                  height: '20px',
+                  width: '18px',
+                  height: '18px',
                   borderRadius: '50%',
                   background: isFilled ? 'var(--primary)' : 'transparent',
                   border: isFilled ? '2px solid var(--primary)' : '2px solid var(--border-color)',
@@ -226,14 +289,14 @@ export default function MpinModal({
         </div>
 
         {/* Number Pad Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', maxWidth: '280px', margin: '0 auto 16px auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', maxWidth: '280px', margin: '0 auto 12px auto' }}>
           {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
             <button
               key={num}
               type="button"
               className="btn btn-secondary"
               style={{
-                height: '54px',
+                height: '52px',
                 fontSize: '20px',
                 fontWeight: '700',
                 borderRadius: '50%',
@@ -242,6 +305,7 @@ export default function MpinModal({
                 justifyContent: 'center'
               }}
               onClick={() => handleKeyPress(num)}
+              disabled={loading}
             >
               {num}
             </button>
@@ -251,7 +315,7 @@ export default function MpinModal({
             type="button"
             className="btn btn-secondary"
             style={{
-              height: '54px',
+              height: '52px',
               fontSize: '20px',
               fontWeight: '700',
               borderRadius: '50%',
@@ -260,6 +324,7 @@ export default function MpinModal({
               justifyContent: 'center'
             }}
             onClick={() => handleKeyPress('0')}
+            disabled={loading}
           >
             0
           </button>
@@ -267,7 +332,7 @@ export default function MpinModal({
             type="button"
             className="btn btn-ghost"
             style={{
-              height: '54px',
+              height: '52px',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
@@ -275,6 +340,7 @@ export default function MpinModal({
               color: 'var(--text-muted)'
             }}
             onClick={handleDelete}
+            disabled={loading}
             title="Backspace (Delete)"
           >
             <Delete size={22} />

@@ -181,31 +181,40 @@ export default function UserProfileModal({
               </div>
             </button>
 
-            <button
-              type="button"
-              className="btn btn-secondary"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px 14px',
-                borderRadius: '14px',
-                justifyContent: 'flex-start',
-                textAlign: 'left'
-              }}
-              onClick={() => {
-                onClose();
-                onOpenMpinModal('set');
-              }}
-            >
-              <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.16)', color: '#38BDF8', flexShrink: 0 }}>
-                <KeyRound size={20} />
-              </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>4-Digit MPIN</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Set Quick Mobile Pin</div>
-              </div>
-            </button>
+            {(() => {
+              const hasRegisteredMpin = user?.hasMpin || localStorage.getItem('wealthpulse_has_mpin') === 'true' || localStorage.getItem('ledgerly_has_mpin') === 'true';
+              return (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 14px',
+                    borderRadius: '14px',
+                    justifyContent: 'flex-start',
+                    textAlign: 'left'
+                  }}
+                  onClick={() => {
+                    onClose();
+                    onOpenMpinModal(hasRegisteredMpin ? 'change' : 'set');
+                  }}
+                >
+                  <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.16)', color: '#38BDF8', flexShrink: 0 }}>
+                    <KeyRound size={20} />
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>
+                      {hasRegisteredMpin ? 'Change 4-Digit MPIN' : 'Set 4-Digit MPIN'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: hasRegisteredMpin ? 'var(--primary)' : 'var(--text-muted)', marginTop: '2px' }}>
+                      {hasRegisteredMpin ? '✓ MPIN Active — Change PIN' : 'Set Quick Mobile PIN'}
+                    </div>
+                  </div>
+                </button>
+              );
+            })()}
           </div>
 
           {bioMessage && (
