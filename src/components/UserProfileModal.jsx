@@ -42,7 +42,12 @@ export default function UserProfileModal({
       await registerBiometricPasskey(user, token);
       setBioMessage('Face ID / Touch ID Biometrics Enabled!');
     } catch (err) {
-      setBioError(err.message || 'Failed to enable biometrics');
+      const msg = err.message || '';
+      if (msg.includes('timed out') || msg.includes('cancelled') || msg.includes('not allowed')) {
+        setBioError('Passkey prompt closed. You can also use 4-Digit MPIN for quick PIN access!');
+      } else {
+        setBioError(msg || 'Failed to enable biometrics');
+      }
     }
   };
 
@@ -68,21 +73,21 @@ export default function UserProfileModal({
         </div>
 
         {/* Identity Header Card */}
-        <div className="card" style={{ background: 'linear-gradient(135deg, rgba(124, 110, 230, 0.15) 0%, rgba(79, 70, 229, 0.05) 100%)', border: '1px solid var(--primary-light)', marginBottom: '16px', padding: '16px' }}>
+        <div className="card" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(10, 25, 47, 0.8) 100%)', border: '1px solid var(--border-glass)', marginBottom: '16px', padding: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <div
               style={{
                 width: '48px',
                 height: '48px',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #7C6EE6 0%, #4F46E5 100%)',
-                color: 'white',
+                background: 'linear-gradient(135deg, var(--primary) 0%, #059669 100%)',
+                color: '#000000',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: '800',
+                fontWeight: '900',
                 fontSize: '18px',
-                boxShadow: '0 4px 12px rgba(124, 110, 230, 0.3)',
+                boxShadow: '0 4px 12px var(--primary-glow)',
                 flexShrink: 0
               }}
             >
@@ -138,14 +143,25 @@ export default function UserProfileModal({
           </div>
 
           {bioMessage && (
-            <div style={{ marginTop: '8px', padding: '8px 12px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Sparkles size={14} /> {bioMessage}
+            <div style={{ marginTop: '10px', padding: '10px 14px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Sparkles size={16} /> {bioMessage}
+              </div>
+              <button type="button" onClick={() => setBioMessage('')} style={{ background: 'none', border: 'none', color: 'var(--success)', cursor: 'pointer' }}>
+                <X size={14} />
+              </button>
             </div>
           )}
 
           {bioError && (
-            <div style={{ marginTop: '8px', padding: '8px 12px', background: 'var(--danger-light)', color: 'var(--danger)', borderRadius: 'var(--radius-md)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <ShieldAlert size={14} /> {bioError}
+            <div style={{ marginTop: '10px', padding: '10px 14px', background: 'rgba(239, 68, 68, 0.15)', color: '#FCA5A5', border: '1px solid #EF4444', borderRadius: 'var(--radius-md)', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <ShieldAlert size={16} style={{ flexShrink: 0 }} />
+                <span>{bioError}</span>
+              </div>
+              <button type="button" onClick={() => setBioError('')} style={{ background: 'none', border: 'none', color: '#FCA5A5', cursor: 'pointer', padding: '2px' }} title="Dismiss">
+                <X size={14} />
+              </button>
             </div>
           )}
         </div>
