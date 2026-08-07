@@ -18,6 +18,24 @@
       "createdAt": "2026-08-07T09:51:57.287Z",
       "resetToken": null,
       "resetTokenExpiry": null
+    },
+    {
+      "id": "usr_1786099954942_r95sps",
+      "name": "Lakshmi Prasanna Nunna",
+      "email": "nunnalakshmiprasanna@gmail.com",
+      "passwordHash": "$2b$10$8bj8nLX9yeUBX8zTDwcjKeGEgJp3czMGz3av9qdcw31vKU.yGtNmy",
+      "createdAt": "2026-08-07T10:52:35.027Z",
+      "resetToken": null,
+      "resetTokenExpiry": null
+    },
+    {
+      "id": "usr_1786100101409_htdan4",
+      "name": "Prasanna Lakshmi Nunna",
+      "email": "lakshmipnunna@gmail.com",
+      "passwordHash": "$2b$10$ySNKAYZgIJdm/P4fCui2uuQ6FdoSZjb1a8QRyHJoiIzn41guZ4fb2",
+      "createdAt": "2026-08-07T10:55:01.480Z",
+      "resetToken": null,
+      "resetTokenExpiry": null
     }
   ],
   "transactions": [
@@ -331,6 +349,106 @@
       ]
     },
     "usr_1786096317198_khugec": {
+      "categories": [
+        "Housing",
+        "Groceries",
+        "Shopping",
+        "Dining",
+        "Transportation",
+        "Utilities",
+        "Subscriptions",
+        "Insurance",
+        "Health",
+        "Entertainment",
+        "Income",
+        "Needs review",
+        "Other"
+      ],
+      "accounts": [
+        "Main Checking",
+        "Everyday Visa",
+        "Rewards Card",
+        "Cash"
+      ],
+      "goals": [],
+      "budgets": [],
+      "subscriptions": [],
+      "recurring": [],
+      "dismissedPatterns": [],
+      "assets": 0,
+      "liabilities": 0,
+      "netWorthConfigured": false,
+      "selectedPeriod": "all-time",
+      "driveFolder": {
+        "name": "WealthPulse Financial Inbox",
+        "id": "folder-wealthpulse-inbox-01",
+        "url": "https://drive.google.com/drive/my-drive"
+      },
+      "driveSync": {
+        "schedule": "08:00 AM Daily",
+        "timezone": "Asia/Kolkata",
+        "lastSyncedAt": null,
+        "lastStatus": "idle",
+        "lastImportedCount": 0,
+        "lastDuplicateCount": 0,
+        "lastReviewCount": 0,
+        "errors": []
+      },
+      "processedDriveFileIds": [],
+      "driveResetAt": null,
+      "freshStart": true
+    },
+    "usr_1786099954942_r95sps": {
+      "categories": [
+        "Housing",
+        "Groceries",
+        "Shopping",
+        "Dining",
+        "Transportation",
+        "Utilities",
+        "Subscriptions",
+        "Insurance",
+        "Health",
+        "Entertainment",
+        "Income",
+        "Needs review",
+        "Other"
+      ],
+      "accounts": [
+        "Main Checking",
+        "Everyday Visa",
+        "Rewards Card",
+        "Cash"
+      ],
+      "goals": [],
+      "budgets": [],
+      "subscriptions": [],
+      "recurring": [],
+      "dismissedPatterns": [],
+      "assets": 0,
+      "liabilities": 0,
+      "netWorthConfigured": false,
+      "selectedPeriod": "all-time",
+      "driveFolder": {
+        "name": "WealthPulse Financial Inbox",
+        "id": "folder-wealthpulse-inbox-01",
+        "url": "https://drive.google.com/drive/my-drive"
+      },
+      "driveSync": {
+        "schedule": "08:00 AM Daily",
+        "timezone": "Asia/Kolkata",
+        "lastSyncedAt": null,
+        "lastStatus": "idle",
+        "lastImportedCount": 0,
+        "lastDuplicateCount": 0,
+        "lastReviewCount": 0,
+        "errors": []
+      },
+      "processedDriveFileIds": [],
+      "driveResetAt": null,
+      "freshStart": true
+    },
+    "usr_1786100101409_htdan4": {
       "categories": [
         "Housing",
         "Groceries",

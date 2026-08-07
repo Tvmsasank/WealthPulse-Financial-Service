@@ -13,7 +13,8 @@ import {
   Sparkles,
   Receipt,
   Cpu,
-  Check
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import { registerBiometricPasskey } from '../utils/biometrics';
 
@@ -33,6 +34,10 @@ export default function UserProfileModal({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [bioMessage, setBioMessage] = useState('');
   const [bioError, setBioError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const getInitials = (name) => {
     if (!name) return 'U';
@@ -66,9 +71,53 @@ export default function UserProfileModal({
     }
   };
 
+  const handleDeleteAccountPermanent = async () => {
+    if (deleteConfirmText.trim() !== 'DELETE MY ACCOUNT PERMANENTLY') {
+      setDeleteError('Please type exact confirmation phrase: DELETE MY ACCOUNT PERMANENTLY');
+      return;
+    }
+
+    setDeletingAccount(true);
+    setDeleteError('');
+    try {
+      const res = await fetch('/api/auth/account', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || 'Failed to delete account');
+      }
+
+      // Wipe all local storage keys
+      localStorage.removeItem('wealthpulse_token');
+      localStorage.removeItem('wealthpulse_user');
+      localStorage.removeItem('wealthpulse_remembered_email');
+      localStorage.removeItem('wealthpulse_has_mpin');
+      localStorage.removeItem('ledgerly_token');
+      localStorage.removeItem('ledgerly_user');
+      localStorage.removeItem('ledgerly_remembered_email');
+      localStorage.removeItem('ledgerly_has_mpin');
+
+      onLogout();
+      onClose();
+    } catch (err) {
+      setDeleteError(err.message || 'Account deletion failed');
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
   const assets = Number(settings.assets || 0);
   const liabilities = Number(settings.liabilities || 0);
   const netWorth = assets - liabilities;
+
+  // Strict Per-User MPIN Check (Fixes Multi-Tenant Browser Storage Leak)
+  const hasRegisteredMpin = !!(user && user.hasMpin);
 
   return (
     <div className={`modal-backdrop ${isLoggingOut ? 'fade-out' : ''}`}>
@@ -181,40 +230,35 @@ export default function UserProfileModal({
               </div>
             </button>
 
-            {(() => {
-              const hasRegisteredMpin = user?.hasMpin || localStorage.getItem('wealthpulse_has_mpin') === 'true' || localStorage.getItem('ledgerly_has_mpin') === 'true';
-              return (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 14px',
-                    borderRadius: '14px',
-                    justifyContent: 'flex-start',
-                    textAlign: 'left'
-                  }}
-                  onClick={() => {
-                    onClose();
-                    onOpenMpinModal(hasRegisteredMpin ? 'change' : 'set');
-                  }}
-                >
-                  <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.16)', color: '#38BDF8', flexShrink: 0 }}>
-                    <KeyRound size={20} />
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>
-                      {hasRegisteredMpin ? 'Change 4-Digit MPIN' : 'Set 4-Digit MPIN'}
-                    </div>
-                    <div style={{ fontSize: '11px', color: hasRegisteredMpin ? 'var(--primary)' : 'var(--text-muted)', marginTop: '2px' }}>
-                      {hasRegisteredMpin ? '✓ MPIN Active — Change PIN' : 'Set Quick Mobile PIN'}
-                    </div>
-                  </div>
-                </button>
-              );
-            })()}
+            <button
+              type="button"
+              className="btn btn-secondary"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 14px',
+                borderRadius: '14px',
+                justifyContent: 'flex-start',
+                textAlign: 'left'
+              }}
+              onClick={() => {
+                onClose();
+                onOpenMpinModal(hasRegisteredMpin ? 'change' : 'set');
+              }}
+            >
+              <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.16)', color: '#38BDF8', flexShrink: 0 }}>
+                <KeyRound size={20} />
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>
+                  {hasRegisteredMpin ? 'Change 4-Digit MPIN' : 'Set 4-Digit MPIN'}
+                </div>
+                <div style={{ fontSize: '11px', color: hasRegisteredMpin ? 'var(--primary)' : 'var(--text-muted)', marginTop: '2px' }}>
+                  {hasRegisteredMpin ? '✓ MPIN Active — Change PIN' : 'Set Quick Mobile PIN'}
+                </div>
+              </div>
+            </button>
           </div>
 
           {bioMessage && (
@@ -268,57 +312,80 @@ export default function UserProfileModal({
           </div>
         </div>
 
-        {/* Security Architecture */}
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-muted)', marginBottom: '10px' }}>
-            Security Architecture
-          </div>
+        {/* Account Deletion Confirmation Card */}
+        {showDeleteConfirm && (
+          <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '16px', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid #EF4444' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FCA5A5', fontWeight: '800', fontSize: '14px', marginBottom: '8px' }}>
+              <AlertTriangle size={18} /> Permanently Delete Account?
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.5', marginBottom: '12px' }}>
+              This will permanently delete your account (<strong>{user.email}</strong>), passwords, MPIN, transactions, investments, and all stored data. This action <strong>cannot be undone</strong>.
+            </p>
 
-          <div style={{ padding: '14px', borderRadius: '14px', background: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
-            <div className="user-profile-grid-2" style={{ gap: '16px' }}>
-              <div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Lock size={12} /> Password Hashing
-                </div>
-                <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-main)', marginTop: '2px' }}>
-                  bcrypt (10 rounds)
-                </div>
-              </div>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontSize: '11px', color: '#FCA5A5', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                Type <code>DELETE MY ACCOUNT PERMANENTLY</code> to confirm:
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="DELETE MY ACCOUNT PERMANENTLY"
+                value={deleteConfirmText}
+                onChange={e => setDeleteConfirmText(e.target.value)}
+                style={{ borderColor: '#EF4444' }}
+              />
+            </div>
 
-              <div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Cpu size={12} /> Passkeys & Biometrics
-                </div>
-                <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-main)', marginTop: '2px' }}>
-                  W3C WebAuthn Hardware
-                </div>
+            {deleteError && (
+              <div style={{ fontSize: '12px', color: '#FCA5A5', marginBottom: '10px' }}>
+                {deleteError}
               </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowDeleteConfirm(false)} disabled={deletingAccount}>
+                Cancel
+              </button>
+              <button type="button" className="btn btn-danger btn-sm" onClick={handleDeleteAccountPermanent} disabled={deletingAccount}>
+                {deletingAccount ? 'Deleting...' : 'Confirm Permanent Deletion'}
+              </button>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Footer Actions */}
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '18px' }}>
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '18px' }}>
           <button
             type="button"
-            className="btn btn-secondary"
-            onClick={() => {
-              onClose();
-              onOpenForgotPassword();
-            }}
-            style={{ fontSize: '13px', padding: '9px 16px' }}
+            className="btn btn-ghost btn-sm"
+            onClick={() => setShowDeleteConfirm(true)}
+            style={{ color: '#EF4444', fontSize: '12px' }}
           >
-            <Lock size={15} /> Change Password
+            <Trash2 size={14} /> Delete Account
           </button>
 
-          <button
-            type="button"
-            className="btn btn-danger"
-            onClick={handleLogoutAnimated}
-            style={{ fontSize: '13px', padding: '9px 18px' }}
-          >
-            <LogOut size={15} /> Sign Out
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => {
+                onClose();
+                onOpenForgotPassword();
+              }}
+              style={{ fontSize: '12px' }}
+            >
+              <Lock size={14} /> Change Password
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-danger btn-sm"
+              onClick={handleLogoutAnimated}
+              style={{ fontSize: '12px' }}
+            >
+              <LogOut size={14} /> Sign Out
+            </button>
+          </div>
         </div>
       </div>
     </div>

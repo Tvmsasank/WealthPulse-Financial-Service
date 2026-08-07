@@ -179,10 +179,26 @@ export const dbEngine = {
       id: user.id,
       name: user.name,
       email: user.email,
-      hasMpin: !!user.mpinHash,
-      hasBiometrics: !!user.webauthnCredentialId,
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
+      hasMpin: !!(db.mpins && db.mpins[userId])
     };
+  },
+
+  deleteUserAccount(userId) {
+    const db = loadDb();
+    db.users = (db.users || []).filter(u => u.id !== userId);
+    if (db.userSettings) delete db.userSettings[userId];
+    if (db.transactions) delete db.transactions[userId];
+    if (db.investments) delete db.investments[userId];
+    if (db.rules) delete db.rules[userId];
+    if (db.documents) delete db.documents[userId];
+    if (db.budgets) delete db.budgets[userId];
+    if (db.goals) delete db.goals[userId];
+    if (db.recurring) delete db.recurring[userId];
+    if (db.subscriptions) delete db.subscriptions[userId];
+    if (db.mpins) delete db.mpins[userId];
+    saveDb();
+    return true;
   },
 
   setUserMpin({ userId, mpin }) {

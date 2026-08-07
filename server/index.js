@@ -239,6 +239,18 @@ app.post('/api/auth/check-methods', (req, res) => {
   }
 });
 
+// DELETE /api/auth/account (Permanently delete user account & all data)
+app.delete('/api/auth/account', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    dbEngine.deleteUserAccount(userId);
+    res.json({ success: true, message: 'Account permanently deleted' });
+  } catch (err) {
+    console.error('DELETE /api/auth/account error:', err);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+});
+
 // POST /api/auth/mpin/set
 app.post('/api/auth/mpin/set', (req, res) => {
   try {
