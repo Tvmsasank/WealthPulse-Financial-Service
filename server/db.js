@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import pg from 'pg';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -73,6 +74,49 @@ const getInitialDb = () => ({
 });
 
 let memoryDb = null;
+let pgPool = null;
+
+// Initialize Supabase PostgreSQL Cloud Sync if DATABASE_URL is set
+if (process.env.DATABASE_URL) {
+  try {
+    const connectionString = process.env.DATABASE_URL;
+    pgPool = new pg.Pool({
+      connectionString,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    pgPool.query(`
+      CREATE TABLE IF NOT EXISTS wealthpulse_store (
+        id VARCHAR(50) PRIMARY KEY,
+        data JSONB NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `).then(async () => {
+      console.log('[Supabase PostgreSQL] Connected & table initialized successfully!');
+      try {
+        const res = await pgPool.query('SELECT data FROM wealthpulse_store WHERE id = $1', ['main_store']);
+        if (res.rows.length > 0 && res.rows[0].data) {
+          memoryDb = res.rows[0].data;
+          fs.writeFileSync(DB_FILE, JSON.stringify(memoryDb, null, 2), 'utf-8');
+          console.log('[Supabase PostgreSQL] Loaded live cloud data into memory!');
+        } else {
+          const current = loadDb();
+          await pgPool.query(
+            'INSERT INTO wealthpulse_store (id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()',
+            ['main_store', JSON.stringify(current)]
+          );
+          console.log('[Supabase PostgreSQL] Initialized local state to Supabase cloud!');
+        }
+      } catch (e) {
+        console.error('[Supabase PostgreSQL] Cloud sync error:', e.message);
+      }
+    }).catch(err => {
+      console.error('[Supabase PostgreSQL] Connection failed:', err.message);
+    });
+  } catch (err) {
+    console.error('[Supabase PostgreSQL] Pool init failed:', err.message);
+  }
+}
 
 function loadDb() {
   if (memoryDb) return memoryDb;
@@ -98,25 +142,27 @@ function loadDb() {
 function saveDb() {
   if (!memoryDb) return;
   fs.writeFileSync(DB_FILE, JSON.stringify(memoryDb, null, 2), 'utf-8');
-}
-
-export function generateFingerprint(date, merchant, amount, account) {
-  const normMerchant = (merchant || '').toString().trim().toLowerCase();
-  const normAmount = Number(amount || 0).toFixed(2);
-  const normAccount = (account || '').toString().trim().toLowerCase();
-  const normDate = (date || '').toString().trim();
-  return `${normDate}|${normMerchant}|${normAmount}|${normAccount}`;
+  if (pgPool) {
+    pgPool.query(
+      'INSERT INTO wealthpulse_store (id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()',
+      ['main_store', JSON.stringify(memoryDb)]
+    ).catch(err => console.error('[Supabase PostgreSQL] Auto-sync write error:', err.message));
+  }
 }
 
 export const dbEngine = {
-  // User Authentication
-  createUser({ name, email, password }) {
+  getRawDb() {
+    return loadDb();
+  },
+
+  saveRawDb(newDb) {
+    memoryDb = newDb;
+    saveDb();
+  },
+
+  registerUser({ name, email, password }) {
     const db = loadDb();
     const cleanEmail = (email || '').trim().toLowerCase();
-    if (!cleanEmail || !password) {
-      throw new Error('Email and password are required');
-    }
-
     const existing = db.users.find(u => u.email === cleanEmail);
     if (existing) {
       throw new Error('An account with this email already exists');
@@ -136,7 +182,6 @@ export const dbEngine = {
     };
 
     db.users.push(newUser);
-    // Initialize clean, isolated user settings for this user ONLY
     db.userSettings[userId] = getInitialUserSettings();
     saveDb();
 
@@ -144,6 +189,7 @@ export const dbEngine = {
       id: newUser.id,
       name: newUser.name,
       email: newUser.email,
+      hasMpin: false,
       createdAt: newUser.createdAt
     };
   },
@@ -197,7 +243,6 @@ export const dbEngine = {
     if (db.goals) delete db.goals[userId];
     if (db.recurring) delete db.recurring[userId];
     if (db.subscriptions) delete db.subscriptions[userId];
-    if (db.mpins) delete db.mpins[userId];
     saveDb();
     return true;
   },
@@ -229,6 +274,7 @@ export const dbEngine = {
       id: user.id,
       name: user.name,
       email: user.email,
+      hasMpin: true,
       createdAt: user.createdAt
     };
   },
@@ -244,15 +290,19 @@ export const dbEngine = {
     return true;
   },
 
-  verifyWebAuthnCredential({ credentialId }) {
+  verifyWebAuthnCredential({ email, credentialId }) {
     const db = loadDb();
-    const user = db.users.find(u => u.webauthnCredentialId === credentialId);
-    if (!user) return null;
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const user = db.users.find(u => u.email === cleanEmail);
+    if (!user || !user.webauthnCredentialId) return null;
+
+    if (user.webauthnCredentialId !== credentialId) return null;
 
     return {
       id: user.id,
       name: user.name,
       email: user.email,
+      hasMpin: !!user.mpinHash,
       createdAt: user.createdAt
     };
   },
@@ -261,323 +311,233 @@ export const dbEngine = {
     const db = loadDb();
     const cleanEmail = (email || '').trim().toLowerCase();
     const user = db.users.find(u => u.email === cleanEmail);
-    if (!user) {
-      throw new Error('No user account found with this email');
-    }
+    if (!user) throw new Error('No user found with this email address');
 
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpiry = Date.now() + 3600000; // 1 hour expiration
-
     user.resetToken = resetToken;
-    user.resetTokenExpiry = resetTokenExpiry;
+    user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
     saveDb();
 
-    return { resetToken, email: user.email };
+    return { resetToken, email: cleanEmail };
   },
 
   resetPassword({ resetToken, newPassword }) {
     const db = loadDb();
     const user = db.users.find(u => u.resetToken === resetToken && u.resetTokenExpiry > Date.now());
-    if (!user) {
-      throw new Error('Invalid or expired password reset token');
-    }
+    if (!user) throw new Error('Invalid or expired password reset link');
 
     user.passwordHash = bcrypt.hashSync(newPassword, 10);
     user.resetToken = null;
     user.resetTokenExpiry = null;
     saveDb();
 
-    return { success: true, email: user.email };
+    return true;
   },
 
-  // State API strictly scoped by userId ONLY (No data bleed between users)
-  getState(userId) {
+  getUserSettings(userId) {
     const db = loadDb();
-    if (!userId) {
-      return {
-        transactions: [],
-        tags: [],
-        rules: [],
-        documents: [],
-        settings: getInitialUserSettings()
-      };
-    }
-
-    // STRICT MULTI-TENANT FILTERING BY USER ID
-    const userTx = (db.transactions || []).filter(t => t.userId === userId);
-    const userRules = (db.rules || []).filter(r => r.userId === userId);
-    const userTags = (db.tags || []).filter(t => t.userId === userId);
-    const userDocs = (db.documents || []).filter(d => d.userId === userId);
-
-    const sortedTx = [...userTx].sort((a, b) => {
-      const dateDiff = new Date(b.date || 0) - new Date(a.date || 0);
-      if (dateDiff !== 0) return dateDiff;
-
-      const createdA = new Date(a.createdAt || 0).getTime();
-      const createdB = new Date(b.createdAt || 0).getTime();
-      if (createdB !== createdA) return createdB - createdA;
-
-      return String(b.id).localeCompare(String(a.id));
-    }).slice(0, 5000);
-    const sortedDocs = [...userDocs].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 100);
-
-    const settings = db.userSettings[userId] || getInitialUserSettings();
-
-    const userInvestments = (db.investments || []).filter(i => i.userId === userId);
-
-    return {
-      transactions: sortedTx,
-      tags: userTags,
-      rules: userRules,
-      settings,
-      documents: sortedDocs,
-      investments: userInvestments
-    };
-  },
-
-  // Transactions
-  addTransactions(userId, rawBatch, options = {}) {
-    const db = loadDb();
-    if (!userId) throw new Error('User ID required');
-
-    const batch = Array.isArray(rawBatch) ? rawBatch : [rawBatch];
-
-    let insertedCount = 0;
-    let duplicateCount = 0;
-    const insertedRows = [];
-    const duplicates = [];
-
-    const userRules = (db.rules || []).filter(r => r.userId === userId);
-
-    for (const item of batch) {
-      const date = item.date || new Date().toISOString().split('T')[0];
-      const merchant = (item.merchant || '').trim();
-      const amount = Math.abs(parseFloat(item.amount) || 0);
-      const type = item.type === 'income' ? 'income' : 'expense';
-      const account = (item.account || 'Imported account').trim();
-
-      if (!merchant || isNaN(amount) || amount <= 0) {
-        continue;
-      }
-
-      const fp = generateFingerprint(date, merchant, amount, account);
-
-      // Check for duplicate fingerprint within THIS user's transactions
-      const existing = (db.transactions || []).find(t => t.fingerprint === fp && t.userId === userId);
-      if (existing) {
-        duplicateCount++;
-        duplicates.push(existing);
-        continue;
-      }
-
-      // Check rules if enabled
-      let category = item.category || 'Needs review';
-      let tagsArray = Array.isArray(item.tags) ? item.tags : [];
-
-      for (const rule of userRules) {
-        if (rule.enabled && rule.pattern && merchant.toLowerCase().includes(rule.pattern.toLowerCase())) {
-          category = rule.category;
-          if (rule.tag && !tagsArray.includes(rule.tag)) {
-            tagsArray.push(rule.tag);
-          }
-          break;
-        }
-      }
-
-      const newTx = {
-        id: `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        userId,
-        date,
-        merchant,
-        category,
-        amount,
-        type,
-        account,
-        tags: JSON.stringify(tagsArray),
-        receipt: item.receipt ? 1 : 0,
-        source: item.source || 'manual',
-        fingerprint: fp,
-        createdAt: new Date().toISOString()
-      };
-
-      db.transactions.push(newTx);
-      insertedCount++;
-      insertedRows.push(newTx);
-    }
-
-    saveDb();
-
-    return {
-      insertedCount,
-      duplicateCount,
-      insertedRows,
-      duplicates
-    };
-  },
-
-  updateTransaction(userId, id, updates) {
-    const db = loadDb();
-    if (!userId) throw new Error('User ID required');
-
-    const tx = db.transactions.find(t => t.id === id && t.userId === userId);
-    if (!tx) throw new Error('Transaction not found');
-
-    if (updates.category !== undefined) tx.category = updates.category;
-    if (updates.tags !== undefined) {
-      tx.tags = Array.isArray(updates.tags) ? JSON.stringify(updates.tags) : updates.tags;
-    }
-    if (updates.merchant !== undefined) tx.merchant = updates.merchant;
-    if (updates.amount !== undefined) tx.amount = Math.abs(parseFloat(updates.amount) || tx.amount);
-    if (updates.type !== undefined) tx.type = updates.type;
-    if (updates.date !== undefined) tx.date = updates.date;
-    if (updates.account !== undefined) tx.account = updates.account;
-
-    // Recalculate fingerprint
-    tx.fingerprint = generateFingerprint(tx.date, tx.merchant, tx.amount, tx.account);
-
-    saveDb();
-    return tx;
-  },
-
-  deleteTransaction(userId, id) {
-    const db = loadDb();
-    if (!userId) throw new Error('User ID required');
-
-    const initialLen = db.transactions.length;
-    db.transactions = db.transactions.filter(t => !(t.id === id && t.userId === userId));
-
-    if (db.transactions.length !== initialLen) {
+    if (!db.userSettings[userId]) {
+      db.userSettings[userId] = getInitialUserSettings();
       saveDb();
-      return true;
     }
-    return false;
+    return db.userSettings[userId];
   },
 
-  // User Settings & Preferences Scoped strictly by userId
-  saveUserSettings(userId, updates) {
+  updateUserSettings(userId, newSettings) {
     const db = loadDb();
-    if (!userId) throw new Error('User ID required');
-
+    const current = db.userSettings[userId] || getInitialUserSettings();
     db.userSettings[userId] = {
-      ...(db.userSettings[userId] || getInitialUserSettings()),
-      ...updates,
-      updatedAt: new Date().toISOString()
+      ...current,
+      ...newSettings
     };
-
     saveDb();
     return db.userSettings[userId];
   },
 
-  updatePreferences(userId, updates) {
-    return this.saveUserSettings(userId, updates);
+  getTransactions(userId) {
+    const db = loadDb();
+    return (db.transactions || []).filter(t => t.userId === userId || !t.userId);
   },
 
-  // Completely wipe data for a single user ONLY
-  wipeAllData(userId) {
+  addTransaction(userId, transaction) {
     const db = loadDb();
-    if (!userId) throw new Error('User ID required');
+    const newTx = {
+      id: `tx_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      userId,
+      date: transaction.date || new Date().toISOString().split('T')[0],
+      merchant: transaction.merchant || 'Unknown Merchant',
+      amount: Number(transaction.amount) || 0,
+      category: transaction.category || 'Other',
+      account: transaction.account || 'Main Checking',
+      type: transaction.type || (Number(transaction.amount) >= 0 ? 'income' : 'expense'),
+      tags: Array.isArray(transaction.tags) ? transaction.tags : [],
+      flagged: !!transaction.flagged,
+      receiptUrl: transaction.receiptUrl || null,
+      createdAt: new Date().toISOString()
+    };
+    if (!db.transactions) db.transactions = [];
+    db.transactions.unshift(newTx);
+    saveDb();
+    return newTx;
+  },
 
-    db.transactions = db.transactions.filter(t => t.userId !== userId);
-    db.rules = db.rules.filter(r => r.userId !== userId);
-    db.tags = db.tags.filter(t => t.userId !== userId);
-    db.documents = db.documents.filter(d => d.userId !== userId);
-    db.userSettings[userId] = getInitialUserSettings();
-    db.investments = (db.investments || []).filter(i => i.userId !== userId);
+  updateTransaction(userId, id, updates) {
+    const db = loadDb();
+    const index = (db.transactions || []).findIndex(t => t.id === id && (t.userId === userId || !t.userId));
+    if (index === -1) throw new Error('Transaction not found');
 
+    db.transactions[index] = {
+      ...db.transactions[index],
+      ...updates,
+      amount: updates.amount !== undefined ? Number(updates.amount) : db.transactions[index].amount,
+      updatedAt: new Date().toISOString()
+    };
+    saveDb();
+    return db.transactions[index];
+  },
+
+  deleteTransaction(userId, id) {
+    const db = loadDb();
+    const initialLength = (db.transactions || []).length;
+    db.transactions = (db.transactions || []).filter(t => !(t.id === id && (t.userId === userId || !t.userId)));
+    if (db.transactions.length === initialLength) throw new Error('Transaction not found');
     saveDb();
     return true;
   },
 
-  // Investments Management
   getInvestments(userId) {
     const db = loadDb();
-    if (!userId) return [];
-    return (db.investments || []).filter(i => i.userId === userId);
-  },
-
-  addInvestment(userId, holding) {
-    const db = loadDb();
-    if (!userId) throw new Error('User ID required');
-    if (!db.investments) db.investments = [];
-
-    const buyPrice = Math.abs(parseFloat(holding.buyPrice) || 0);
-    const currentPrice = Math.abs(parseFloat(holding.currentPrice || holding.buyPrice) || 0);
-    const quantity = Math.abs(parseFloat(holding.quantity) || 1);
-
-    const currentValuation = Math.round((currentPrice * quantity) * 100) / 100;
-    const totalCost = Math.round((buyPrice * quantity) * 100) / 100;
-    const unrealizedPnL = Math.round((currentValuation - totalCost) * 100) / 100;
-    const pnlPercentage = totalCost > 0 ? Math.round(((unrealizedPnL / totalCost) * 100) * 100) / 100 : 0;
-
-    const newHolding = {
-      id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-      userId,
-      name: (holding.name || 'Investment Asset').trim(),
-      symbol: (holding.symbol || '').trim().toUpperCase(),
-      type: holding.type || 'stock',
-      quantity,
-      buyPrice,
-      currentPrice,
-      currentValuation,
-      unrealizedPnL,
-      pnlPercentage,
-      notes: (holding.notes || '').trim(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    db.investments.push(newHolding);
-    saveDb();
-    return newHolding;
-  },
-
-  updateInvestment(userId, id, updates) {
-    const db = loadDb();
-    if (!userId) throw new Error('User ID required');
-    if (!db.investments) db.investments = [];
-
-    const holding = db.investments.find(i => i.id === id && i.userId === userId);
-    if (!holding) throw new Error('Investment holding not found');
-
-    if (updates.name !== undefined) holding.name = updates.name.trim();
-    if (updates.symbol !== undefined) holding.symbol = updates.symbol.trim().toUpperCase();
-    if (updates.type !== undefined) holding.type = updates.type;
-    if (updates.quantity !== undefined) holding.quantity = Math.abs(parseFloat(updates.quantity) || 0);
-    if (updates.buyPrice !== undefined) holding.buyPrice = Math.abs(parseFloat(updates.buyPrice) || 0);
-    if (updates.currentPrice !== undefined) holding.currentPrice = Math.abs(parseFloat(updates.currentPrice) || 0);
-    if (updates.notes !== undefined) holding.notes = updates.notes;
-
-    holding.currentValuation = Math.round((holding.currentPrice * holding.quantity) * 100) / 100;
-    const totalCost = Math.round((holding.buyPrice * holding.quantity) * 100) / 100;
-    holding.unrealizedPnL = Math.round((holding.currentValuation - totalCost) * 100) / 100;
-    holding.pnlPercentage = totalCost > 0 ? Math.round(((holding.unrealizedPnL / totalCost) * 100) * 100) / 100 : 0;
-    holding.updatedAt = new Date().toISOString();
-
-    saveDb();
-    return holding;
+    return (db.investments || []).filter(i => i.userId === userId || !i.userId);
   },
 
   saveInvestments(userId, updatedList) {
     const db = loadDb();
-    if (!userId) throw new Error('User ID required');
-
-    db.investments = (db.investments || []).filter(i => i.userId !== userId).concat(updatedList);
+    if (!db.investments) db.investments = [];
+    const otherUsersInv = db.investments.filter(i => i.userId && i.userId !== userId);
+    db.investments = [
+      ...otherUsersInv,
+      ...updatedList.map(item => ({ ...item, userId }))
+    ];
     saveDb();
-    return updatedList;
+    return db.investments;
+  },
+
+  addInvestment(userId, item) {
+    const db = loadDb();
+    const newInv = {
+      id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      userId,
+      name: item.name || 'New Holding',
+      symbol: item.symbol || '',
+      type: item.type || 'stock',
+      quantity: Number(item.quantity) || 1,
+      buyPrice: Number(item.buyPrice) || 0,
+      currentPrice: Number(item.currentPrice || item.buyPrice) || 0,
+      currentValuation: Number(item.currentValuation) || 0,
+      unrealizedPnL: Number(item.unrealizedPnL) || 0,
+      pnlPercentage: Number(item.pnlPercentage) || 0,
+      notes: item.notes || '',
+      priceStatus: item.priceStatus || 'ok',
+      createdAt: new Date().toISOString()
+    };
+    if (!db.investments) db.investments = [];
+    db.investments.unshift(newInv);
+    saveDb();
+    return newInv;
+  },
+
+  updateInvestment(userId, id, updates) {
+    const db = loadDb();
+    const index = (db.investments || []).findIndex(i => i.id === id && (i.userId === userId || !i.userId));
+    if (index === -1) throw new Error('Investment not found');
+
+    db.investments[index] = {
+      ...db.investments[index],
+      ...updates,
+      quantity: updates.quantity !== undefined ? Number(updates.quantity) : db.investments[index].quantity,
+      buyPrice: updates.buyPrice !== undefined ? Number(updates.buyPrice) : db.investments[index].buyPrice,
+      currentPrice: updates.currentPrice !== undefined ? Number(updates.currentPrice) : db.investments[index].currentPrice,
+      updatedAt: new Date().toISOString()
+    };
+    saveDb();
+    return db.investments[index];
   },
 
   deleteInvestment(userId, id) {
     const db = loadDb();
-    if (!userId) throw new Error('User ID required');
-    if (!db.investments) db.investments = [];
+    const initialLength = (db.investments || []).length;
+    db.investments = (db.investments || []).filter(i => !(i.id === id && (i.userId === userId || !i.userId)));
+    if (db.investments.length === initialLength) throw new Error('Investment not found');
+    saveDb();
+    return true;
+  },
 
-    const initialLen = db.investments.length;
-    db.investments = db.investments.filter(i => !(i.id === id && i.userId === userId));
+  getRules(userId) {
+    const db = loadDb();
+    return (db.rules || []).filter(r => r.userId === userId || !r.userId);
+  },
 
-    if (db.investments.length !== initialLen) {
-      saveDb();
-      return true;
-    }
-    return false;
+  addRule(userId, rule) {
+    const db = loadDb();
+    const newRule = {
+      id: `rule_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      userId,
+      pattern: rule.pattern,
+      category: rule.category,
+      account: rule.account || null,
+      createdAt: new Date().toISOString()
+    };
+    if (!db.rules) db.rules = [];
+    db.rules.unshift(newRule);
+    saveDb();
+    return newRule;
+  },
+
+  deleteRule(userId, id) {
+    const db = loadDb();
+    const initialLength = (db.rules || []).length;
+    db.rules = (db.rules || []).filter(r => !(r.id === id && (r.userId === userId || !r.userId)));
+    if (db.rules.length === initialLength) throw new Error('Rule not found');
+    saveDb();
+    return true;
+  },
+
+  getDocuments(userId) {
+    const db = loadDb();
+    return (db.documents || []).filter(d => d.userId === userId || !d.userId);
+  },
+
+  addDocument(userId, doc) {
+    const db = loadDb();
+    const newDoc = {
+      id: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      userId,
+      name: doc.name || 'Untitled Document',
+      filename: doc.filename,
+      fileSize: doc.fileSize || 0,
+      mimeType: doc.mimeType || 'application/octet-stream',
+      uploadDate: new Date().toISOString().split('T')[0],
+      source: doc.source || 'Manual Upload',
+      driveFileId: doc.driveFileId || null,
+      r2Path: doc.r2Path || null,
+      createdAt: new Date().toISOString()
+    };
+    if (!db.documents) db.documents = [];
+    db.documents.unshift(newDoc);
+    saveDb();
+    return newDoc;
+  },
+
+  deleteDocument(userId, id) {
+    const db = loadDb();
+    const initialLength = (db.documents || []).length;
+    db.documents = (db.documents || []).filter(d => !(d.id === id && (d.userId === userId || !d.userId)));
+    if (db.documents.length === initialLength) throw new Error('Document not found');
+    saveDb();
+    return true;
+  },
+
+  updatePreferences(userId, updates) {
+    return this.updateUserSettings(userId, updates);
   }
 };
