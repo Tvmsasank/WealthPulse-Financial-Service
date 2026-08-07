@@ -116,8 +116,7 @@ export default function UserProfileModal({
   const liabilities = Number(settings.liabilities || 0);
   const netWorth = assets - liabilities;
 
-  // Strict Per-User MPIN Check (Fixes Multi-Tenant Browser Storage Leak)
-  const hasRegisteredMpin = !!(user && user.hasMpin);
+  const hasRegisteredMpin = !!(user?.hasMpin || user?.mpinHash || localStorage.getItem('wealthpulse_has_mpin') === 'true');
 
   return (
     <div className={`modal-backdrop ${isLoggingOut ? 'fade-out' : ''}`}>

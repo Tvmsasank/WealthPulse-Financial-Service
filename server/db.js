@@ -161,6 +161,7 @@ export const dbEngine = {
       id: user.id,
       name: user.name,
       email: user.email,
+      hasMpin: !!user.mpinHash,
       createdAt: user.createdAt
     };
   },
@@ -180,7 +181,7 @@ export const dbEngine = {
       name: user.name,
       email: user.email,
       createdAt: user.createdAt,
-      hasMpin: !!(db.mpins && db.mpins[userId])
+      hasMpin: !!user.mpinHash
     };
   },
 
