@@ -67,7 +67,7 @@ export default function SettingsTab({
     e.preventDefault();
     await onSaveNetWorth({
       driveFolder: {
-        name: driveNameInput.trim() || 'Ledgerly Financial Inbox',
+        name: driveNameInput.trim() || 'WealthPulse Financial Inbox',
         url: driveUrlInput.trim() || 'https://drive.google.com/drive/my-drive'
       }
     });

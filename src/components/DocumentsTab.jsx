@@ -7,8 +7,8 @@ export default function DocumentsTab({
   onOpenImport
 }) {
   const driveFolder = settings.driveFolder || {
-    name: 'Ledgerly Financial Inbox',
-    url: 'https://drive.google.com/drive/folders/ledgerly-inbox'
+    name: 'WealthPulse Financial Inbox',
+    url: 'https://drive.google.com/drive/folders/wealthpulse-inbox'
   };
   const driveSync = settings.driveSync || {
     schedule: '08:00 AM Daily',

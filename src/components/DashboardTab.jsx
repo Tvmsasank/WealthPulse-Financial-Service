@@ -313,7 +313,7 @@ export default function DashboardTab({
         </div>
       </div>
 
-      {/* Bottom Grid: Recent Activity & Ledgerly Insight */}
+      {/* Bottom Grid: Recent Activity & WealthPulse Insight */}
       <div className="grid-2">
         {/* Recent Activity (All Account Transactions Displayed) */}
         <div className="card">
@@ -381,7 +381,7 @@ export default function DashboardTab({
           )}
         </div>
 
-        {/* Ledgerly Insights & Coming Up */}
+        {/* WealthPulse Insights & Coming Up */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* WealthPulse Insight Panel */}
           <div className="card card-navy">

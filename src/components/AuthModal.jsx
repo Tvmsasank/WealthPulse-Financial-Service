@@ -276,7 +276,7 @@ export default function AuthModal({
         className="modal-content"
         onClick={e => e.stopPropagation()}
         style={{
-          maxWidth: '480px',
+          maxWidth: '520px',
           width: '100%',
           padding: '28px',
           borderRadius: '24px',
@@ -347,22 +347,22 @@ export default function AuthModal({
         {rememberedEmail && authMethod !== 'register' && (
           <div
             style={{
-              padding: '14px 16px',
-              borderRadius: '16px',
+              padding: '16px 18px',
+              borderRadius: '18px',
               background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(10, 25, 47, 0.8) 100%)',
               border: '1px solid var(--border-glass)',
-              marginBottom: '20px',
+              marginBottom: '22px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: '12px'
+              gap: '16px'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
               <div
                 style={{
-                  width: '42px',
-                  height: '42px',
+                  width: '44px',
+                  height: '44px',
                   borderRadius: '50%',
                   background: 'linear-gradient(135deg, var(--primary) 0%, #059669 100%)',
                   color: '#000000',
@@ -370,17 +370,17 @@ export default function AuthModal({
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: '900',
-                  fontSize: '15px',
+                  fontSize: '16px',
                   flexShrink: 0
                 }}
               >
                 {getInitials(rememberedEmail)}
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {rememberedEmail}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                   <CheckCircle2 size={12} /> Remembered Account
                 </div>
               </div>
@@ -388,12 +388,22 @@ export default function AuthModal({
 
             <button
               type="button"
-              className="btn btn-secondary btn-sm"
-              style={{ fontSize: '12px', padding: '6px 12px', flexShrink: 0, gap: '6px', borderRadius: '10px' }}
+              className="btn btn-secondary"
+              style={{
+                fontSize: '12px',
+                fontWeight: '700',
+                padding: '7px 14px',
+                flexShrink: 0,
+                gap: '6px',
+                borderRadius: '12px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-main)'
+              }}
               onClick={handleSwitchAccount}
               title="Switch Account"
             >
-              <RefreshCw size={13} /> Switch
+              <RefreshCw size={13} /> Switch Account
             </button>
           </div>
         )}

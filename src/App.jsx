@@ -506,7 +506,7 @@ export default function App() {
 
   // Interactive Drive Sync Trigger Action with Status Modal Feedback
   const handleTriggerDriveSync = async () => {
-    setDriveSyncStatus({ syncState: 'syncing', message: 'Scanning Ledgerly Financial Inbox folder...' });
+    setDriveSyncStatus({ syncState: 'syncing', message: 'Scanning WealthPulse Financial Inbox folder...' });
 
     try {
       const res = await fetch('/api/drive-sync', {
