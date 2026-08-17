@@ -91,7 +91,7 @@ export default function AuthModal({
             setEmailHasMpin(true);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
   };
 
@@ -170,7 +170,8 @@ export default function AuthModal({
     setError('');
     setLoading(true);
     try {
-      const result = await authenticateWithBiometrics();
+      const targetEmail = emailToUse || email || rememberedEmail;
+      const result = await authenticateWithBiometrics(targetEmail);
       setSuccess('Face ID / Biometric Verified! Unlocking...');
       setTimeout(() => {
         onLoginSuccess(result.user, result.token, true);
@@ -351,18 +352,18 @@ export default function AuthModal({
               borderRadius: '18px',
               background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(10, 25, 47, 0.8) 100%)',
               border: '1px solid var(--border-glass)',
-              marginBottom: '22px',
+              marginBottom: '16px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: '16px'
+              gap: '10px'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
               <div
                 style={{
-                  width: '44px',
-                  height: '44px',
+                  width: '38px',
+                  height: '38px',
                   borderRadius: '50%',
                   background: 'linear-gradient(135deg, var(--primary) 0%, #059669 100%)',
                   color: '#000000',
@@ -370,40 +371,41 @@ export default function AuthModal({
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: '900',
-                  fontSize: '16px',
+                  fontSize: '14px',
                   flexShrink: 0
                 }}
               >
                 {getInitials(rememberedEmail)}
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={rememberedEmail}>
                   {rememberedEmail}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                  <CheckCircle2 size={12} /> Remembered Account
+                <div style={{ fontSize: '10px', color: '#34D399', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '2px' }}>
+                  <CheckCircle2 size={11} /> Remembered
                 </div>
               </div>
             </div>
 
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-secondary btn-sm"
               style={{
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: '700',
-                padding: '7px 14px',
+                padding: '6px 10px',
                 flexShrink: 0,
-                gap: '6px',
-                borderRadius: '12px',
+                gap: '4px',
+                borderRadius: '10px',
                 background: 'rgba(255, 255, 255, 0.08)',
                 border: '1px solid var(--border-color)',
-                color: 'var(--text-main)'
+                color: 'var(--text-main)',
+                whiteSpace: 'nowrap'
               }}
               onClick={handleSwitchAccount}
               title="Switch Account"
             >
-              <RefreshCw size={13} /> Switch Account
+              <RefreshCw size={11} /> Switch
             </button>
           </div>
         )}
@@ -509,25 +511,23 @@ export default function AuthModal({
             </div>
 
             {/* Bottom Actions Bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid var(--border-color)', fontSize: '13px' }}>
-              {hasBiometrics && (
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  style={{ color: 'var(--primary)', gap: '6px' }}
-                  onClick={() => handleBiometricLogin(rememberedEmail)}
-                >
-                  <Fingerprint size={16} /> Touch Face ID
-                </button>
-              )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '14px', borderTop: '1px solid var(--border-color)', fontSize: '12px', gap: '8px' }}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ color: 'var(--primary)', gap: '6px', padding: '6px 8px', fontSize: '12px' }}
+                onClick={() => handleBiometricLogin(rememberedEmail)}
+              >
+                <Fingerprint size={16} /> Touch / Face ID
+              </button>
 
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
-                style={{ color: 'var(--text-muted)', gap: '6px', marginLeft: 'auto' }}
+                style={{ color: 'var(--text-muted)', gap: '6px', padding: '6px 8px', fontSize: '12px', marginLeft: 'auto' }}
                 onClick={() => setAuthMethod('password')}
               >
-                <Lock size={14} /> Use Password instead
+                <Lock size={14} /> Password Login
               </button>
             </div>
           </div>

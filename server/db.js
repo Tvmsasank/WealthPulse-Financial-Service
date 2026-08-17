@@ -324,10 +324,11 @@ export const dbEngine = {
   verifyWebAuthnCredential({ email, credentialId }) {
     const db = loadDb();
     const cleanEmail = (email || '').trim().toLowerCase();
-    const user = db.users.find(u => u.email === cleanEmail);
-    if (!user || !user.webauthnCredentialId) return null;
-
-    if (user.webauthnCredentialId !== credentialId) return null;
+    const user = db.users.find(u => 
+      (cleanEmail && u.email === cleanEmail) || 
+      (credentialId && u.webauthnCredentialId === credentialId)
+    );
+    if (!user) return null;
 
     return {
       id: user.id,
