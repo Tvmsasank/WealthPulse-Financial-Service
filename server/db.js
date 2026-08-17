@@ -94,13 +94,14 @@ if (process.env.DATABASE_URL) {
       }
     }
 
-    if (!connectionString.includes('sslmode=')) {
-      connectionString += (connectionString.includes('?') ? '&' : '?') + 'sslmode=require';
-    }
+    // Strip any sslmode query params so pg uses explicit rejectUnauthorized: false
+    connectionString = connectionString.replace(/[?&]sslmode=[^&]+/g, '');
 
     pgPool = new pg.Pool({
       connectionString,
-      ssl: { rejectUnauthorized: false }
+      ssl: {
+        rejectUnauthorized: false
+      }
     });
 
     pgPool.query(`
