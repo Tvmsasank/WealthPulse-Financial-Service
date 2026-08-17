@@ -133,7 +133,7 @@ export default function TransactionsTab({
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tx.date} • <span style={{ textTransform: 'capitalize' }}>{tx.source}</span></div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{tx.date} • <span style={{ textTransform: 'capitalize' }}>{tx.source || 'Manual'}</span></div>
                       </td>
 
                       {/* Inline Category Editor Dropdown */}

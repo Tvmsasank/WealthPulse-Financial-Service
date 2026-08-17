@@ -52,10 +52,6 @@ const getUserIdFromReq = (req) => {
     if (user) return user.id;
   }
 
-  // Mobile Fallback 2: Fallback to owner account or first existing user
-  const ownerUser = dbEngine.getUserByEmail('venkatamanishashankt@gmail.com');
-  if (ownerUser) return ownerUser.id;
-
   return null;
 };
 

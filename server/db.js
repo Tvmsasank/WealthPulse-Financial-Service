@@ -430,6 +430,7 @@ export const dbEngine = {
       account: transaction.account || 'Main Checking',
       type: transaction.type || (Number(transaction.amount) >= 0 ? 'income' : 'expense'),
       tags: Array.isArray(transaction.tags) ? transaction.tags : [],
+      source: transaction.source || 'Manual',
       flagged: !!transaction.flagged,
       receiptUrl: transaction.receiptUrl || null,
       createdAt: new Date().toISOString()
@@ -463,6 +464,17 @@ export const dbEngine = {
       updatedAt: new Date().toISOString()
     };
     saveDb();
+
+    if (pgPool) {
+      const tx = db.transactions[index];
+      pgPool.query(
+        `UPDATE public.wealthpulse_transactions
+         SET merchant = $1, amount = $2, type = $3, date = $4, category = $5, account = $6, tags = $7
+         WHERE id = $8`,
+        [tx.merchant, tx.amount, tx.type, tx.date, tx.category, tx.account, JSON.stringify(tx.tags), tx.id]
+      ).catch(e => console.error('[Supabase PostgreSQL] Relational Tx update error:', e.message));
+    }
+
     return db.transactions[index];
   },
 
@@ -546,6 +558,17 @@ export const dbEngine = {
       updatedAt: new Date().toISOString()
     };
     saveDb();
+
+    if (pgPool) {
+      const inv = db.investments[index];
+      pgPool.query(
+        `UPDATE public.wealthpulse_investments
+         SET name = $1, symbol = $2, type = $3, quantity = $4, buy_price = $5, current_price = $6, current_valuation = $7, unrealized_pnl = $8, pnl_percentage = $9
+         WHERE id = $10`,
+        [inv.name, inv.symbol, inv.type, inv.quantity, inv.buyPrice, inv.currentPrice, inv.currentValuation, inv.unrealizedPnL, inv.pnlPercentage, inv.id]
+      ).catch(e => console.error('[Supabase PostgreSQL] Relational Inv update error:', e.message));
+    }
+
     return db.investments[index];
   },
 
