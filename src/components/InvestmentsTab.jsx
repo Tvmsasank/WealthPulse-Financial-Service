@@ -15,7 +15,8 @@ import {
   Landmark,
   Layers,
   Activity,
-  AlertCircle
+  AlertCircle,
+  Zap
 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
@@ -39,6 +40,7 @@ export default function InvestmentsTab({
   // Group holdings by Category
   const stocks = safeInvestments.filter(i => i.type === 'stock');
   const mutualFunds = safeInvestments.filter(i => i.type === 'mutual_fund');
+  const cryptoHoldings = safeInvestments.filter(i => i.type === 'crypto' || i.type === 'cryptocurrency');
   const goldHoldings = safeInvestments.filter(i => i.type === 'gold');
   const fdHoldings = safeInvestments.filter(i => i.type === 'fd' || i.type === 'other');
 
@@ -46,12 +48,12 @@ export default function InvestmentsTab({
   const typeMap = {};
   for (const i of safeInvestments) {
     const t = i.type || 'other';
-    const label = t === 'stock' ? 'Equity Stocks' : t === 'mutual_fund' ? 'Mutual Funds' : t === 'gold' ? 'Gold & Metals' : t === 'fd' ? 'Fixed Deposits' : 'Other Assets';
+    const label = t === 'stock' ? 'Equity Stocks' : t === 'mutual_fund' ? 'Mutual Funds' : (t === 'crypto' || t === 'cryptocurrency') ? 'Cryptocurrency' : t === 'gold' ? 'Gold & Metals' : t === 'fd' ? 'Fixed Deposits' : 'Other Assets';
     typeMap[label] = (typeMap[label] || 0) + (Number(i.currentValuation) || 0);
   }
 
   const pieData = Object.keys(typeMap).map(k => ({ name: k, value: Math.round(typeMap[k]) }));
-  const COLORS = ['#10B981', '#7C6EE6', '#F59E0B', '#3B82F6', '#EC4899'];
+  const COLORS = ['#10B981', '#7C6EE6', '#F59E0B', '#3B82F6', '#EC4899', '#8B5CF6'];
 
   const handleDelete = () => {
     if (deleteTarget) {
@@ -83,6 +85,8 @@ export default function InvestmentsTab({
               <Building2 style={{ color: '#10B981' }} size={22} />
             ) : categoryTitle.includes('Mutual') ? (
               <Briefcase style={{ color: '#7C6EE6' }} size={22} />
+            ) : categoryTitle.includes('Crypto') ? (
+              <Zap style={{ color: '#F59E0B' }} size={22} />
             ) : categoryTitle.includes('Gold') ? (
               <Coins style={{ color: '#F59E0B' }} size={22} />
             ) : (
@@ -151,77 +155,111 @@ export default function InvestmentsTab({
 
                 return (
                   <tr key={item.id}>
-                    {/* Name & Symbol */}
+                    {/* Name & Symbol Badge */}
                     <td>
-                      <div style={{ fontWeight: '700', color: 'var(--text-main)', fontSize: '14px' }}>{item.name}</div>
-                      {item.symbol && (
-                        <span style={{ fontSize: '11px', color: '#818CF8', fontWeight: '700', background: 'rgba(99, 102, 241, 0.12)', padding: '2px 6px', borderRadius: '4px' }}>
-                          {item.symbol}
-                        </span>
-                      )}
+                      <div style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-main)' }}>
+                        {item.name}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                        {item.symbol ? (
+                          <span
+                            className="pill"
+                            style={{
+                              fontSize: '11px',
+                              padding: '1px 7px',
+                              background: 'var(--bg-app)',
+                              border: '1px solid var(--border-color)',
+                              color: 'var(--primary)',
+                              fontFamily: 'monospace'
+                            }}
+                          >
+                            {item.symbol}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Manual Asset</span>
+                        )}
+                        {item.priceStatus === 'invalid_symbol' && (
+                          <span
+                            style={{
+                              fontSize: '10px',
+                              color: '#EF4444',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '2px'
+                            }}
+                            title="Live ticker not found. Click edit to adjust ticker symbol."
+                          >
+                            <AlertCircle size={12} /> Check Ticker
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Quantity */}
-                    <td style={{ fontWeight: '600' }}>
-                      {item.quantity} {item.type === 'mutual_fund' ? 'units' : item.type === 'stock' ? 'shares' : 'units'}
+                    <td style={{ fontSize: '13px', fontWeight: '600' }}>
+                      {Number(item.quantity).toLocaleString('en-IN', { maximumFractionDigits: 4 })}{' '}
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        {item.type === 'stock' ? 'shares' : item.type === 'mutual_fund' ? 'units' : (item.type === 'crypto' || item.type === 'cryptocurrency') ? 'coins' : 'units'}
+                      </span>
                     </td>
 
                     {/* Buy Price */}
-                    <td style={{ color: 'var(--text-muted)' }}>
-                      ₹{buyPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    <td style={{ fontSize: '13px' }}>
+                      ₹{buyPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                     </td>
 
-                    {/* Current Live Price */}
-                    <td style={{ fontWeight: '700', color: 'var(--text-main)' }}>
-                      ₹{currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    {/* Live Market Price / NAV */}
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-main)' }}>
+                          ₹{currentPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                        </span>
+                        {item.priceStatus === 'ok' && (
+                          <span
+                            className="pill"
+                            style={{
+                              fontSize: '9px',
+                              padding: '1px 5px',
+                              background: 'rgba(16, 185, 129, 0.15)',
+                              color: '#34D399',
+                              border: '1px solid #10B981'
+                            }}
+                          >
+                            LIVE
+                          </span>
+                        )}
+                      </div>
                     </td>
 
-                    {/* Valuation */}
-                    <td style={{ textAlign: 'right', fontWeight: '800', fontSize: '15px', color: 'var(--primary)' }}>
+                    {/* Current Valuation */}
+                    <td style={{ textAlign: 'right', fontWeight: '700', fontSize: '14px' }}>
                       ₹{valuation.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
 
-                    {/* Rich Red / Green P&L Badge */}
+                    {/* P&L */}
                     <td style={{ textAlign: 'right' }}>
                       {item.priceStatus === 'invalid_symbol' ? (
                         <button
                           type="button"
+                          className="btn btn-ghost btn-sm"
+                          style={{ color: '#F59E0B', fontSize: '11px', padding: '2px 6px' }}
                           onClick={() => onOpenEditInvestment(item)}
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: '700',
-                            padding: '4px 10px',
-                            borderRadius: '16px',
-                            background: 'rgba(245, 158, 11, 0.16)',
-                            color: '#F59E0B',
-                            border: '1px solid #F59E0B',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            cursor: 'pointer'
-                          }}
-                          title="Click to set official NSE/BSE ticker symbol (e.g. DEVYANI.NS)"
                         >
-                          <AlertCircle size={13} /> Set Ticker Code
+                          Set Ticker Code
                         </button>
                       ) : (
-                        <span
+                        <div
                           style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            padding: '4px 10px',
-                            borderRadius: '16px',
-                            fontSize: '12px',
-                            fontWeight: '800',
-                            background: pnl >= 0 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.18)',
-                            color: pnl >= 0 ? '#34D399' : '#FCA5A5',
-                            border: `1px solid ${pnl >= 0 ? '#10B981' : '#EF4444'}`
+                            fontWeight: '700',
+                            fontSize: '13px',
+                            color: pnl >= 0 ? '#34D399' : '#FCA5A5'
                           }}
                         >
-                          {pnl >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                          {pnl >= 0 ? '+' : ''}₹{Math.abs(pnl).toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%)
-                        </span>
+                          {pnl >= 0 ? '+' : ''}₹{Math.abs(pnl).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          <div style={{ fontSize: '11px', fontWeight: '600' }}>
+                            ({pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%)
+                          </div>
+                        </div>
                       )}
                     </td>
 
@@ -235,17 +273,16 @@ export default function InvestmentsTab({
                           title="Edit Holding"
                           onClick={() => onOpenEditInvestment(item)}
                         >
-                          <Edit3 size={16} />
+                          <Edit3 size={15} />
                         </button>
-
                         <button
                           type="button"
                           className="btn btn-ghost btn-sm"
-                          style={{ padding: '6px', color: '#EF4444' }}
-                          title="Delete Asset"
+                          style={{ padding: '6px', color: 'var(--danger)' }}
+                          title="Delete Holding"
                           onClick={() => setDeleteTarget(item)}
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>
@@ -266,49 +303,59 @@ export default function InvestmentsTab({
             const pnlPct = Number(item.pnlPercentage || (buyPrice > 0 ? (pnl / (buyPrice * item.quantity)) * 100 : 0));
 
             return (
-              <div key={item.id} className="card" style={{ padding: '14px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
+              <div key={item.id} className="card" style={{ padding: '14px', marginBottom: '10px', background: 'var(--bg-app)' }}>
+                {/* Top Row: Name + Valuation */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                   <div>
-                    <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-main)' }}>{item.name}</div>
-                    {item.symbol && (
-                      <span style={{ fontSize: '11px', color: '#818CF8', fontWeight: '700' }}>
-                        {item.symbol}
+                    <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-main)' }}>
+                      {item.name}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                      {item.symbol && (
+                        <span className="pill" style={{ fontSize: '11px', padding: '1px 6px' }}>
+                          {item.symbol}
+                        </span>
+                      )}
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        {Number(item.quantity).toLocaleString('en-IN', { maximumFractionDigits: 4 })} {item.type === 'stock' ? 'shares' : item.type === 'mutual_fund' ? 'units' : (item.type === 'crypto' || item.type === 'cryptocurrency') ? 'coins' : 'units'}
                       </span>
-                    )}
+                    </div>
                   </div>
 
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '2px',
-                      padding: '4px 8px',
-                      borderRadius: '12px',
-                      fontSize: '11px',
-                      fontWeight: '800',
-                      background: pnl >= 0 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(239, 68, 68, 0.18)',
-                      color: pnl >= 0 ? '#34D399' : '#FCA5A5',
-                      border: `1px solid ${pnl >= 0 ? '#10B981' : '#EF4444'}`
-                    }}
-                  >
-                    {pnl >= 0 ? '+' : ''}₹{Math.abs(pnl).toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%)
-                  </span>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-main)' }}>
+                      ₹{valuation.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </div>
+                    <div style={{ fontSize: '12px', fontWeight: '700', color: pnl >= 0 ? '#34D399' : '#FCA5A5' }}>
+                      {pnl >= 0 ? '+' : ''}₹{Math.abs(pnl).toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({pnlPct.toFixed(2)}%)
+                    </div>
+                  </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px', background: 'var(--bg-app)', padding: '8px 10px', borderRadius: 'var(--radius-sm)', marginBottom: '8px' }}>
-                  <div>Buy Price: <strong>₹{buyPrice.toLocaleString('en-IN')}</strong></div>
-                  <div>Live Price: <strong style={{ color: 'var(--primary)' }}>₹{currentPrice.toLocaleString('en-IN')}</strong></div>
-                  <div>Quantity: <strong>{item.quantity}</strong></div>
-                  <div>Valuation: <strong style={{ color: '#10B981' }}>₹{valuation.toLocaleString('en-IN')}</strong></div>
-                </div>
+                {/* Bottom Row: Buy vs Live Price + Actions */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border-color)', fontSize: '12px' }}>
+                  <div style={{ color: 'var(--text-muted)' }}>
+                    Buy: ₹{buyPrice.toLocaleString('en-IN')} ➔ Live: <span style={{ color: 'var(--text-main)', fontWeight: '700' }}>₹{currentPrice.toLocaleString('en-IN')}</span>
+                  </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
-                  <button className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)', padding: '4px' }} onClick={() => onOpenEditInvestment(item)}>
-                    <Edit3 size={16} /> Edit
-                  </button>
-                  <button className="btn btn-ghost btn-sm" style={{ color: '#EF4444', padding: '4px' }} onClick={() => setDeleteTarget(item)}>
-                    <Trash2 size={16} /> Delete
-                  </button>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      style={{ padding: '4px 8px', color: 'var(--primary)' }}
+                      onClick={() => onOpenEditInvestment(item)}
+                    >
+                      <Edit3 size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      style={{ padding: '4px 8px', color: 'var(--danger)' }}
+                      onClick={() => setDeleteTarget(item)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -319,43 +366,44 @@ export default function InvestmentsTab({
   };
 
   return (
-    <div>
+    <div className="tab-container animate-fade">
       {/* Header Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="section-header" style={{ marginBottom: '20px' }}>
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <TrendingUp style={{ color: 'var(--primary)' }} /> Real-Time Investment & Stock Portfolio
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <TrendingUp size={24} style={{ color: 'var(--primary)' }} /> Real-Time Investment Portfolio
           </h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#10B981', background: 'rgba(16, 185, 129, 0.12)', padding: '3px 8px', borderRadius: '12px', fontWeight: '700' }}>
-              <Activity size={14} className="spin" /> Live Ticker Active (3s Fast Market Feed)
-            </span>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              AMFI & Yahoo Finance Live APIs
-            </span>
-          </div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: '4px 0 0 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span className="live-pulse-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', display: 'inline-block' }}></span>
+            <span>Live Ticker Active (3s Fast Market Feed) • AMFI, NSE & Crypto Real-Time APIs</span>
+          </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button
-            className="btn btn-secondary"
+            type="button"
+            className="btn btn-secondary btn-sm"
             onClick={onRefreshPrices}
             disabled={isSyncing}
-            style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            <RefreshCw size={15} className={isSyncing ? 'spin' : ''} />
-            {isSyncing ? 'Syncing Market Prices...' : 'Sync Live Market Prices'}
+            <RefreshCw size={14} className={isSyncing ? 'spin-icon' : ''} />
+            {isSyncing ? 'Fetching Live Prices...' : 'Sync Live Prices'}
           </button>
-
-          <button className="btn btn-primary" onClick={onOpenAddInvestment} style={{ fontSize: '13px' }}>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={onOpenAddInvestment}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
             <Plus size={16} /> Add Asset / Holding
           </button>
         </div>
       </div>
 
-      {/* Summary KPI Cards */}
-      <div className="grid-4" style={{ marginBottom: '24px' }}>
-        {/* Total Investment Value */}
+      {/* Top 4 Metric KPI Cards */}
+      <div className="stats-grid" style={{ marginBottom: '24px' }}>
+        {/* Total Valuation */}
         <div className="card" style={{ padding: '16px' }}>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: '600' }}>
             Portfolio Market Valuation
@@ -368,7 +416,7 @@ export default function InvestmentsTab({
           </div>
         </div>
 
-        {/* Invested Cost */}
+        {/* Invested Capital */}
         <div className="card" style={{ padding: '16px' }}>
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: '600' }}>
             Total Invested Capital
@@ -404,7 +452,7 @@ export default function InvestmentsTab({
             {safeInvestments.length} Assets
           </div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Across Stocks, MFs & Metals
+            Across Stocks, MFs, Crypto & Metals
           </div>
         </div>
       </div>
@@ -444,6 +492,7 @@ export default function InvestmentsTab({
         <>
           {renderHoldingTable(stocks, 'Equity Stocks (NSE / BSE)')}
           {renderHoldingTable(mutualFunds, 'Mutual Funds (Direct Growth NAVs)')}
+          {renderHoldingTable(cryptoHoldings, 'Cryptocurrency (Live Coins & Tokens)')}
           {renderHoldingTable(goldHoldings, 'Gold & Precious Metals')}
           {renderHoldingTable(fdHoldings, 'Fixed Deposits & Other Assets')}
         </>
@@ -451,7 +500,7 @@ export default function InvestmentsTab({
         <div className="card empty-state" style={{ padding: '48px 20px' }}>
           <div className="empty-state-icon"><TrendingUp size={32} /></div>
           <div className="empty-state-title">No Investments Added</div>
-          <div className="empty-state-text">Track your Mutual Funds, Stocks, Gold, and FDs continuously with live price updates.</div>
+          <div className="empty-state-text">Track your Mutual Funds, Stocks, Crypto, Gold, and FDs continuously with live price updates.</div>
           <button className="btn btn-primary btn-sm" onClick={onOpenAddInvestment}>
             <Plus size={14} /> Add Your First Investment
           </button>

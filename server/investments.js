@@ -1,5 +1,5 @@
 /**
- * Live Investment Price Fetcher for Indian Mutual Funds and Stocks
+ * Live Investment Price Fetcher for Indian Mutual Funds, Stocks & Cryptocurrencies
  */
 
 // Memory cache for prices (expires every 1 minute for fast live updates)
@@ -14,9 +14,13 @@ const INDIAN_STOCK_MAP = {
   'CANBK.NS': 'CANBK.NS',
   'RELIANCE': 'RELIANCE.NS',
   'RELIANCE INDUSTRIES': 'RELIANCE.NS',
-  'TATA MOTORS': 'TATAMOTORS.NS',
-  'TATAMOTORS': 'TATAMOTORS.NS',
-  'TATAMOTORS.NS': 'TATAMOTORS.NS',
+  'TATA MOTORS': 'TMPV.NS',
+  'TATAMOTORS': 'TMPV.NS',
+  'TATAMOTORS.NS': 'TMPV.NS',
+  'TMCV': 'TMCV.NS',
+  'TMCV.NS': 'TMCV.NS',
+  'TMPV': 'TMPV.NS',
+  'TMPV.NS': 'TMPV.NS',
   'INFOSYS': 'INFY.NS',
   'INFY': 'INFY.NS',
   'TCS': 'TCS.NS',
@@ -52,9 +56,6 @@ const INDIAN_STOCK_MAP = {
   'LAURUS LABS': 'LAURUSLABS.NS',
   'OLAELEC': 'OLAELEC.NS',
   'OLA ELECTRIC': 'OLAELEC.NS',
-  'TMCV': 'TATAMOTORS.NS',
-  'TMPV': 'TATAMOTORS.NS',
-  'TATAMTRDVR.NS': 'TATAMOTORS.NS',
   'DEBIL': 'DBEIL.NS',
   'DEBIL.NS': 'DBEIL.NS',
   'DBEIL': 'DBEIL.NS',
@@ -68,6 +69,49 @@ const INDIAN_STOCK_MAP = {
   'DELTACORP': 'DELTACORP.NS',
   'DELTA': 'DELTA.BO',
   'DEBOCK': 'DEBOCK.NS'
+};
+
+// Popular Crypto mapper (Coin Name / Symbol -> Yahoo Finance INR Ticker)
+const CRYPTO_MAP = {
+  'BTC': 'BTC-INR',
+  'BITCOIN': 'BTC-INR',
+  'BTC-INR': 'BTC-INR',
+  'ETH': 'ETH-INR',
+  'ETHEREUM': 'ETH-INR',
+  'ETH-INR': 'ETH-INR',
+  'SOL': 'SOL-INR',
+  'SOLANA': 'SOL-INR',
+  'SOL-INR': 'SOL-INR',
+  'DOGE': 'DOGE-INR',
+  'DOGECOIN': 'DOGE-INR',
+  'DOGE-INR': 'DOGE-INR',
+  'XRP': 'XRP-INR',
+  'RIPPLE': 'XRP-INR',
+  'XRP-INR': 'XRP-INR',
+  'USDT': 'USDT-INR',
+  'TETHER': 'USDT-INR',
+  'USDT-INR': 'USDT-INR',
+  'BNB': 'BNB-INR',
+  'BINANCE COIN': 'BNB-INR',
+  'BNB-INR': 'BNB-INR',
+  'ADA': 'ADA-INR',
+  'CARDANO': 'ADA-INR',
+  'ADA-INR': 'ADA-INR',
+  'SHIB': 'SHIB-INR',
+  'SHIBA INU': 'SHIB-INR',
+  'SHIB-INR': 'SHIB-INR',
+  'MATIC': 'MATIC-INR',
+  'POLYGON': 'MATIC-INR',
+  'MATIC-INR': 'MATIC-INR',
+  'AVAX': 'AVAX-INR',
+  'AVALANCHE': 'AVAX-INR',
+  'AVAX-INR': 'AVAX-INR',
+  'DOT': 'DOT-INR',
+  'POLKADOT': 'DOT-INR',
+  'DOT-INR': 'DOT-INR',
+  'TRX': 'TRX-INR',
+  'TRON': 'TRX-INR',
+  'TRX-INR': 'TRX-INR'
 };
 
 /**
@@ -93,11 +137,30 @@ export function resolveStockSymbol(symbolOrName) {
 }
 
 /**
+ * Resolve crypto ticker for any cryptocurrency
+ */
+export function resolveCryptoSymbol(symbolOrName) {
+  if (!symbolOrName) return 'BTC-INR';
+  const raw = symbolOrName.trim().toUpperCase();
+
+  if (CRYPTO_MAP[raw]) {
+    return CRYPTO_MAP[raw];
+  }
+
+  if (raw.endsWith('-INR') || raw.endsWith('-USD')) {
+    return raw;
+  }
+
+  const clean = raw.replace(/[^A-Z0-9]/g, '');
+  return `${clean}-INR`;
+}
+
+/**
  * Single symbol price query helper from Yahoo Finance API
  */
 async function querySingleYahooSymbol(symbol) {
   if (!symbol) return null;
-  const cacheKey = `stock_${symbol}`;
+  const cacheKey = `price_${symbol}`;
   const cached = priceCache.get(cacheKey);
   if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
     return cached.price;
@@ -131,7 +194,7 @@ export async function fetchStockPrice(symbolOrName) {
   if (!symbolOrName) return { price: null, symbol: null };
   const primarySymbol = resolveStockSymbol(symbolOrName);
 
-  // 1. Try Primary Symbol (e.g. DBEIL.NS, CANBK.NS)
+  // 1. Try Primary Symbol (e.g. TMCV.NS, TMPV.NS, DBEIL.NS)
   let price = await querySingleYahooSymbol(primarySymbol);
   if (price !== null) {
     return { price, symbol: primarySymbol };
@@ -160,6 +223,29 @@ export async function fetchStockPrice(symbolOrName) {
   }
 
   return { price: null, symbol: primarySymbol };
+}
+
+/**
+ * Fetch live Cryptocurrency price in INR
+ */
+export async function fetchCryptoPrice(symbolOrName) {
+  if (!symbolOrName) return { price: null, symbol: null };
+  const resolved = resolveCryptoSymbol(symbolOrName);
+
+  let price = await querySingleYahooSymbol(resolved);
+  if (price !== null) {
+    return { price, symbol: resolved };
+  }
+
+  // Fallback: Try -USD converted to INR (~ ₹87)
+  const usdSymbol = resolved.replace('-INR', '-USD');
+  const usdPrice = await querySingleYahooSymbol(usdSymbol);
+  if (usdPrice !== null) {
+    const inrRate = 87.0;
+    return { price: Math.round(usdPrice * inrRate * 100) / 100, symbol: resolved };
+  }
+
+  return { price: null, symbol: resolved };
 }
 
 /**
@@ -264,6 +350,12 @@ export async function refreshHoldingsPrices(holdings = []) {
       if (stockResult.symbol) {
         resolvedSymbol = stockResult.symbol;
       }
+    } else if (h.type === 'crypto' || h.type === 'cryptocurrency') {
+      const cryptoResult = await fetchCryptoPrice(h.symbol || h.name);
+      livePrice = cryptoResult.price;
+      if (cryptoResult.symbol) {
+        resolvedSymbol = cryptoResult.symbol;
+      }
     } else if (h.type === 'mutual_fund') {
       liveData = await fetchMutualFundNav(h.symbol || h.name);
       livePrice = typeof liveData === 'object' && liveData ? liveData.price : liveData;
@@ -289,7 +381,7 @@ export async function refreshHoldingsPrices(holdings = []) {
         lastPriceSyncAt: new Date().toISOString()
       });
     } else {
-      priceStatus = (h.type === 'stock' || h.type === 'mutual_fund') ? 'invalid_symbol' : 'manual';
+      priceStatus = (h.type === 'stock' || h.type === 'mutual_fund' || h.type === 'crypto') ? 'invalid_symbol' : 'manual';
       const currentPrice = h.currentPrice || h.buyPrice || 0;
       const currentValuation = Math.round((currentPrice * (h.quantity || 1)) * 100) / 100;
       const totalCost = Math.round(((h.buyPrice || currentPrice) * (h.quantity || 1)) * 100) / 100;

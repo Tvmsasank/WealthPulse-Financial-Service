@@ -4,14 +4,17 @@ import { X, TrendingUp, Search, Plus, Check } from 'lucide-react';
 const POPULAR_SUGGESTIONS = [
   { name: 'Canara Bank', symbol: 'CANBK.NS', type: 'stock', defaultPrice: 131.70 },
   { name: 'Reliance Industries Ltd', symbol: 'RELIANCE.NS', type: 'stock', defaultPrice: 2950 },
-  { name: 'Tata Motors Ltd', symbol: 'TATAMOTORS.NS', type: 'stock', defaultPrice: 1020 },
+  { name: 'Tata Motors (Commercial)', symbol: 'TMCV.NS', type: 'stock', defaultPrice: 468.90 },
+  { name: 'Tata Motors (Passenger)', symbol: 'TMPV.NS', type: 'stock', defaultPrice: 330.20 },
   { name: 'Infosys Ltd', symbol: 'INFY.NS', type: 'stock', defaultPrice: 1820 },
   { name: 'HDFC Bank Ltd', symbol: 'HDFCBANK.NS', type: 'stock', defaultPrice: 1650 },
-  { name: 'TCS - Tata Consultancy Services', symbol: 'TCS.NS', type: 'stock', defaultPrice: 4200 },
+  { name: 'Bitcoin (BTC)', symbol: 'BTC-INR', type: 'crypto', defaultPrice: 6071000 },
+  { name: 'Ethereum (ETH)', symbol: 'ETH-INR', type: 'crypto', defaultPrice: 181700 },
+  { name: 'Solana (SOL)', symbol: 'SOL-INR', type: 'crypto', defaultPrice: 7218 },
+  { name: 'Dogecoin (DOGE)', symbol: 'DOGE-INR', type: 'crypto', defaultPrice: 6.70 },
   { name: 'Parag Parikh Flexi Cap Direct Fund', symbol: '122639', type: 'mutual_fund', defaultPrice: 92.83 },
   { name: 'Nippon India Multi Asset Direct Fund', symbol: '148457', type: 'mutual_fund', defaultPrice: 27.22 },
-  { name: 'Sovereign Gold Bond (SGB)', symbol: 'SGB', type: 'gold', defaultPrice: 7250 },
-  { name: 'Bank Fixed Deposit (FD)', symbol: 'FD', type: 'fd', defaultPrice: 100000 }
+  { name: 'Sovereign Gold Bond (SGB)', symbol: 'SGB', type: 'gold', defaultPrice: 7250 }
 ];
 
 export default function AddInvestmentModal({
@@ -158,6 +161,7 @@ export default function AddInvestmentModal({
             <select className="form-control" value={type} onChange={e => setType(e.target.value)}>
               <option value="stock">Equity Stock (NSE / BSE)</option>
               <option value="mutual_fund">Mutual Fund (AMFI NAV)</option>
+              <option value="crypto">Cryptocurrency (Coins & Tokens)</option>
               <option value="gold">Gold & Precious Metals</option>
               <option value="fd">Fixed Deposit / Bond</option>
               <option value="other">Other Asset / Real Estate</option>
@@ -170,7 +174,7 @@ export default function AddInvestmentModal({
               <label className="form-label">Asset Name</label>
               <input
                 type="text"
-                placeholder="e.g. Parag Parikh Flexi Cap"
+                placeholder={type === 'crypto' ? 'e.g. Bitcoin, Ethereum' : 'e.g. Reliance, Parag Parikh Flexi Cap'}
                 className="form-control"
                 value={name}
                 onChange={e => setName(e.target.value)}
@@ -181,7 +185,7 @@ export default function AddInvestmentModal({
               <label className="form-label">Ticker Symbol / Code</label>
               <input
                 type="text"
-                placeholder="e.g. RELIANCE.NS or Scheme Name"
+                placeholder={type === 'crypto' ? 'e.g. BTC, ETH, SOL, DOGE' : 'e.g. RELIANCE.NS, TMCV.NS, 122639'}
                 className="form-control"
                 value={symbol}
                 onChange={e => setSymbol(e.target.value)}
@@ -196,20 +200,19 @@ export default function AddInvestmentModal({
               <input
                 type="number"
                 step="any"
-                placeholder="e.g. 10.5"
+                placeholder={type === 'crypto' ? 'e.g. 0.05 or 100' : 'e.g. 10'}
                 className="form-control"
                 value={quantity}
                 onChange={e => setQuantity(e.target.value)}
                 required
               />
             </div>
-
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Average Buy Price (₹)</label>
+              <label className="form-label">Avg Buy Price per Unit (₹)</label>
               <input
                 type="number"
                 step="any"
-                placeholder="e.g. 2800.00"
+                placeholder="e.g. 1500"
                 className="form-control"
                 value={buyPrice}
                 onChange={e => setBuyPrice(e.target.value)}
@@ -218,40 +221,40 @@ export default function AddInvestmentModal({
             </div>
           </div>
 
-          {/* Current Live Price */}
+          {/* Current Manual Price (Optional Override) */}
           <div className="form-group" style={{ marginTop: '16px' }}>
-            <label className="form-label">Current Market Price / NAV (₹)</label>
+            <label className="form-label">Current Market Price (Optional Manual Override)</label>
             <input
               type="number"
               step="any"
-              placeholder="Leave blank for auto-sync or enter price"
+              placeholder="Leave blank to auto-fetch live price via NSE / AMFI / Coin Tickers"
               className="form-control"
               value={currentPrice}
               onChange={e => setCurrentPrice(e.target.value)}
             />
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-              Live prices auto-fetch continuously from AMFI & Yahoo Finance.
-            </div>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+              💡 Live market prices and mutual fund NAVs automatically refresh every 3 seconds!
+            </span>
           </div>
 
           {/* Notes */}
           <div className="form-group">
-            <label className="form-label">Notes / Folio Number (Optional)</label>
+            <label className="form-label">Portfolio Notes (Optional)</label>
             <input
               type="text"
-              placeholder="e.g. Zerodha Kite Account / Folio #123456"
+              placeholder="e.g. Long-term holding, Zerodha / Groww / Binance Account"
               className="form-control"
               value={notes}
               onChange={e => setNotes(e.target.value)}
             />
           </div>
 
-          <div style={{ display: 'flex', justifySelf: 'flex-end', gap: '12px', marginTop: '24px' }}>
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={saving}>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '24px' }}>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Saving...' : (isEditing ? 'Update Holding' : 'Save Investment')}
+              {saving ? 'Saving...' : isEditing ? 'Update Holding' : 'Add Holding'}
             </button>
           </div>
         </form>
