@@ -279,28 +279,44 @@ export default function DashboardTab({
 
         {/* Spending by Category Pie Chart */}
         <div className="card">
-          <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px' }}>Spending by Category</h3>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px' }}>Spending by Category</h3>
           {categoryData.length > 0 ? (
-            <div style={{ width: '100%', height: '240px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={3}
-                    dataKey="value"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => `₹${Number(value).toFixed(2)}`} />
-                  <Legend fontSize={12} />
-                </PieChart>
-              </ResponsiveContainer>
+            <div>
+              <div style={{ width: '100%', height: '170px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={70}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => `₹${Number(value).toFixed(2)}`} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Clean Structured Category Legends (Zero Overlap) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', marginTop: '12px', maxHeight: '130px', overflowY: 'auto', paddingRight: '4px' }}>
+                {categoryData.map((cat, idx) => (
+                  <div key={cat.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '4px 6px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: COLORS[idx % COLORS.length], flexShrink: 0 }} />
+                    <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80px' }} title={cat.name}>
+                      {cat.name}
+                    </span>
+                    <span style={{ fontWeight: '700', marginLeft: 'auto', color: 'var(--text-main)', fontSize: '11px' }}>
+                      ₹{Number(cat.value).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="empty-state" style={{ padding: '36px 16px' }}>

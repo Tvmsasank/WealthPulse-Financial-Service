@@ -771,8 +771,14 @@ export default function App() {
         </main>
       </div>
 
-      {/* Mobile Scrollable Bottom Navigation */}
-      <MobileNav activeTab={activeTab} onSelectTab={setActiveTab} />
+      {/* Mobile Clean 5-Item Bottom Navigation */}
+      <MobileNav
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        user={user}
+        onOpenProfile={() => setIsProfileModalOpen(true)}
+        onLogout={handleLogout}
+      />
 
       {/* User Profile & Portfolio Modal */}
       <UserProfileModal

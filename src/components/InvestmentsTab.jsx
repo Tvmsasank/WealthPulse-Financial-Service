@@ -471,29 +471,45 @@ export default function InvestmentsTab({
       {/* Asset Distribution Chart */}
       {pieData.length > 0 && (
         <div className="card" style={{ marginBottom: '24px', padding: '20px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <PieIcon size={18} style={{ color: 'var(--primary)' }} /> Portfolio Asset Allocation
           </h3>
-          <div style={{ width: '100%', height: '200px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(val) => `₹${Number(val).toLocaleString('en-IN')}`} />
-                <Legend fontSize={12} />
-              </PieChart>
-            </ResponsiveContainer>
+          <div>
+            <div style={{ width: '100%', height: '170px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={70}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(val) => `₹${Number(val).toLocaleString('en-IN')}`} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Structured Asset Breakdown Legends (Zero Overlap) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginTop: '12px' }}>
+              {pieData.map((entry, idx) => (
+                <div key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '6px 8px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: COLORS[idx % COLORS.length], flexShrink: 0 }} />
+                  <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {entry.name}
+                  </span>
+                  <span style={{ fontWeight: '700', marginLeft: 'auto', color: 'var(--text-main)', fontSize: '11px' }}>
+                    ₹{Number(entry.value).toLocaleString('en-IN')}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

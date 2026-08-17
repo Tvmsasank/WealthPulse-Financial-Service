@@ -666,25 +666,90 @@ select.form-control option {
 
 /* Responsive Breakpoints */
 @media (max-width: 1024px) {
-  .grid-4 { grid-template-columns: repeat(2, 1fr); }
-  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .grid-3 { grid-template-columns: repeat(2, 1fr); gap: 16px; }
 }
 
 @media (max-width: 768px) {
   .sidebar { display: none; }
-  .main-content { margin-left: 0; }
-  .grid-2, .grid-3, .grid-4, .settings-grid-3, .settings-grid-2, .settings-manage-grid {
+  .main-content { margin-left: 0; width: 100%; }
+  
+  /* Compact 2x2 Grid for 4 Summary Cards on Mobile */
+  .grid-4 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .grid-2, .grid-3, .settings-grid-3, .settings-grid-2, .settings-manage-grid {
     grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .card {
+    padding: 16px 14px;
+    border-radius: 16px;
   }
 
   .desktop-table-view { display: none; }
   .mobile-cards-view { display: block; }
 
-  .page-body { padding: 16px; }
-  .top-bar { padding: 0 16px; }
+  .page-body {
+    padding: 14px 14px 84px 14px;
+  }
+
+  .top-bar {
+    padding: 0 14px;
+    height: 56px;
+  }
+
+  .page-title-area h1 {
+    font-size: 18px;
+  }
+
+  .period-selector {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .period-selector::-webkit-scrollbar {
+    display: none;
+  }
+
+  .period-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
 
   .btn-text-desktop { display: none; }
-  .header-action-btn { padding: 6px 10px; }
+  .header-action-btn { padding: 6px 8px; }
+}
+
+@media (max-width: 480px) {
+  .grid-4 {
+    gap: 8px !important;
+  }
+
+  .grid-4 .card {
+    padding: 12px 10px !important;
+  }
+
+  .grid-4 .card div[style*="font-size: 24px"],
+  .grid-4 .card div[style*="font-size: 26px"] {
+    font-size: 18px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .grid-4 .card span[style*="font-size: 13px"] {
+    font-size: 11px !important;
+  }
 }
 
 /* Mobile Navigation Bar (Hidden on Desktop) */
@@ -699,12 +764,13 @@ select.form-control option {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 64px;
+    height: 58px;
     background: var(--bg-sidebar);
     backdrop-filter: blur(28px) saturate(180%);
     -webkit-backdrop-filter: blur(28px) saturate(180%);
     border-top: 1px solid var(--border-color);
     z-index: 90;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .mobile-nav-inner {
@@ -714,7 +780,6 @@ select.form-control option {
     align-items: center;
     justify-content: space-around;
     padding: 0 4px;
-    overflow-x: auto;
   }
 
   .mobile-nav-item {
@@ -722,16 +787,16 @@ select.form-control option {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 3px;
     background: none;
     border: none;
     color: var(--text-muted);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     flex: 1;
-    min-width: 54px;
     height: 100%;
+    transition: all 0.2s ease;
   }
 
   .mobile-nav-item.active {
