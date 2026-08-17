@@ -401,58 +401,69 @@ export default function InvestmentsTab({
         </div>
       </div>
 
-      {/* Top 4 Metric KPI Cards */}
-      <div className="stats-grid" style={{ marginBottom: '24px' }}>
+      {/* Top 4 Summary Cards */}
+      <div className="grid-4" style={{ marginBottom: '28px' }}>
         {/* Total Valuation */}
-        <div className="card" style={{ padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: '600' }}>
-            Portfolio Market Valuation
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Portfolio Market Valuation</span>
+            <div style={{ padding: '8px', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: 'var(--radius-md)' }}>
+              <TrendingUp size={18} />
+            </div>
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--primary)' }}>
-            ₹{totalValuation.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '8px' }}>
+            ₹{totalValuation.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
             Live market valuation
           </div>
         </div>
 
         {/* Invested Capital */}
-        <div className="card" style={{ padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: '600' }}>
-            Total Invested Capital
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Invested Capital</span>
+            <div style={{ padding: '8px', background: 'rgba(99, 102, 241, 0.15)', color: '#818CF8', borderRadius: 'var(--radius-md)' }}>
+              <Building2 size={18} />
+            </div>
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-main)' }}>
-            ₹{totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '8px' }}>
+            ₹{totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Initial buy cost
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
+            Initial purchase cost
           </div>
         </div>
 
-        {/* Total P&L with Vivid Colors */}
-        <div className="card" style={{ padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: '600' }}>
-            Unrealized Gain / Loss (P&L)
+        {/* Total P&L */}
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Unrealized Gain / Loss</span>
+            <div style={{ padding: '8px', background: totalPnL >= 0 ? 'var(--success-light)' : 'rgba(239, 68, 68, 0.15)', color: totalPnL >= 0 ? 'var(--success)' : '#EF4444', borderRadius: 'var(--radius-md)' }}>
+              {totalPnL >= 0 ? <ArrowUpRight size={18} /> : <ArrowDownRight size={18} />}
+            </div>
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: totalPnL >= 0 ? '#34D399' : '#FCA5A5', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {totalPnL >= 0 ? <ArrowUpRight size={22} /> : <ArrowDownRight size={22} />}
-            {totalPnL >= 0 ? '+' : ''}₹{Math.abs(totalPnL).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          <div style={{ fontSize: '24px', fontWeight: '800', color: totalPnL >= 0 ? 'var(--success)' : '#EF4444', marginBottom: '8px' }}>
+            {totalPnL >= 0 ? '+' : ''}₹{Math.abs(totalPnL).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <div style={{ fontSize: '12px', fontWeight: '700', color: totalPnL >= 0 ? '#34D399' : '#FCA5A5', marginTop: '2px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '700', color: totalPnL >= 0 ? 'var(--success)' : '#EF4444', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
             {totalPnLPercentage >= 0 ? '+' : ''}{totalPnLPercentage.toFixed(2)}% Overall Returns
           </div>
         </div>
 
         {/* Total Assets Count */}
-        <div className="card" style={{ padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: '600' }}>
-            Managed Asset Holdings
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Managed Holdings</span>
+            <div style={{ padding: '8px', background: 'var(--info-light)', color: 'var(--info)', borderRadius: 'var(--radius-md)' }}>
+              <Layers size={18} />
+            </div>
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-main)' }}>
+          <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '8px' }}>
             {safeInvestments.length} Assets
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Across Stocks, MFs, Crypto & Metals
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
+            Stocks, Mutual Funds, Crypto & Metals
           </div>
         </div>
       </div>
