@@ -209,6 +209,13 @@ export const dbEngine = {
     db.userSettings[userId] = getInitialUserSettings();
     saveDb();
 
+    if (pgPool) {
+      pgPool.query(
+        'INSERT INTO public.wealthpulse_users (id, name, email, password_hash, created_at) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING',
+        [newUser.id, newUser.name, newUser.email, newUser.passwordHash, newUser.createdAt]
+      ).catch(e => console.error('[Supabase PostgreSQL] Relational User sync error:', e.message));
+    }
+
     return {
       id: newUser.id,
       name: newUser.name,
@@ -430,6 +437,17 @@ export const dbEngine = {
     if (!db.transactions) db.transactions = [];
     db.transactions.unshift(newTx);
     saveDb();
+
+    // Dual-sync to relational table if pgPool is connected
+    if (pgPool) {
+      pgPool.query(
+        `INSERT INTO public.wealthpulse_transactions (id, user_id, date, merchant, amount, type, category, account, tags, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         ON CONFLICT (id) DO UPDATE SET date = $3, merchant = $4, amount = $5, type = $6, category = $7, account = $8, tags = $9`,
+        [newTx.id, newTx.userId, newTx.date, newTx.merchant, newTx.amount, newTx.type, newTx.category, newTx.account, JSON.stringify(newTx.tags), newTx.createdAt]
+      ).catch(e => console.error('[Supabase PostgreSQL] Relational Tx sync error:', e.message));
+    }
+
     return newTx;
   },
 
@@ -454,6 +472,12 @@ export const dbEngine = {
     db.transactions = (db.transactions || []).filter(t => !(t.id === id && (t.userId === userId || !t.userId)));
     if (db.transactions.length === initialLength) throw new Error('Transaction not found');
     saveDb();
+
+    if (pgPool) {
+      pgPool.query('DELETE FROM public.wealthpulse_transactions WHERE id = $1', [id])
+        .catch(e => console.error('[Supabase PostgreSQL] Relational Tx delete error:', e.message));
+    }
+
     return true;
   },
 
@@ -495,6 +519,16 @@ export const dbEngine = {
     if (!db.investments) db.investments = [];
     db.investments.unshift(newInv);
     saveDb();
+
+    if (pgPool) {
+      pgPool.query(
+        `INSERT INTO public.wealthpulse_investments (id, user_id, name, symbol, type, quantity, buy_price, current_price, current_valuation, unrealized_pnl, pnl_percentage, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         ON CONFLICT (id) DO UPDATE SET quantity = $6, buy_price = $7, current_price = $8, current_valuation = $9, unrealized_pnl = $10, pnl_percentage = $11`,
+        [newInv.id, newInv.userId, newInv.name, newInv.symbol, newInv.type, newInv.quantity, newInv.buyPrice, newInv.currentPrice, newInv.currentValuation, newInv.unrealizedPnL, newInv.pnlPercentage, newInv.createdAt]
+      ).catch(e => console.error('[Supabase PostgreSQL] Relational Inv sync error:', e.message));
+    }
+
     return newInv;
   },
 
@@ -521,6 +555,12 @@ export const dbEngine = {
     db.investments = (db.investments || []).filter(i => !(i.id === id && (i.userId === userId || !i.userId)));
     if (db.investments.length === initialLength) throw new Error('Investment not found');
     saveDb();
+
+    if (pgPool) {
+      pgPool.query('DELETE FROM public.wealthpulse_investments WHERE id = $1', [id])
+        .catch(e => console.error('[Supabase PostgreSQL] Relational Inv delete error:', e.message));
+    }
+
     return true;
   },
 
