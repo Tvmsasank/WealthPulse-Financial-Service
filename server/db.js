@@ -79,14 +79,18 @@ let pgPool = null;
 // Initialize Supabase PostgreSQL Cloud Sync if DATABASE_URL is set
 if (process.env.DATABASE_URL) {
   try {
-    const connectionString = process.env.DATABASE_URL;
+    let connectionString = process.env.DATABASE_URL.trim();
+    if (!connectionString.includes('sslmode=')) {
+      connectionString += (connectionString.includes('?') ? '&' : '?') + 'sslmode=require';
+    }
+
     pgPool = new pg.Pool({
       connectionString,
       ssl: { rejectUnauthorized: false }
     });
 
     pgPool.query(`
-      CREATE TABLE IF NOT EXISTS wealthpulse_store (
+      CREATE TABLE IF NOT EXISTS public.wealthpulse_store (
         id VARCHAR(50) PRIMARY KEY,
         data JSONB NOT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -94,7 +98,7 @@ if (process.env.DATABASE_URL) {
     `).then(async () => {
       console.log('[Supabase PostgreSQL] Connected & table initialized successfully!');
       try {
-        const res = await pgPool.query('SELECT data FROM wealthpulse_store WHERE id = $1', ['main_store']);
+        const res = await pgPool.query('SELECT data FROM public.wealthpulse_store WHERE id = $1', ['main_store']);
         if (res.rows.length > 0 && res.rows[0].data) {
           memoryDb = res.rows[0].data;
           fs.writeFileSync(DB_FILE, JSON.stringify(memoryDb, null, 2), 'utf-8');
@@ -102,19 +106,19 @@ if (process.env.DATABASE_URL) {
         } else {
           const current = loadDb();
           await pgPool.query(
-            'INSERT INTO wealthpulse_store (id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()',
+            'INSERT INTO public.wealthpulse_store (id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()',
             ['main_store', JSON.stringify(current)]
           );
-          console.log('[Supabase PostgreSQL] Initialized local state to Supabase cloud!');
+          console.log('[Supabase PostgreSQL] Seeded local database to Supabase cloud!');
         }
       } catch (e) {
         console.error('[Supabase PostgreSQL] Cloud sync error:', e.message);
       }
     }).catch(err => {
-      console.error('[Supabase PostgreSQL] Connection failed:', err.message);
+      console.error('[Supabase PostgreSQL] Connection error:', err.message);
     });
   } catch (err) {
-    console.error('[Supabase PostgreSQL] Pool init failed:', err.message);
+    console.error('[Supabase PostgreSQL] Pool init error:', err.message);
   }
 }
 
@@ -127,6 +131,7 @@ function loadDb() {
       if (!memoryDb.users) memoryDb.users = [];
       if (!memoryDb.userSettings) memoryDb.userSettings = {};
       if (!memoryDb.investments) memoryDb.investments = [];
+      if (!memoryDb.transactions) memoryDb.transactions = [];
     } catch (e) {
       console.error('Failed to parse database file, reinitializing', e);
       memoryDb = getInitialDb();
@@ -144,7 +149,7 @@ function saveDb() {
   fs.writeFileSync(DB_FILE, JSON.stringify(memoryDb, null, 2), 'utf-8');
   if (pgPool) {
     pgPool.query(
-      'INSERT INTO wealthpulse_store (id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()',
+      'INSERT INTO public.wealthpulse_store (id, data) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()',
       ['main_store', JSON.stringify(memoryDb)]
     ).catch(err => console.error('[Supabase PostgreSQL] Auto-sync write error:', err.message));
   }
@@ -158,6 +163,10 @@ export const dbEngine = {
   saveRawDb(newDb) {
     memoryDb = newDb;
     saveDb();
+  },
+
+  createUser(args) {
+    return this.registerUser(args);
   },
 
   registerUser({ name, email, password }) {
@@ -354,9 +363,37 @@ export const dbEngine = {
     return db.userSettings[userId];
   },
 
+  getState(userId) {
+    const db = loadDb();
+    const effectiveUserId = userId || (db.users?.[0]?.id) || 'usr_1785755811844_crbzz5';
+    const transactions = this.getTransactions(effectiveUserId);
+    const investments = this.getInvestments(effectiveUserId);
+    const rules = this.getRules(effectiveUserId);
+    const documents = this.getDocuments(effectiveUserId);
+    const settings = this.getUserSettings(effectiveUserId);
+    const tags = Array.from(new Set(transactions.flatMap(t => Array.isArray(t.tags) ? t.tags : [])));
+
+    return {
+      transactions,
+      investments,
+      rules,
+      documents,
+      settings,
+      tags
+    };
+  },
+
   getTransactions(userId) {
     const db = loadDb();
     return (db.transactions || []).filter(t => t.userId === userId || !t.userId);
+  },
+
+  addTransactions(userId, payload) {
+    if (!payload) return [];
+    if (Array.isArray(payload)) {
+      return payload.map(tx => this.addTransaction(userId, tx));
+    }
+    return this.addTransaction(userId, payload);
   },
 
   addTransaction(userId, transaction) {

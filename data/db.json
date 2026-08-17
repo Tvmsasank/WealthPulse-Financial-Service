@@ -515,7 +515,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:08:46.650Z",
       "updatedAt": "2026-08-06T09:11:11.764Z",
-      "lastPriceSyncAt": "2026-08-07T11:44:24.923Z",
+      "lastPriceSyncAt": "2026-08-07T11:45:25.227Z",
       "priceStatus": "ok"
     },
     {
@@ -533,7 +533,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:12:27.082Z",
       "updatedAt": "2026-08-06T09:13:21.916Z",
-      "lastPriceSyncAt": "2026-08-07T11:44:24.923Z",
+      "lastPriceSyncAt": "2026-08-07T11:45:25.305Z",
       "priceStatus": "ok"
     },
     {
@@ -551,7 +551,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:42:20.816Z",
       "updatedAt": "2026-08-06T09:42:20.816Z",
-      "lastPriceSyncAt": "2026-08-07T11:44:24.923Z",
+      "lastPriceSyncAt": "2026-08-07T11:45:25.476Z",
       "priceStatus": "ok"
     },
     {
@@ -570,7 +570,7 @@
       "createdAt": "2026-08-06T09:45:17.335Z",
       "updatedAt": "2026-08-06T09:45:30.445Z",
       "priceStatus": "ok",
-      "lastPriceSyncAt": "2026-08-07T11:44:24.923Z"
+      "lastPriceSyncAt": "2026-08-07T11:45:25.646Z"
     },
     {
       "id": "inv_1786009572245_nknwut",
@@ -587,7 +587,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:46:12.245Z",
       "updatedAt": "2026-08-06T09:46:12.245Z",
-      "lastPriceSyncAt": "2026-08-07T11:44:24.923Z",
+      "lastPriceSyncAt": "2026-08-07T11:45:25.717Z",
       "priceStatus": "ok"
     },
     {
@@ -605,7 +605,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:48:15.487Z",
       "updatedAt": "2026-08-06T09:48:15.487Z",
-      "lastPriceSyncAt": "2026-08-07T11:44:24.923Z",
+      "lastPriceSyncAt": "2026-08-07T11:45:25.836Z",
       "priceStatus": "ok"
     },
     {
@@ -623,7 +623,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:49:00.061Z",
       "updatedAt": "2026-08-06T09:49:00.061Z",
-      "lastPriceSyncAt": "2026-08-07T11:44:24.923Z",
+      "lastPriceSyncAt": "2026-08-07T11:45:25.836Z",
       "priceStatus": "ok"
     },
     {
@@ -641,7 +641,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:49:21.172Z",
       "updatedAt": "2026-08-06T09:49:21.172Z",
-      "lastPriceSyncAt": "2026-08-07T11:44:24.923Z",
+      "lastPriceSyncAt": "2026-08-07T11:45:25.983Z",
       "priceStatus": "ok"
     },
     {
@@ -659,7 +659,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:49:46.157Z",
       "updatedAt": "2026-08-06T09:49:46.157Z",
-      "lastPriceSyncAt": "2026-08-07T11:44:24.923Z",
+      "lastPriceSyncAt": "2026-08-07T11:45:26.161Z",
       "priceStatus": "ok"
     },
     {
@@ -677,7 +677,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:50:07.825Z",
       "updatedAt": "2026-08-06T09:50:07.825Z",
-      "lastPriceSyncAt": "2026-08-07T11:44:24.923Z",
+      "lastPriceSyncAt": "2026-08-07T11:45:26.311Z",
       "priceStatus": "ok"
     },
     {
@@ -731,7 +731,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:50:51.200Z",
       "updatedAt": "2026-08-06T09:50:51.200Z",
-      "lastPriceSyncAt": "2026-08-07T11:44:25.925Z",
+      "lastPriceSyncAt": "2026-08-07T11:45:26.997Z",
       "priceStatus": "ok"
     },
     {
@@ -750,7 +750,7 @@
       "createdAt": "2026-08-07T06:53:40.993Z",
       "updatedAt": "2026-08-07T06:53:40.993Z",
       "priceStatus": "ok",
-      "lastPriceSyncAt": "2026-08-07T11:44:25.925Z"
+      "lastPriceSyncAt": "2026-08-07T11:45:26.997Z"
     }
   ]
 }
