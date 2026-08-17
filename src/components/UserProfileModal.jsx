@@ -124,28 +124,30 @@ export default function UserProfileModal({
         className={`modal-content ${isLoggingOut ? 'scale-down' : ''}`}
         onClick={e => e.stopPropagation()}
         style={{
-          maxWidth: '560px',
+          maxWidth: '520px',
           width: '100%',
-          padding: '28px',
+          padding: '24px 20px',
           borderRadius: '24px',
           background: 'var(--bg-card)',
           backdropFilter: 'blur(28px) saturate(180%)',
           WebkitBackdropFilter: 'blur(28px) saturate(180%)',
           border: '1px solid var(--border-glass)',
-          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.6)'
+          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.6)',
+          maxHeight: '90vh',
+          overflowY: 'auto'
         }}
       >
         {/* Modal Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ padding: '8px', borderRadius: '12px', background: 'var(--primary-light)', color: 'var(--primary)' }}>
+            <div style={{ padding: '8px', borderRadius: '12px', background: 'var(--primary-light)', color: 'var(--primary)', flexShrink: 0 }}>
               <ShieldCheck size={20} />
             </div>
             <div>
-              <h2 style={{ fontSize: '18px', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+              <h2 style={{ fontSize: '17px', fontWeight: '800', margin: 0, color: 'var(--text-main)', lineHeight: '1.2' }}>
                 User Profile & Security
               </h2>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Account credentials & authentication settings</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Account credentials & authentication settings</div>
             </div>
           </div>
           <button className="modal-close" onClick={onClose} aria-label="Close" style={{ padding: '6px' }}>
@@ -156,20 +158,20 @@ export default function UserProfileModal({
         {/* User Identity Banner */}
         <div
           style={{
-            padding: '18px',
+            padding: '16px',
             borderRadius: '16px',
             background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(10, 25, 47, 0.8) 100%)',
             border: '1px solid var(--border-glass)',
-            marginBottom: '20px',
+            marginBottom: '16px',
             display: 'flex',
             alignItems: 'center',
-            gap: '16px'
+            gap: '14px'
           }}
         >
           <div
             style={{
-              width: '52px',
-              height: '52px',
+              width: '48px',
+              height: '48px',
               borderRadius: '50%',
               background: 'linear-gradient(135deg, var(--primary) 0%, #059669 100%)',
               color: '#000000',
@@ -177,7 +179,7 @@ export default function UserProfileModal({
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: '900',
-              fontSize: '20px',
+              fontSize: '18px',
               boxShadow: '0 4px 16px var(--primary-glow)',
               flexShrink: 0
             }}
@@ -186,60 +188,68 @@ export default function UserProfileModal({
           </div>
 
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <h3 style={{ fontSize: '17px', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>{user.name}</h3>
-              <span className="badge badge-success" style={{ fontSize: '11px', padding: '3px 8px' }}>
-                <CheckCircle2 size={12} /> Verified Owner
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>{user.name}</h3>
+              <span className="badge badge-success" style={{ fontSize: '10px', padding: '2px 6px' }}>
+                <CheckCircle2 size={11} /> Verified Owner
               </span>
             </div>
-            <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Mail size={13} style={{ flexShrink: 0, color: 'var(--primary)' }} />
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Mail size={12} style={{ flexShrink: 0, color: 'var(--primary)' }} />
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</span>
             </div>
           </div>
         </div>
 
         {/* Fast Authentication Options */}
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-muted)', marginBottom: '10px' }}>
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-muted)', marginBottom: '8px' }}>
             Fast Authentication Options
           </div>
 
-          <div className="user-profile-grid-2">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+            {/* Face ID Button */}
             <button
               type="button"
               className="btn btn-secondary"
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
-                padding: '12px 14px',
+                gap: '10px',
+                padding: '12px',
                 borderRadius: '14px',
                 justifyContent: 'flex-start',
-                textAlign: 'left'
+                textAlign: 'left',
+                minHeight: '68px',
+                boxSizing: 'border-box'
               }}
               onClick={handleEnableBiometrics}
             >
               <div style={{ padding: '8px', borderRadius: '10px', background: 'var(--primary-light)', color: 'var(--primary)', flexShrink: 0 }}>
-                <Fingerprint size={20} />
+                <Fingerprint size={18} />
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>Face ID / Biometrics</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Enable Touch ID / Passkey</div>
+                <div style={{ fontWeight: '700', fontSize: '12px', color: 'var(--text-main)', lineHeight: '1.2' }}>Face ID / Biometrics</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  Touch ID & Passkey
+                </div>
               </div>
             </button>
 
+            {/* 4-Digit MPIN Button */}
             <button
               type="button"
               className="btn btn-secondary"
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
-                padding: '12px 14px',
+                gap: '10px',
+                padding: '12px',
                 borderRadius: '14px',
                 justifyContent: 'flex-start',
-                textAlign: 'left'
+                textAlign: 'left',
+                minHeight: '68px',
+                boxSizing: 'border-box'
               }}
               onClick={() => {
                 onClose();
@@ -247,65 +257,65 @@ export default function UserProfileModal({
               }}
             >
               <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.16)', color: '#38BDF8', flexShrink: 0 }}>
-                <KeyRound size={20} />
+                <KeyRound size={18} />
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>
-                  {hasRegisteredMpin ? 'Change 4-Digit MPIN' : 'Set 4-Digit MPIN'}
+                <div style={{ fontWeight: '700', fontSize: '12px', color: 'var(--text-main)', lineHeight: '1.2' }}>
+                  {hasRegisteredMpin ? 'Change 4-Digit PIN' : 'Set 4-Digit PIN'}
                 </div>
-                <div style={{ fontSize: '11px', color: hasRegisteredMpin ? 'var(--primary)' : 'var(--text-muted)', marginTop: '2px' }}>
-                  {hasRegisteredMpin ? '✓ MPIN Active — Change PIN' : 'Set Quick Mobile PIN'}
+                <div style={{ fontSize: '11px', color: hasRegisteredMpin ? '#34D399' : 'var(--text-muted)', marginTop: '3px', fontWeight: hasRegisteredMpin ? '700' : '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {hasRegisteredMpin ? '✓ MPIN Active' : 'Set Quick Mobile PIN'}
                 </div>
               </div>
             </button>
           </div>
 
           {bioMessage && (
-            <div style={{ marginTop: '10px', padding: '10px 14px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: '12px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <div style={{ marginTop: '8px', padding: '8px 12px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: '10px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Sparkles size={16} /> {bioMessage}
+                <Sparkles size={14} /> {bioMessage}
               </div>
               <button type="button" onClick={() => setBioMessage('')} style={{ background: 'none', border: 'none', color: 'var(--success)', cursor: 'pointer' }}>
-                <X size={14} />
+                <X size={12} />
               </button>
             </div>
           )}
 
           {bioError && (
-            <div style={{ marginTop: '10px', padding: '10px 14px', background: 'rgba(239, 68, 68, 0.15)', color: '#FCA5A5', border: '1px solid #EF4444', borderRadius: '12px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(239, 68, 68, 0.15)', color: '#FCA5A5', border: '1px solid #EF4444', borderRadius: '10px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <ShieldAlert size={16} style={{ flexShrink: 0 }} />
+                <ShieldAlert size={14} style={{ flexShrink: 0 }} />
                 <span>{bioError}</span>
               </div>
               <button type="button" onClick={() => setBioError('')} style={{ background: 'none', border: 'none', color: '#FCA5A5', cursor: 'pointer', padding: '2px' }} title="Dismiss">
-                <X size={14} />
+                <X size={12} />
               </button>
             </div>
           )}
         </div>
 
         {/* Portfolio Summary KPI Cards */}
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-muted)', marginBottom: '10px' }}>
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-muted)', marginBottom: '8px' }}>
             Financial Portfolio Summary
           </div>
 
-          <div className="user-profile-grid-2">
-            <div style={{ padding: '14px', borderRadius: '14px', background: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Wallet size={14} style={{ color: 'var(--primary)' }} /> Net Worth Valuation
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+            <div style={{ padding: '12px', borderRadius: '14px', background: 'var(--bg-app)', border: '1px solid var(--border-color)', minHeight: '68px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Wallet size={13} style={{ color: 'var(--primary)' }} /> Net Worth Valuation
               </div>
-              <div style={{ fontSize: '20px', fontWeight: '900', color: netWorth >= 0 ? 'var(--primary)' : 'var(--danger)' }}>
+              <div style={{ fontSize: '18px', fontWeight: '900', color: netWorth >= 0 ? 'var(--primary)' : 'var(--danger)', marginTop: '4px' }}>
                 ₹{netWorth.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
               </div>
             </div>
 
-            <div style={{ padding: '14px', borderRadius: '14px', background: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Receipt size={14} style={{ color: '#38BDF8' }} /> Managed Transactions
+            <div style={{ padding: '12px', borderRadius: '14px', background: 'var(--bg-app)', border: '1px solid var(--border-color)', minHeight: '68px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <Receipt size={13} style={{ color: '#38BDF8' }} /> Managed Records
               </div>
-              <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--text-main)' }}>
-                {transactionCount} <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>records</span>
+              <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--text-main)', marginTop: '4px' }}>
+                {transactionCount} <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)' }}>entries</span>
               </div>
             </div>
           </div>
@@ -313,17 +323,17 @@ export default function UserProfileModal({
 
         {/* Account Deletion Confirmation Card */}
         {showDeleteConfirm && (
-          <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '16px', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid #EF4444' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FCA5A5', fontWeight: '800', fontSize: '14px', marginBottom: '8px' }}>
-              <AlertTriangle size={18} /> Permanently Delete Account?
+          <div style={{ marginBottom: '16px', padding: '14px', borderRadius: '14px', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid #EF4444' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FCA5A5', fontWeight: '800', fontSize: '13px', marginBottom: '6px' }}>
+              <AlertTriangle size={16} /> Permanently Delete Account?
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.5', marginBottom: '12px' }}>
-              This will permanently delete your account (<strong>{user.email}</strong>), passwords, MPIN, transactions, investments, and all stored data. This action <strong>cannot be undone</strong>.
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.4', marginBottom: '10px' }}>
+              This will permanently delete your account (<strong>{user.email}</strong>), passwords, MPIN, transactions, and investments. This action cannot be undone.
             </p>
 
-            <div style={{ marginBottom: '12px' }}>
+            <div style={{ marginBottom: '10px' }}>
               <label style={{ fontSize: '11px', color: '#FCA5A5', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
-                Type <code>DELETE MY ACCOUNT PERMANENTLY</code> to confirm:
+                Type <code>DELETE MY ACCOUNT PERMANENTLY</code>:
               </label>
               <input
                 type="text"
@@ -331,39 +341,39 @@ export default function UserProfileModal({
                 placeholder="DELETE MY ACCOUNT PERMANENTLY"
                 value={deleteConfirmText}
                 onChange={e => setDeleteConfirmText(e.target.value)}
-                style={{ borderColor: '#EF4444' }}
+                style={{ borderColor: '#EF4444', fontSize: '12px' }}
               />
             </div>
 
             {deleteError && (
-              <div style={{ fontSize: '12px', color: '#FCA5A5', marginBottom: '10px' }}>
+              <div style={{ fontSize: '11px', color: '#FCA5A5', marginBottom: '8px' }}>
                 {deleteError}
               </div>
             )}
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowDeleteConfirm(false)} disabled={deletingAccount}>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowDeleteConfirm(false)} disabled={deletingAccount} style={{ fontSize: '12px' }}>
                 Cancel
               </button>
-              <button type="button" className="btn btn-danger btn-sm" onClick={handleDeleteAccountPermanent} disabled={deletingAccount}>
-                {deletingAccount ? 'Deleting...' : 'Confirm Permanent Deletion'}
+              <button type="button" className="btn btn-danger btn-sm" onClick={handleDeleteAccountPermanent} disabled={deletingAccount} style={{ fontSize: '12px' }}>
+                {deletingAccount ? 'Deleting...' : 'Confirm Deletion'}
               </button>
             </div>
           </div>
         )}
 
         {/* Footer Actions */}
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '18px' }}>
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '16px', flexWrap: 'wrap' }}>
           <button
             type="button"
             className="btn btn-ghost btn-sm"
             onClick={() => setShowDeleteConfirm(true)}
-            style={{ color: '#EF4444', fontSize: '12px' }}
+            style={{ color: '#EF4444', fontSize: '12px', padding: '6px 8px' }}
           >
-            <Trash2 size={14} /> Delete Account
+            <Trash2 size={13} /> Delete Account
           </button>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               type="button"
               className="btn btn-secondary btn-sm"
@@ -371,18 +381,18 @@ export default function UserProfileModal({
                 onClose();
                 onOpenForgotPassword();
               }}
-              style={{ fontSize: '12px' }}
+              style={{ fontSize: '12px', padding: '6px 12px' }}
             >
-              <Lock size={14} /> Change Password
+              <Lock size={13} /> Change Password
             </button>
 
             <button
               type="button"
               className="btn btn-danger btn-sm"
               onClick={handleLogoutAnimated}
-              style={{ fontSize: '12px' }}
+              style={{ fontSize: '12px', padding: '6px 14px' }}
             >
-              <LogOut size={14} /> Sign Out
+              <LogOut size={13} /> Sign Out
             </button>
           </div>
         </div>

@@ -101,79 +101,87 @@ export default function DashboardTab({
       {/* 4 Summary Cards */}
       <div className="grid-4" style={{ marginBottom: '28px' }}>
         {/* Net Worth Card */}
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Net Worth</span>
-            <div style={{ padding: '8px', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: 'var(--radius-md)' }}>
-              <Wallet size={18} />
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Net Worth</span>
+              <div style={{ padding: '8px', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: 'var(--radius-md)' }}>
+                <Wallet size={18} />
+              </div>
             </div>
+            {netWorthConfigured ? (
+              <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
+                ₹{netWorthValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            ) : (
+              <div style={{ marginBottom: '4px' }}>
+                <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--warning)' }}>Not set</div>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ padding: '0', fontSize: '11px', color: 'var(--primary)', cursor: 'pointer' }}
+                  onClick={() => onNavigateTab('settings')}
+                >
+                  Configure in Settings →
+                </button>
+              </div>
+            )}
           </div>
-          {netWorthConfigured ? (
-            <div style={{ fontSize: '26px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '8px' }}>
-              ₹{netWorthValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-          ) : (
-            <div style={{ marginBottom: '8px' }}>
-              <span style={{ fontSize: '20px', fontWeight: '700', color: 'var(--warning)' }}>Not set</span>
-              <button
-                className="btn btn-ghost btn-sm"
-                style={{ display: 'block', padding: '2px 0', fontSize: '12px', color: 'var(--primary)', cursor: 'pointer' }}
-                onClick={() => onNavigateTab('settings')}
-              >
-                Configure in Settings →
-              </button>
-            </div>
-          )}
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
-            User configured assets & liabilities
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
+            User configured assets
           </div>
         </div>
 
         {/* Income Card */}
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Income</span>
-            <div style={{ padding: '8px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)' }}>
-              <TrendingUp size={18} />
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Income</span>
+              <div style={{ padding: '8px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)' }}>
+                <TrendingUp size={18} />
+              </div>
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
+              ₹{totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '8px' }}>
-            ₹{totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
             Sum of income in period
           </div>
         </div>
 
         {/* Spending Card */}
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Spending</span>
-            <div style={{ padding: '8px', background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444', borderRadius: 'var(--radius-md)' }}>
-              <TrendingDown size={18} />
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Spending</span>
+              <div style={{ padding: '8px', background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444', borderRadius: 'var(--radius-md)' }}>
+                <TrendingDown size={18} />
+              </div>
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
+              ₹{totalSpending.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '8px' }}>
-            ₹{totalSpending.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
             Sum of expenses in period
           </div>
         </div>
 
         {/* Savings Rate Card */}
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Savings Rate</span>
-            <div style={{ padding: '8px', background: 'var(--info-light)', color: 'var(--info)', borderRadius: 'var(--radius-md)' }}>
-              <PiggyBank size={18} />
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)' }}>Savings Rate</span>
+              <div style={{ padding: '8px', background: 'var(--info-light)', color: 'var(--info)', borderRadius: 'var(--radius-md)' }}>
+                <PiggyBank size={18} />
+              </div>
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
+              {savingsRate}%
             </div>
           </div>
-          <div style={{ fontSize: '26px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '8px' }}>
-            {savingsRate}%
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
-            ((Income - Spending) / Income) * 100
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
+            ((Income - Spending) / Income)
           </div>
         </div>
       </div>
