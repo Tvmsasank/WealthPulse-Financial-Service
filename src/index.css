@@ -803,3 +803,14 @@ select.form-control option {
     color: var(--primary);
   }
 }
+
+/* Header Responsive Classes */
+.desktop-theme-selector { display: flex; }
+.mobile-theme-selector { display: none; }
+.desktop-only-action { display: inline-flex; }
+
+@media (max-width: 768px) {
+  .desktop-theme-selector { display: none !important; }
+  .mobile-theme-selector { display: block !important; }
+  .desktop-only-action { display: none !important; }
+}

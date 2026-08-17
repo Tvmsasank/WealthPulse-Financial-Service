@@ -1,5 +1,12 @@
-import React from 'react';
-import { FolderSync, Upload, Plus, Sun, Moon, LogIn, UserPlus, LogOut, Palette } from 'lucide-react';
+import React, { useState } from 'react';
+import { FolderSync, Upload, Plus, LogIn, UserPlus, LogOut, Palette, ChevronDown } from 'lucide-react';
+
+const THEMES = [
+  { id: 'emerald', label: 'Emerald Dark', color: '#10B981' },
+  { id: 'cyan', label: 'Aurora Cyan', color: '#00F2FE' },
+  { id: 'gold', label: 'Champagne Gold', color: '#F59E0B' },
+  { id: 'light', label: 'Apple Light', color: '#FFFFFF' }
+];
 
 export default function Header({
   activeTabTitle,
@@ -14,6 +21,8 @@ export default function Header({
   onOpenImport,
   onTriggerDriveSync
 }) {
+  const [showThemePicker, setShowThemePicker] = useState(false);
+
   const getInitials = (name) => {
     if (!name) return 'U';
     const parts = name.trim().split(' ');
@@ -21,16 +30,20 @@ export default function Header({
     return name.substring(0, 2).toUpperCase();
   };
 
+  const activeColor = THEMES.find(t => t.id === theme)?.color || '#10B981';
+
   return (
-    <header className="top-bar">
-      <div className="page-title-area">
-        <h1>{activeTabTitle}</h1>
+    <header className="top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="page-title-area" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+          {activeTabTitle}
+        </h1>
       </div>
 
-      <div className="top-actions">
-        {/* Apple Liquid Glass Theme Selector */}
+      <div className="top-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Desktop Theme Selector (4 Dots) */}
         <div
-          title="Liquid Glass Theme Selector"
+          className="desktop-theme-selector"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -43,132 +56,154 @@ export default function Header({
           }}
         >
           <Palette size={14} style={{ color: 'var(--primary)', marginRight: '2px' }} />
+          {THEMES.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => onSelectTheme(t.id)}
+              title={t.label}
+              style={{
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                background: t.color,
+                border: (theme === t.id || (t.id === 'emerald' && theme === 'dark')) ? '2px solid white' : '1px solid rgba(255,255,255,0.3)',
+                cursor: 'pointer',
+                boxShadow: (theme === t.id || (t.id === 'emerald' && theme === 'dark')) ? `0 0 10px ${t.color}` : 'none',
+                transition: 'all 0.2s ease'
+              }}
+            />
+          ))}
+        </div>
 
-          {/* Cyber Emerald */}
+        {/* Mobile Compact Theme Dropdown Button */}
+        <div className="mobile-theme-selector" style={{ position: 'relative' }}>
           <button
             type="button"
-            onClick={() => onSelectTheme('emerald')}
-            title="Cyber Emerald & Obsidian Glass"
+            className="btn btn-ghost"
+            onClick={() => setShowThemePicker(!showThemePicker)}
             style={{
-              width: '18px',
-              height: '18px',
+              padding: '6px',
               borderRadius: '50%',
-              background: '#10B981',
-              border: (theme === 'emerald' || theme === 'dark') ? '2px solid white' : '1px solid rgba(255,255,255,0.3)',
-              cursor: 'pointer',
-              boxShadow: (theme === 'emerald' || theme === 'dark') ? '0 0 12px #10B981' : 'none',
-              transition: 'all 0.2s ease'
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid var(--border-color)'
             }}
-          />
+            title="Switch Theme"
+          >
+            <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: activeColor, border: '1px solid white' }} />
+          </button>
 
-          {/* Aurora Cyan */}
-          <button
-            type="button"
-            onClick={() => onSelectTheme('cyan')}
-            title="Aurora Cyan & Sapphire Glass"
-            style={{
-              width: '18px',
-              height: '18px',
-              borderRadius: '50%',
-              background: '#00F2FE',
-              border: theme === 'cyan' ? '2px solid white' : '1px solid rgba(255,255,255,0.3)',
-              cursor: 'pointer',
-              boxShadow: theme === 'cyan' ? '0 0 12px #00F2FE' : 'none',
-              transition: 'all 0.2s ease'
-            }}
-          />
-
-          {/* Golden Champagne */}
-          <button
-            type="button"
-            onClick={() => onSelectTheme('gold')}
-            title="Golden Champagne & Onyx Velvet"
-            style={{
-              width: '18px',
-              height: '18px',
-              borderRadius: '50%',
-              background: '#F59E0B',
-              border: theme === 'gold' ? '2px solid white' : '1px solid rgba(255,255,255,0.3)',
-              cursor: 'pointer',
-              boxShadow: theme === 'gold' ? '0 0 12px #F59E0B' : 'none',
-              transition: 'all 0.2s ease'
-            }}
-          />
-
-          {/* Light Glass */}
-          <button
-            type="button"
-            onClick={() => onSelectTheme('light')}
-            title="Apple Crystal Light Mode"
-            style={{
-              width: '18px',
-              height: '18px',
-              borderRadius: '50%',
-              background: '#FFFFFF',
-              border: theme === 'light' ? '2px solid var(--primary)' : '1px solid rgba(255,255,255,0.3)',
-              cursor: 'pointer',
-              boxShadow: theme === 'light' ? '0 0 12px #FFFFFF' : 'none',
-              transition: 'all 0.2s ease'
-            }}
-          />
+          {showThemePicker && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '40px',
+                right: '0',
+                background: 'var(--bg-card)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid var(--border-glass)',
+                borderRadius: '16px',
+                padding: '8px',
+                display: 'flex',
+                gap: '8px',
+                zIndex: 100,
+                boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+              }}
+            >
+              {THEMES.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    onSelectTheme(t.id);
+                    setShowThemePicker(false);
+                  }}
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: t.color,
+                    border: (theme === t.id || (t.id === 'emerald' && theme === 'dark')) ? '2px solid white' : '1px solid rgba(255,255,255,0.3)',
+                    cursor: 'pointer'
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {user ? (
           <>
-            <button className="btn btn-ghost btn-sm header-action-btn" onClick={onTriggerDriveSync} title="Sync Google Drive Inbox">
-              <FolderSync size={16} /> <span className="btn-text-desktop">Drive sync</span>
+            {/* Desktop Only Actions */}
+            <button className="btn btn-ghost btn-sm desktop-only-action" onClick={onTriggerDriveSync} title="Sync Google Drive Inbox">
+              <FolderSync size={16} /> <span>Drive sync</span>
             </button>
 
-            <button className="btn btn-secondary btn-sm header-action-btn" onClick={onOpenImport} title="Import Statement or File">
-              <Upload size={16} /> <span className="btn-text-desktop">Import</span>
+            <button className="btn btn-secondary btn-sm desktop-only-action" onClick={onOpenImport} title="Import Statement or File">
+              <Upload size={16} /> <span>Import</span>
             </button>
 
-            <button className="btn btn-primary btn-sm header-action-btn" onClick={onOpenAddEntry} title="Add Entry">
+            {/* Quick Add Entry (+ Button on Mobile, Full on Desktop) */}
+            <button className="btn btn-primary btn-sm" onClick={onOpenAddEntry} title="Add Entry" style={{ padding: '6px 12px' }}>
               <Plus size={16} /> <span className="btn-text-desktop">Add entry</span>
             </button>
 
+            {/* Prominent User Profile Avatar Button (Always Visible & 100% Clickable!) */}
             <button
               type="button"
-              className="btn btn-ghost"
-              style={{ padding: '4px', borderRadius: '50%' }}
+              className="btn btn-ghost user-profile-header-btn"
+              style={{
+                padding: '2px',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                background: 'none',
+                border: 'none'
+              }}
               onClick={onOpenProfileModal}
-              title="Account Settings"
+              title="My Account & Security"
+              aria-label="User Account"
             >
               <div
                 style={{
                   width: '36px',
                   height: '36px',
                   borderRadius: '50%',
-                  background: 'var(--primary-light)',
-                  color: 'var(--primary)',
-                  fontWeight: '700',
-                  fontSize: '14px',
+                  background: 'linear-gradient(135deg, var(--primary) 0%, #059669 100%)',
+                  color: '#000000',
+                  fontWeight: '800',
+                  fontSize: '13px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: '1px solid var(--border-glass)'
+                  boxShadow: '0 2px 10px var(--primary-glow)',
+                  border: '1.5px solid rgba(255, 255, 255, 0.4)'
                 }}
               >
                 {getInitials(user.name || user.email)}
               </div>
             </button>
 
+            {/* Desktop Only Sign Out */}
             <button
-              className="btn btn-ghost btn-sm"
+              className="btn btn-ghost btn-sm desktop-only-action"
               onClick={onLogout}
               title="Sign Out"
               style={{ color: '#EF4444', padding: '6px 8px' }}
             >
-              <LogOut size={18} />
+              <LogOut size={16} />
             </button>
           </>
         ) : (
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button className="btn btn-secondary btn-sm" onClick={onOpenLogin}>
-              <LogIn size={15} /> Sign In
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button className="btn btn-secondary btn-sm" onClick={onOpenLogin} style={{ padding: '6px 10px', fontSize: '12px' }}>
+              <LogIn size={14} /> Sign In
             </button>
-            <button className="btn btn-primary btn-sm" onClick={onOpenRegister}>
-              <UserPlus size={15} /> Register
+            <button className="btn btn-primary btn-sm" onClick={onOpenRegister} style={{ padding: '6px 10px', fontSize: '12px' }}>
+              <UserPlus size={14} /> Register
             </button>
           </div>
         )}
