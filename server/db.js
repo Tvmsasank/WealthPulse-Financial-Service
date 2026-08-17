@@ -80,6 +80,20 @@ let pgPool = null;
 if (process.env.DATABASE_URL) {
   try {
     let connectionString = process.env.DATABASE_URL.trim();
+
+    // Auto-fix: Convert IPv6 Direct Connection (port 5432) to IPv4 Pooler (port 6543) for cloud platforms like Render
+    if (connectionString.includes('db.') && connectionString.includes('.supabase.co:5432')) {
+      const match = connectionString.match(/db\.([a-z0-9]+)\.supabase\.co:5432/);
+      if (match && match[1]) {
+        const projectRef = match[1];
+        if (!connectionString.includes(`postgres.${projectRef}:`)) {
+          connectionString = connectionString.replace(`postgres:`, `postgres.${projectRef}:`);
+        }
+        connectionString = connectionString.replace(`db.${projectRef}.supabase.co:5432`, `aws-0-ap-south-1.pooler.supabase.com:6543`);
+        console.log('[Supabase PostgreSQL] Auto-optimized connection string to IPv4 Transaction Pooler (port 6543)!');
+      }
+    }
+
     if (!connectionString.includes('sslmode=')) {
       connectionString += (connectionString.includes('?') ? '&' : '?') + 'sslmode=require';
     }
@@ -93,7 +107,7 @@ if (process.env.DATABASE_URL) {
       CREATE TABLE IF NOT EXISTS public.wealthpulse_store (
         id VARCHAR(50) PRIMARY KEY,
         data JSONB NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `).then(async () => {
       console.log('[Supabase PostgreSQL] Connected & table initialized successfully!');
