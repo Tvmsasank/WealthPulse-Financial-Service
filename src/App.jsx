@@ -567,11 +567,11 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Desktop Sidebar (238px) */}
-      <Sidebar activeTab={activeTab} onSelectTab={setActiveTab} />
+      {/* Desktop Sidebar (Only when logged in) */}
+      {user && <Sidebar activeTab={activeTab} onSelectTab={setActiveTab} />}
 
       {/* Main Content Area */}
-      <div className="main-content">
+      <div className={`main-content ${!user ? 'logged-out' : ''}`}>
         <Header
           activeTabTitle={activeNav.label}
           theme={theme}
@@ -825,14 +825,16 @@ export default function App() {
         </main>
       </div>
 
-      {/* Mobile Clean 5-Item Bottom Navigation */}
-      <MobileNav
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        user={user}
-        onOpenProfile={() => setIsProfileModalOpen(true)}
-        onLogout={handleLogout}
-      />
+      {/* Mobile Clean 5-Item Bottom Navigation (Only when logged in) */}
+      {user && (
+        <MobileNav
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+          user={user}
+          onOpenProfile={() => setIsProfileModalOpen(true)}
+          onLogout={handleLogout}
+        />
+      )}
 
       {/* User Profile & Portfolio Modal */}
       <UserProfileModal

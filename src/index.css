@@ -273,6 +273,11 @@ body::after {
   min-width: 0;
 }
 
+.main-content.logged-out {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
 /* Top Header (Liquid Glassmorphism) */
 .top-bar {
   height: var(--header-height);

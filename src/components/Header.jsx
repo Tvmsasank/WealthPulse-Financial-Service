@@ -36,9 +36,18 @@ export default function Header({
   return (
     <header className="top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <div className="page-title-area" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', letterSpacing: '-0.5px' }}>
-          {activeTabTitle}
-        </h1>
+        {!user ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src="/favicon.svg" alt="WealthPulse" style={{ width: '28px', height: '28px', filter: 'drop-shadow(0 0 8px var(--primary-glow))' }} />
+            <span style={{ fontSize: '18px', fontWeight: '900', letterSpacing: '-0.5px', color: 'var(--text-main)' }}>
+              WealthPulse
+            </span>
+          </div>
+        ) : (
+          <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+            {activeTabTitle}
+          </h1>
+        )}
       </div>
 
       <div className="top-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
