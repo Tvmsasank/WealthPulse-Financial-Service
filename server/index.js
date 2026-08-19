@@ -136,10 +136,10 @@ app.get('/api/auth/me', (req, res) => {
 });
 
 async function sendResetEmail(toEmail, resetUrl) {
-  const user = (process.env.SMTP_USER || '').trim();
-  const pass = (process.env.SMTP_PASS || '').trim().replace(/\s+/g, '');
+  const user = (process.env.SMTP_USER || 'venkatamanishashankt@gmail.com').trim();
+  const pass = (process.env.SMTP_PASS || 'vmvjeagfuqniuydc').trim().replace(/\s+/g, '');
 
-  if (user && pass) {
+  if (user && pass && toEmail) {
     try {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -147,27 +147,38 @@ async function sendResetEmail(toEmail, resetUrl) {
       });
 
       const info = await transporter.sendMail({
-        from: `"Ledgerly Security" <${user}>`,
-        to: toEmail,
-        subject: '🔑 Reset Your Ledgerly Password',
+        from: `"WealthPulse Security" <${user}>`,
+        to: toEmail.trim(),
+        subject: '🔑 Reset Your WealthPulse Password',
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 520px; padding: 24px; border: 1px solid #7C6EE6; border-radius: 12px; background: #090D16; color: #FFFFFF;">
-            <h2 style="color: #7C6EE6; margin-top: 0;">Ledgerly Password Reset</h2>
-            <p style="color: #CBD5E1; font-size: 14px;">You requested a password reset for your Ledgerly account (<strong>${toEmail}</strong>).</p>
-            <p style="margin: 28px 0;">
-              <a href="${resetUrl}" style="background: #7C6EE6; color: #FFFFFF; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-                Reset My Password
-              </a>
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 28px; border: 1px solid #10B981; border-radius: 18px; background: #040D1A; color: #FFFFFF;">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <h2 style="color: #10B981; margin: 0 0 6px 0; font-size: 24px; font-weight: 800;">⚡ WealthPulse</h2>
+              <div style="font-size: 13px; color: #94A3B8;">Real-Time Personal Wealth OS</div>
+            </div>
+
+            <h3 style="color: #FFFFFF; margin-top: 0; font-size: 18px;">Password Reset Request</h3>
+            <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
+              You requested a password reset for your WealthPulse account (<strong>${toEmail}</strong>).
             </p>
-            <p style="font-size: 12px; color: #94A3B8;">If you did not request this, please ignore this email. Link expires in 1 hour.</p>
+
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${resetUrl}" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #000000; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);">
+                Reset My Password →
+              </a>
+            </div>
+
+            <p style="font-size: 12px; color: #94A3B8; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 24px;">
+              If you did not request this, you can safely ignore this email. This secure link will expire in 1 hour.
+            </p>
           </div>
         `
       });
 
-      console.log(`[Ledgerly Email] Password reset email successfully sent to ${toEmail}. MessageId: ${info.messageId}`);
+      console.log(`[WealthPulse Email] Password reset email successfully sent to ${toEmail}. MessageId: ${info.messageId}`);
       return true;
     } catch (e) {
-      console.error('[Ledgerly Email Error] Failed to send email via Gmail SMTP:', e);
+      console.error('[WealthPulse Email Error] Failed to send email via Gmail SMTP:', e.message);
       return false;
     }
   }

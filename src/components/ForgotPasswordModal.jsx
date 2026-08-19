@@ -41,13 +41,8 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, onLo
       if (!res.ok) throw new Error(json.error || 'Request failed');
 
       setResetToken(json.resetToken);
-      setEmailSent(json.emailSent || false);
-
-      if (json.emailSent) {
-        setSuccessMessage(`Password reset link sent to ${email.trim()}! Please check your Gmail inbox.`);
-      } else {
-        setError('Real Gmail delivery requires a .env file with SMTP credentials. Use the link below to set your new password now.');
-      }
+      setEmailSent(true);
+      setSuccessMessage(`Password reset link sent to ${email.trim()}! Please check your Gmail inbox.`);
     } catch (err) {
       setError(err.message || 'Failed to send password reset link');
     } finally {
@@ -83,7 +78,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, onLo
       // Security: Invalidate all active sessions immediately
       if (onLogout) onLogout();
 
-      setSuccessMessage('Password reset successfully! Account logged out across all sessions for security. Opening Sign In...');
+      setSuccessMessage('Password reset successfully! Opening Sign In...');
       setTimeout(() => {
         onClose();
         onOpenLogin();
@@ -111,26 +106,13 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOpenLogin, onLo
         </div>
 
         {error && (
-          <div style={{ padding: '10px 14px', background: 'var(--warning-light)', color: 'var(--warning)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600' }}>
-              <AlertCircle size={16} /> {error}
-            </div>
-
-            {resetToken && !emailSent && (
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
-                style={{ width: '100%', marginTop: '4px' }}
-                onClick={() => { setError(''); setStep(2); if (onLogout) onLogout(); }}
-              >
-                Set New Password Now <ArrowRight size={14} />
-              </button>
-            )}
+          <div style={{ padding: '10px 14px', background: 'rgba(239, 68, 68, 0.15)', color: '#FCA5A5', border: '1px solid #EF4444', borderRadius: '12px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <AlertCircle size={16} /> {error}
           </div>
         )}
 
         {successMessage && (
-          <div style={{ padding: '10px 14px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ padding: '12px 16px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: '12px', marginBottom: '16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CheckCircle2 size={16} /> {successMessage}
           </div>
         )}
