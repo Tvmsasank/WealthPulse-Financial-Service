@@ -135,114 +135,126 @@ app.get('/api/auth/me', (req, res) => {
   res.json({ user });
 });
 
-function getMailTransporter() {
+async function sendEmailWithFallback({ to, subject, html }) {
   const user = (process.env.SMTP_USER || 'venkatamanishashankt@gmail.com').trim();
   const pass = (process.env.SMTP_PASS || 'vmvjeagfuqniuydc').trim().replace(/\s+/g, '');
 
-  return {
-    user,
-    transporter: nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+  if (!user || !pass || !to) {
+    console.error('[WealthPulse Email Error] Missing SMTP credentials or recipient email');
+    return false;
+  }
+
+  // Attempt 1: Gmail service
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
       auth: { user, pass },
       connectionTimeout: 8000,
       greetingTimeout: 5000,
       socketTimeout: 10000
-    })
-  };
+    });
+    const info = await transporter.sendMail({
+      from: `"WealthPulse Security" <${user}>`,
+      to: to.trim(),
+      subject,
+      html
+    });
+    console.log(`[WealthPulse Email] Successfully delivered email to ${to} via Gmail Service. MessageId: ${info.messageId}`);
+    return true;
+  } catch (err1) {
+    console.warn(`[WealthPulse Email] Primary transport failed (${err1.message}). Trying fallback transport on port 587...`);
+  }
+
+  // Attempt 2: Direct SMTP on port 587
+  try {
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      auth: { user, pass },
+      connectionTimeout: 8000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000
+    });
+    const info = await transporter.sendMail({
+      from: `"WealthPulse Security" <${user}>`,
+      to: to.trim(),
+      subject,
+      html
+    });
+    console.log(`[WealthPulse Email] Successfully delivered email to ${to} via Port 587. MessageId: ${info.messageId}`);
+    return true;
+  } catch (err2) {
+    console.error(`[WealthPulse Email Error] Both SMTP transports failed: ${err2.message}`);
+    return false;
+  }
 }
 
 async function sendResetEmail(toEmail, resetUrl) {
-  const { user, transporter } = getMailTransporter();
+  const timeCode = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+  const subject = `🔑 Reset Your WealthPulse Password [${timeCode}]`;
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 28px; border: 1px solid #10B981; border-radius: 18px; background: #040D1A; color: #FFFFFF;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h2 style="color: #10B981; margin: 0 0 6px 0; font-size: 24px; font-weight: 800;">⚡ WealthPulse</h2>
+        <div style="font-size: 13px; color: #94A3B8;">Real-Time Personal Wealth OS</div>
+      </div>
 
-  if (user && toEmail) {
-    try {
-      const info = await transporter.sendMail({
-        from: `"WealthPulse Security" <${user}>`,
-        to: toEmail.trim(),
-        subject: '🔑 Reset Your WealthPulse Password',
-        html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 28px; border: 1px solid #10B981; border-radius: 18px; background: #040D1A; color: #FFFFFF;">
-            <div style="text-align: center; margin-bottom: 24px;">
-              <h2 style="color: #10B981; margin: 0 0 6px 0; font-size: 24px; font-weight: 800;">⚡ WealthPulse</h2>
-              <div style="font-size: 13px; color: #94A3B8;">Real-Time Personal Wealth OS</div>
-            </div>
+      <h3 style="color: #FFFFFF; margin-top: 0; font-size: 18px;">Password Reset Request</h3>
+      <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
+        You requested a password reset for your WealthPulse account (<strong>${toEmail}</strong>).
+      </p>
 
-            <h3 style="color: #FFFFFF; margin-top: 0; font-size: 18px;">Password Reset Request</h3>
-            <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
-              You requested a password reset for your WealthPulse account (<strong>${toEmail}</strong>).
-            </p>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${resetUrl}" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #000000; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);">
+          Reset My Password →
+        </a>
+      </div>
 
-            <div style="text-align: center; margin: 32px 0;">
-              <a href="${resetUrl}" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #000000; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);">
-                Reset My Password →
-              </a>
-            </div>
+      <p style="font-size: 12px; color: #94A3B8; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 24px;">
+        If you did not request this, you can safely ignore this email. This secure link will expire in 1 hour.
+      </p>
+    </div>
+  `;
 
-            <p style="font-size: 12px; color: #94A3B8; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 24px;">
-              If you did not request this, you can safely ignore this email. This secure link will expire in 1 hour.
-            </p>
-          </div>
-        `
-      });
-
-      console.log(`[WealthPulse Email] Password reset email successfully sent to ${toEmail}. MessageId: ${info.messageId}`);
-      return true;
-    } catch (e) {
-      console.error('[WealthPulse Email Error] Failed to send email via Gmail SMTP:', e.message);
-      return false;
-    }
-  }
-  return false;
+  return await sendEmailWithFallback({ to: toEmail, subject, html });
 }
 
 async function sendMpinResetEmail(toEmail, resetMpinUrl, isLocked = false) {
-  const { user, transporter } = getMailTransporter();
+  const timeCode = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+  const subject = isLocked 
+    ? `🔒 WealthPulse Security Alert: Account Locked [${timeCode}]` 
+    : `🔑 Reset Your WealthPulse 4-Digit MPIN [${timeCode}]`;
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 28px; border: 1px solid #10B981; border-radius: 18px; background: #040D1A; color: #FFFFFF;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h2 style="color: #10B981; margin: 0 0 6px 0; font-size: 24px; font-weight: 800;">⚡ WealthPulse</h2>
+        <div style="font-size: 13px; color: #94A3B8;">Real-Time Personal Wealth OS</div>
+      </div>
 
-  if (user && toEmail) {
-    try {
-      const info = await transporter.sendMail({
-        from: `"WealthPulse Security" <${user}>`,
-        to: toEmail.trim(),
-        subject: isLocked ? '🔒 WealthPulse Security Alert: Account Locked' : '🔑 Reset Your WealthPulse 4-Digit MPIN',
-        html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 28px; border: 1px solid #10B981; border-radius: 18px; background: #040D1A; color: #FFFFFF;">
-            <div style="text-align: center; margin-bottom: 24px;">
-              <h2 style="color: #10B981; margin: 0 0 6px 0; font-size: 24px; font-weight: 800;">⚡ WealthPulse</h2>
-              <div style="font-size: 13px; color: #94A3B8;">Real-Time Personal Wealth OS</div>
-            </div>
+      <h3 style="color: #FFFFFF; margin-top: 0; font-size: 18px;">
+        ${isLocked ? '⚠️ Security Lockout: Reset MPIN to Unlock' : 'Reset Your 4-Digit Security MPIN'}
+      </h3>
+      <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
+        ${isLocked 
+          ? `Your WealthPulse account (<strong>${toEmail}</strong>) was temporarily locked due to multiple incorrect MPIN attempts. Click below to verify your identity and set a new MPIN.` 
+          : `You requested to reset the 4-digit MPIN for your WealthPulse account (<strong>${toEmail}</strong>).`}
+      </p>
 
-            <h3 style="color: #FFFFFF; margin-top: 0; font-size: 18px;">
-              ${isLocked ? '⚠️ Security Lockout: Reset MPIN to Unlock' : 'Reset Your 4-Digit Security MPIN'}
-            </h3>
-            <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
-              ${isLocked 
-                ? `Your WealthPulse account (<strong>${toEmail}</strong>) was temporarily locked due to multiple incorrect MPIN attempts. Click below to verify your identity and set a new MPIN.` 
-                : `You requested to reset the 4-digit MPIN for your WealthPulse account (<strong>${toEmail}</strong>).`}
-            </p>
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${resetMpinUrl}" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #000000; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);">
+          Set New 4-Digit MPIN →
+        </a>
+      </div>
 
-            <div style="text-align: center; margin: 32px 0;">
-              <a href="${resetMpinUrl}" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #000000; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);">
-                Set New 4-Digit MPIN →
-              </a>
-            </div>
+      <p style="font-size: 12px; color: #94A3B8; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 24px;">
+        If you did not request this, please secure your account immediately. This link expires in 1 hour.
+      </p>
+    </div>
+  `;
 
-            <p style="font-size: 12px; color: #94A3B8; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 24px;">
-              If you did not request this, please secure your account immediately. This link expires in 1 hour.
-            </p>
-          </div>
-        `
-      });
-
-      console.log(`[WealthPulse Email] MPIN reset email sent to ${toEmail}. MessageId: ${info.messageId}`);
-      return true;
-    } catch (e) {
-      console.error('[WealthPulse Email Error] Failed to send MPIN reset email:', e.message);
-      return false;
-    }
-  }
-  return false;
+  return await sendEmailWithFallback({ to: toEmail, subject, html });
 }
 
 // POST /api/auth/forgot-password
