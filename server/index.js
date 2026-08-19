@@ -181,7 +181,22 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
     const result = dbEngine.createPasswordResetToken(email);
-    const resetUrl = `http://localhost:3000/?resetToken=${result.resetToken}`;
+
+    // Compute dynamic Origin based on request headers (supporting Render, custom domains, and localhost)
+    let origin = req.headers.origin || req.headers.referer;
+    if (origin) {
+      try {
+        const urlObj = new URL(origin);
+        origin = urlObj.origin;
+      } catch (e) {}
+    }
+    if (!origin) {
+      const host = req.headers.host || 'wealthpulse-financial-service.onrender.com';
+      const protocol = host.includes('localhost') ? 'http' : 'https';
+      origin = `${protocol}://${host}`;
+    }
+
+    const resetUrl = `${origin}/?resetToken=${result.resetToken}`;
 
     // Attempt real email dispatch
     const emailSent = await sendResetEmail(email, resetUrl);
@@ -189,7 +204,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     res.json({
       message: emailSent
         ? `Password reset link sent to ${email}. Check your Gmail inbox!`
-        : 'Password reset token created successfully',
+        : 'Password reset link generated successfully',
       emailSent,
       resetToken: result.resetToken,
       resetUrl
