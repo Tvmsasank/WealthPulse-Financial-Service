@@ -126,6 +126,18 @@ export async function authenticateWithBiometrics(targetEmail) {
   const rawIdBase64 = localStorage.getItem('wealthpulse_biometric_raw_id');
   const credentialId = localStorage.getItem('wealthpulse_biometric_credential') || localStorage.getItem('ledgerly_biometric_credential');
 
+  if (!window.PublicKeyCredential) {
+    throw new Error('Biometric WebAuthn passkeys are not supported on this device/browser');
+  }
+
+  if (!email) {
+    throw new Error('Please enter your account email address first to use Face ID / Passkey');
+  }
+
+  if (!credentialId && !rawIdBase64) {
+    throw new Error('No Passkey found on this device. Sign in with your password and enable Face ID in User Profile.');
+  }
+
   const challengeBuffer = crypto.getRandomValues(new Uint8Array(32));
   const hostname = window.location.hostname;
   const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
@@ -158,9 +170,9 @@ export async function authenticateWithBiometrics(targetEmail) {
     assertion = await navigator.credentials.get(requestOptions);
   } catch (e) {
     if (e.name === 'NotAllowedError') {
-      throw new Error('Passkey scan cancelled or not available on this device.');
+      throw new Error('Passkey scan prompt was closed or cancelled.');
     }
-    throw new Error('Biometric verification cancelled');
+    throw new Error(e.message || 'Biometric verification cancelled');
   }
 
   if (!assertion) throw new Error('Biometric verification cancelled');

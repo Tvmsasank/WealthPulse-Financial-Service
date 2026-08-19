@@ -34,10 +34,31 @@ export default function UserProfileModal({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [bioMessage, setBioMessage] = useState('');
   const [bioError, setBioError] = useState('');
+  const [mpinResetMessage, setMpinResetMessage] = useState('');
+  const [mpinResetLoading, setMpinResetLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+
+  const handleRequestMpinReset = async () => {
+    setMpinResetMessage('');
+    setMpinResetLoading(true);
+    try {
+      const res = await fetch('/api/auth/forgot-mpin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to send MPIN reset link');
+      setMpinResetMessage(`MPIN reset link sent to ${user.email}! Check your Gmail inbox.`);
+    } catch (err) {
+      setMpinResetMessage(err.message || 'Failed to send MPIN reset link');
+    } finally {
+      setMpinResetLoading(false);
+    }
+  };
 
   const getInitials = (name) => {
     if (!name) return 'U';
@@ -242,39 +263,74 @@ export default function UserProfileModal({
             </button>
 
             {/* 4-Digit MPIN Row */}
-            <button
-              type="button"
-              className="btn btn-secondary"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '12px 14px',
-                borderRadius: '12px',
-                width: '100%',
-                boxSizing: 'border-box'
-              }}
-              onClick={() => {
-                onClose();
-                onOpenMpinModal(hasRegisteredMpin ? 'change' : 'set');
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ padding: '6px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.16)', color: '#38BDF8', flexShrink: 0 }}>
-                  <KeyRound size={18} />
-                </div>
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>
-                    {hasRegisteredMpin ? 'Change 4-Digit MPIN' : 'Set 4-Digit MPIN'}
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'stretch' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  flex: 1,
+                  boxSizing: 'border-box'
+                }}
+                onClick={() => {
+                  onClose();
+                  onOpenMpinModal(hasRegisteredMpin ? 'change' : 'set');
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ padding: '6px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.16)', color: '#38BDF8', flexShrink: 0 }}>
+                    <KeyRound size={18} />
                   </div>
-                  <div style={{ fontSize: '11px', color: hasRegisteredMpin ? '#34D399' : 'var(--text-muted)', fontWeight: hasRegisteredMpin ? '700' : '400' }}>
-                    {hasRegisteredMpin ? '✓ MPIN Active' : 'Enable Fast PIN Login'}
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>
+                      {hasRegisteredMpin ? 'Change 4-Digit MPIN' : 'Set 4-Digit MPIN'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: hasRegisteredMpin ? '#34D399' : 'var(--text-muted)', fontWeight: hasRegisteredMpin ? '700' : '400' }}>
+                      {hasRegisteredMpin ? '✓ MPIN Active' : 'Enable Fast PIN Login'}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
-            </button>
+                <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
+              </button>
+
+              {hasRegisteredMpin && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  style={{
+                    padding: '8px 12px',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    color: '#F87171',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    background: 'rgba(239, 68, 68, 0.08)',
+                    whiteSpace: 'nowrap'
+                  }}
+                  onClick={handleRequestMpinReset}
+                  disabled={mpinResetLoading}
+                  title="Send MPIN Reset Link to Email"
+                >
+                  {mpinResetLoading ? 'Sending...' : 'Reset MPIN'}
+                </button>
+              )}
+            </div>
           </div>
+
+          {mpinResetMessage && (
+            <div style={{ marginTop: '8px', padding: '8px 12px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: '10px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <CheckCircle2 size={14} /> {mpinResetMessage}
+              </div>
+              <button type="button" onClick={() => setMpinResetMessage('')} style={{ background: 'none', border: 'none', color: 'var(--success)', cursor: 'pointer' }}>
+                <X size={12} />
+              </button>
+            </div>
+          )}
 
           {bioMessage && (
             <div style={{ marginTop: '8px', padding: '8px 12px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: '10px', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>

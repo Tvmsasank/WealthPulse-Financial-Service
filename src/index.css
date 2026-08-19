@@ -959,3 +959,104 @@ select.form-control option {
     font-size: 10px !important;
   }
 }
+
+/* ==========================================================================
+   ✨ WEALTHSIMPLE / AWWWARDS FINTECH FLOATING ANIMATIONS & UTILITIES
+   ========================================================================== */
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-16px) rotate(2deg);
+  }
+}
+
+@keyframes float-reverse {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(14px) rotate(-2deg);
+  }
+}
+
+@keyframes float-drift {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(8px, -12px) rotate(1.5deg);
+  }
+  66% {
+    transform: translate(-8px, -6px) rotate(-1.5deg);
+  }
+}
+
+@keyframes pulse-glow-slow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.anim-float-1 {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.anim-float-2 {
+  animation: float-reverse 7s ease-in-out infinite;
+}
+
+.anim-float-3 {
+  animation: float-drift 8.5s ease-in-out infinite;
+}
+
+.floating-fintech-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 18px;
+  background: rgba(10, 25, 47, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  user-select: none;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .floating-fintech-badge {
+    display: none !important;
+  }
+}
+

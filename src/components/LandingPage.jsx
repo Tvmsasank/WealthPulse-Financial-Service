@@ -67,8 +67,29 @@ export default function LandingPage({
 
   return (
     <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 16px 60px 16px' }}>
-      {/* 🚀 HERO SECTION */}
+      {/* 🚀 HERO SECTION WITH FLOATING FINTECH BADGES */}
       <section style={{ textAlign: 'center', padding: '40px 0 50px 0', position: 'relative' }}>
+        {/* Floating Fintech Watermarks (Wealthsimple inspired) */}
+        <div className="floating-fintech-badge anim-float-1" style={{ position: 'absolute', top: '5%', left: '-10px', zIndex: 1 }}>
+          <TrendingUp size={16} style={{ color: '#10B981' }} />
+          <span>RELIANCE +1.4%</span>
+        </div>
+
+        <div className="floating-fintech-badge anim-float-2" style={{ position: 'absolute', top: '12%', right: '-10px', zIndex: 1 }}>
+          <Sparkles size={16} style={{ color: '#FBBF24' }} />
+          <span>₹14.82L Net Worth</span>
+        </div>
+
+        <div className="floating-fintech-badge anim-float-3" style={{ position: 'absolute', top: '50%', left: '-25px', zIndex: 1 }}>
+          <Zap size={16} style={{ color: '#38BDF8' }} />
+          <span>Smart UPI 1-Tap</span>
+        </div>
+
+        <div className="floating-fintech-badge anim-float-1" style={{ position: 'absolute', top: '60%', right: '-25px', zIndex: 1 }}>
+          <ShieldCheck size={16} style={{ color: '#10B981' }} />
+          <span>Touch ID Passkey</span>
+        </div>
+
         {/* Top Innovation Badge */}
         <div
           style={{
@@ -168,7 +189,7 @@ export default function LandingPage({
             background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(10, 25, 47, 0.9) 100%)',
             border: '1px solid var(--border-glass)',
             boxShadow: '0 24px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-            maxWidth: '880px',
+            maxWidth: '940px',
             margin: '0 auto',
             textAlign: 'left'
           }}
@@ -212,8 +233,8 @@ export default function LandingPage({
             </div>
           </div>
 
-          {/* Live Market Tickers Chips */}
-          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+          {/* Live Market Tickers Chips (No scrollbar, clean flex wrap) */}
+          <div className="no-scrollbar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-start', alignItems: 'center' }}>
             <div style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-color)', fontSize: '12px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <strong>RELIANCE.NS</strong> <span style={{ color: '#10B981' }}>₹2,980.40 (+1.4%)</span>
             </div>

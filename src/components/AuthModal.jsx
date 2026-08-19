@@ -204,6 +204,7 @@ export default function AuthModal({
 
   const handleBiometricLogin = async (emailToUse) => {
     setError('');
+    setSuccess('');
     setLoading(true);
     try {
       const targetEmail = emailToUse || email || rememberedEmail;
@@ -214,13 +215,7 @@ export default function AuthModal({
         onClose();
       }, 400);
     } catch (err) {
-      if (hasMpin) {
-        setAuthMethod('mpin');
-        setError('Biometric scan cancelled. Enter your 4-Digit MPIN.');
-      } else {
-        setAuthMethod('password');
-        setError(err.message || 'Biometric scan failed');
-      }
+      setError(err.message || 'Biometric scan failed');
     } finally {
       setLoading(false);
     }
