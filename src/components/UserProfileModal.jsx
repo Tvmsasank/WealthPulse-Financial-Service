@@ -115,6 +115,7 @@ export default function UserProfileModal({
   const liabilities = Number(settings.liabilities || 0);
   const netWorth = assets - liabilities;
   const hasRegisteredMpin = !!(user?.hasMpin || user?.mpinHash || localStorage.getItem('wealthpulse_has_mpin') === 'true');
+  const hasRegisteredBiometrics = !!(user?.hasBiometrics || user?.webauthnCredentialId || localStorage.getItem('wealthpulse_has_biometrics') === 'true');
 
   return (
     <div className={`modal-backdrop ${isLoggingOut ? 'fade-out' : ''}`} onClick={onClose} style={{ padding: '16px', boxSizing: 'border-box' }}>
@@ -232,7 +233,9 @@ export default function UserProfileModal({
                 </div>
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-main)' }}>Face ID / Biometrics</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Touch ID & Device Passkey</div>
+                  <div style={{ fontSize: '11px', color: hasRegisteredBiometrics ? '#34D399' : 'var(--text-muted)', fontWeight: hasRegisteredBiometrics ? '700' : '400' }}>
+                    {hasRegisteredBiometrics ? '✓ Face ID / Passkey Active' : 'Touch ID & Device Passkey'}
+                  </div>
                 </div>
               </div>
               <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />

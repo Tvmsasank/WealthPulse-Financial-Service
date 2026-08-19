@@ -185,15 +185,74 @@ async function sendResetEmail(toEmail, resetUrl) {
   return false;
 }
 
+async function sendMpinResetEmail(toEmail, resetMpinUrl, isLocked = false) {
+  const user = (process.env.SMTP_USER || 'venkatamanishashankt@gmail.com').trim();
+  const pass = (process.env.SMTP_PASS || 'vmvjeagfuqniuydc').trim().replace(/\s+/g, '');
+
+  if (user && pass && toEmail) {
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user, pass }
+      });
+
+      const info = await transporter.sendMail({
+        from: `"WealthPulse Security" <${user}>`,
+        to: toEmail.trim(),
+        subject: isLocked ? '🔒 WealthPulse Security Alert: Account Locked' : '🔑 Reset Your WealthPulse 4-Digit MPIN',
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 28px; border: 1px solid #10B981; border-radius: 18px; background: #040D1A; color: #FFFFFF;">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <h2 style="color: #10B981; margin: 0 0 6px 0; font-size: 24px; font-weight: 800;">⚡ WealthPulse</h2>
+              <div style="font-size: 13px; color: #94A3B8;">Real-Time Personal Wealth OS</div>
+            </div>
+
+            <h3 style="color: #FFFFFF; margin-top: 0; font-size: 18px;">
+              ${isLocked ? '⚠️ Security Lockout: Reset MPIN to Unlock' : 'Reset Your 4-Digit Security MPIN'}
+            </h3>
+            <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
+              ${isLocked 
+                ? `Your WealthPulse account (<strong>${toEmail}</strong>) was temporarily locked due to multiple incorrect MPIN attempts. Click below to verify your identity and set a new MPIN.` 
+                : `You requested to reset the 4-digit MPIN for your WealthPulse account (<strong>${toEmail}</strong>).`}
+            </p>
+
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${resetMpinUrl}" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #000000; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);">
+                Set New 4-Digit MPIN →
+              </a>
+            </div>
+
+            <p style="font-size: 12px; color: #94A3B8; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 24px;">
+              If you did not request this, please secure your account immediately. This link expires in 1 hour.
+            </p>
+          </div>
+        `
+      });
+
+      console.log(`[WealthPulse Email] MPIN reset email sent to ${toEmail}. MessageId: ${info.messageId}`);
+      return true;
+    } catch (e) {
+      console.error('[WealthPulse Email Error] Failed to send MPIN reset email:', e.message);
+      return false;
+    }
+  }
+  return false;
+}
+
 // POST /api/auth/forgot-password
 app.post('/api/auth/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
-    const result = dbEngine.createPasswordResetToken(email);
+    const cleanEmail = email.trim().toLowerCase();
+    const existingUser = dbEngine.getUserByEmail(cleanEmail);
+    if (!existingUser) {
+      return res.status(404).json({ error: 'No account found with this email. Please enter the email associated with your WealthPulse account.' });
+    }
 
-    // Compute dynamic Origin based on request headers (supporting Render, custom domains, and localhost)
+    const result = dbEngine.createPasswordResetToken(cleanEmail);
+
     let origin = req.headers.origin || req.headers.referer;
     if (origin) {
       try {
@@ -209,12 +268,11 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
     const resetUrl = `${origin}/?resetToken=${result.resetToken}`;
 
-    // Attempt real email dispatch
-    const emailSent = await sendResetEmail(email, resetUrl);
+    const emailSent = await sendResetEmail(cleanEmail, resetUrl);
 
     res.json({
       message: emailSent
-        ? `Password reset link sent to ${email}. Check your Gmail inbox!`
+        ? `Password reset link sent to ${cleanEmail}. Check your Gmail inbox!`
         : 'Password reset link generated successfully',
       emailSent,
       resetToken: result.resetToken,
@@ -245,21 +303,80 @@ app.post('/api/auth/reset-password', (req, res) => {
   }
 });
 
+// POST /api/auth/forgot-mpin
+app.post('/api/auth/forgot-mpin', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const cleanEmail = email.trim().toLowerCase();
+    const existingUser = dbEngine.getUserByEmail(cleanEmail);
+    if (!existingUser) {
+      return res.status(404).json({ error: 'No account found with this email. Please enter your registered WealthPulse email.' });
+    }
+
+    const result = dbEngine.createMpinResetToken(cleanEmail);
+
+    let origin = req.headers.origin || req.headers.referer;
+    if (origin) {
+      try { origin = new URL(origin).origin; } catch (e) {}
+    }
+    if (!origin) {
+      const host = req.headers.host || 'wealthpulse-financial-service.onrender.com';
+      origin = `${host.includes('localhost') ? 'http' : 'https'}://${host}`;
+    }
+
+    const resetMpinUrl = `${origin}/?resetMpinToken=${result.resetMpinToken}`;
+    const emailSent = await sendMpinResetEmail(cleanEmail, resetMpinUrl, false);
+
+    res.json({
+      message: emailSent
+        ? `MPIN reset link sent to ${cleanEmail}. Check your Gmail inbox!`
+        : 'MPIN reset link generated successfully',
+      emailSent,
+      resetMpinToken: result.resetMpinToken,
+      resetMpinUrl
+    });
+  } catch (err) {
+    console.error('POST /api/auth/forgot-mpin error:', err);
+    res.status(400).json({ error: err.message || 'MPIN reset request failed' });
+  }
+});
+
+// POST /api/auth/reset-mpin
+app.post('/api/auth/reset-mpin', (req, res) => {
+  try {
+    const { resetMpinToken, newMpin } = req.body;
+    if (!resetMpinToken || !newMpin) {
+      return res.status(400).json({ error: 'Reset token and new 4-digit MPIN are required' });
+    }
+
+    dbEngine.resetUserMpin({ resetMpinToken, newMpin });
+    res.json({ message: '4-Digit MPIN reset successfully!' });
+  } catch (err) {
+    console.error('POST /api/auth/reset-mpin error:', err);
+    res.status(400).json({ error: err.message || 'MPIN reset failed' });
+  }
+});
+
 // POST /api/auth/check-methods
 app.post('/api/auth/check-methods', (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) return res.json({ hasMpin: false, hasBiometrics: false });
+    if (!email) return res.json({ exists: false, hasMpin: false, hasBiometrics: false });
 
-    const user = dbEngine.getUserByEmail(email);
-    if (!user) return res.json({ hasMpin: false, hasBiometrics: false });
+    const cleanEmail = email.trim().toLowerCase();
+    const user = dbEngine.getUserByEmail(cleanEmail);
+    if (!user) return res.json({ exists: false, hasMpin: false, hasBiometrics: false });
 
     res.json({
+      exists: true,
       hasMpin: !!user.mpinHash,
-      hasBiometrics: !!user.webauthnCredentialId
+      hasBiometrics: !!user.webauthnCredentialId,
+      name: user.name || ''
     });
   } catch (err) {
-    res.json({ hasMpin: false, hasBiometrics: false });
+    res.json({ exists: false, hasMpin: false, hasBiometrics: false });
   }
 });
 
@@ -292,17 +409,52 @@ app.post('/api/auth/mpin/set', (req, res) => {
 });
 
 // POST /api/auth/mpin/verify
-app.post('/api/auth/mpin/verify', (req, res) => {
+app.post('/api/auth/mpin/verify', async (req, res) => {
   try {
     const { email, mpin } = req.body;
     if (!email || !mpin) {
       return res.status(400).json({ error: 'Email and MPIN are required' });
     }
 
-    const user = dbEngine.verifyUserMpin({ email, mpin });
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid 4-digit MPIN' });
+    const cleanEmail = email.trim().toLowerCase();
+    const dbUser = dbEngine.getUserByEmail(cleanEmail);
+    if (!dbUser) {
+      return res.status(404).json({ error: 'No account found with this email' });
     }
+
+    const user = dbEngine.verifyUserMpin({ email: cleanEmail, mpin });
+    if (!user) {
+      dbUser.failedMpinAttempts = (dbUser.failedMpinAttempts || 0) + 1;
+      const attemptsLeft = Math.max(0, 3 - dbUser.failedMpinAttempts);
+
+      if (dbUser.failedMpinAttempts >= 3) {
+        const result = dbEngine.createMpinResetToken(cleanEmail);
+
+        let origin = req.headers.origin || req.headers.referer;
+        if (origin) {
+          try { origin = new URL(origin).origin; } catch (e) {}
+        }
+        if (!origin) {
+          const host = req.headers.host || 'wealthpulse-financial-service.onrender.com';
+          origin = `${host.includes('localhost') ? 'http' : 'https'}://${host}`;
+        }
+        const resetMpinUrl = `${origin}/?resetMpinToken=${result.resetMpinToken}`;
+        await sendMpinResetEmail(cleanEmail, resetMpinUrl, true);
+
+        return res.status(423).json({
+          error: 'Account locked: 3 incorrect MPIN attempts. We have sent an unlock & reset link to your email.',
+          locked: true
+        });
+      }
+
+      return res.status(401).json({
+        error: `Invalid 4-digit MPIN. ${attemptsLeft} attempt(s) remaining before account lockout.`,
+        attemptsLeft
+      });
+    }
+
+    // Reset failed attempts on success
+    dbUser.failedMpinAttempts = 0;
 
     const token = jwt.sign(
       { userId: user.id, email: user.email },

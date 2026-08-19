@@ -35,6 +35,7 @@ export default function AuthModal({
   const [success, setSuccess] = useState('');
   const [biometricSupported, setBiometricSupported] = useState(false);
   const [emailHasMpin, setEmailHasMpin] = useState(false);
+  const [emailHasBiometrics, setEmailHasBiometrics] = useState(false);
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('wealthpulse_remembered_email') || localStorage.getItem('ledgerly_remembered_email') || '';
@@ -67,6 +68,9 @@ export default function AuthModal({
             localStorage.setItem('wealthpulse_has_mpin', 'true');
             setEmailHasMpin(true);
             setAuthMethod('mpin');
+          } else if (data.hasBiometrics) {
+            setEmailHasBiometrics(true);
+            setAuthMethod('password');
           } else {
             setAuthMethod('password');
           }
@@ -80,10 +84,11 @@ export default function AuthModal({
     }
   }, [initialMode, isOpen]);
 
-  // Dynamically check if typed email has MPIN set
+  // Dynamically check if typed email has MPIN or Biometrics set
   const handleEmailChange = (val) => {
     setEmail(val);
     setEmailHasMpin(false);
+    setEmailHasBiometrics(false);
     if (val && val.includes('@')) {
       fetch('/api/auth/check-methods', {
         method: 'POST',
@@ -92,9 +97,8 @@ export default function AuthModal({
       })
         .then(res => res.json())
         .then(data => {
-          if (data.hasMpin) {
-            setEmailHasMpin(true);
-          }
+          if (data.hasMpin) setEmailHasMpin(true);
+          if (data.hasBiometrics) setEmailHasBiometrics(true);
         })
         .catch(() => { });
     }
@@ -127,13 +131,11 @@ export default function AuthModal({
       } else if (e.key === 'Backspace') {
         e.preventDefault();
         handleDeleteMpin();
-      } else if (e.key === 'Escape') {
-        onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, authMethod, handleKeyPress, handleDeleteMpin, onClose]);
+  }, [isOpen, authMethod, handleKeyPress, handleDeleteMpin]);
 
   const handleVerifyMpin = async (completedMpin) => {
     setLoading(true);
@@ -154,7 +156,12 @@ export default function AuthModal({
         throw new Error('API server connection lost.');
       }
 
-      if (!res.ok) throw new Error(json.error || 'Invalid 4-Digit MPIN');
+      if (!res.ok) {
+        if (json.locked || res.status === 423) {
+          throw new Error(json.error || 'Account locked: 3 incorrect MPIN attempts. An unlock link has been sent to your Gmail inbox.');
+        }
+        throw new Error(json.error || 'Invalid 4-Digit MPIN');
+      }
 
       localStorage.setItem('wealthpulse_remembered_email', targetEmail);
       localStorage.setItem('wealthpulse_has_mpin', 'true');
@@ -166,6 +173,30 @@ export default function AuthModal({
     } catch (err) {
       setError(err.message || 'MPIN verification failed');
       setMpin('');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotMpin = async () => {
+    const targetEmail = email || rememberedEmail;
+    if (!targetEmail) {
+      setError('Please enter your account email to receive an MPIN reset link');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/auth/forgot-mpin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail.trim() })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to send MPIN reset link');
+      setSuccess(`MPIN reset link sent to ${targetEmail}! Please check your Gmail inbox.`);
+    } catch (err) {
+      setError(err.message || 'Failed to send MPIN reset link');
     } finally {
       setLoading(false);
     }
@@ -516,23 +547,33 @@ export default function AuthModal({
             </div>
 
             {/* Bottom Actions Bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '14px', borderTop: '1px solid var(--border-color)', fontSize: '12px', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '14px', borderTop: '1px solid var(--border-color)', fontSize: '12px', gap: '6px', flexWrap: 'wrap' }}>
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
-                style={{ color: 'var(--primary)', gap: '6px', padding: '6px 8px', fontSize: '12px' }}
+                style={{ color: 'var(--primary)', gap: '4px', padding: '6px 6px', fontSize: '11.5px' }}
                 onClick={() => handleBiometricLogin(rememberedEmail)}
               >
-                <Fingerprint size={16} /> Touch / Face ID
+                <Fingerprint size={15} /> Face ID
               </button>
 
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
-                style={{ color: 'var(--text-muted)', gap: '6px', padding: '6px 8px', fontSize: '12px', marginLeft: 'auto' }}
+                style={{ color: '#F87171', gap: '4px', padding: '6px 6px', fontSize: '11.5px' }}
+                onClick={handleForgotMpin}
+                disabled={loading}
+              >
+                <KeyRound size={13} /> Reset MPIN
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ color: 'var(--text-muted)', gap: '4px', padding: '6px 6px', fontSize: '11.5px', marginLeft: 'auto' }}
                 onClick={() => setAuthMethod('password')}
               >
-                <Lock size={14} /> Password Login
+                <Lock size={13} /> Password
               </button>
             </div>
           </div>
@@ -554,16 +595,28 @@ export default function AuthModal({
                 />
               </div>
 
-              {emailHasMpin && (
-                <div style={{ marginTop: '8px' }}>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    style={{ width: '100%', fontSize: '12px', padding: '8px', color: 'var(--primary)', borderColor: 'var(--primary)' }}
-                    onClick={() => setAuthMethod('mpin')}
-                  >
-                    <KeyRound size={14} /> Sign In with 4-Digit MPIN
-                  </button>
+              {(emailHasMpin || emailHasBiometrics || biometricSupported) && (
+                <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                  {emailHasMpin && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ flex: 1, fontSize: '11.5px', padding: '7px', color: 'var(--primary)', borderColor: 'var(--primary)', gap: '4px' }}
+                      onClick={() => setAuthMethod('mpin')}
+                    >
+                      <KeyRound size={13} /> 4-Digit MPIN
+                    </button>
+                  )}
+                  {(emailHasBiometrics || biometricSupported) && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ flex: 1, fontSize: '11.5px', padding: '7px', color: '#38BDF8', borderColor: '#38BDF8', gap: '4px' }}
+                      onClick={() => handleBiometricLogin(email || rememberedEmail)}
+                    >
+                      <Fingerprint size={13} /> Face ID / Passkey
+                    </button>
+                  )}
                 </div>
               )}
             </div>

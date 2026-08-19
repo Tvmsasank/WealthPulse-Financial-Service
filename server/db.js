@@ -366,7 +366,40 @@ export const dbEngine = {
     return true;
   },
 
+  createMpinResetToken(email) {
+    const db = loadDb();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const user = db.users.find(u => u.email === cleanEmail);
+    if (!user) throw new Error('No user found with this email address');
+
+    const resetMpinToken = crypto.randomBytes(32).toString('hex');
+    user.resetMpinToken = resetMpinToken;
+    user.resetMpinTokenExpiry = Date.now() + 3600000; // 1 hour
+    saveDb();
+
+    return { resetMpinToken, email: cleanEmail };
+  },
+
+  resetUserMpin({ resetMpinToken, newMpin }) {
+    const db = loadDb();
+    const user = db.users.find(u => u.resetMpinToken === resetMpinToken && u.resetMpinTokenExpiry > Date.now());
+    if (!user) throw new Error('Invalid or expired MPIN reset link');
+
+    if (!/^\d{4}$/.test(newMpin)) {
+      throw new Error('MPIN must be exactly 4 digits');
+    }
+
+    user.mpinHash = bcrypt.hashSync(newMpin, 10);
+    user.resetMpinToken = null;
+    user.resetMpinTokenExpiry = null;
+    user.failedMpinAttempts = 0;
+    saveDb();
+
+    return true;
+  },
+
   getUserSettings(userId) {
+    if (!userId) return getInitialUserSettings();
     const db = loadDb();
     if (!db.userSettings[userId]) {
       db.userSettings[userId] = getInitialUserSettings();
@@ -376,6 +409,7 @@ export const dbEngine = {
   },
 
   updateUserSettings(userId, newSettings) {
+    if (!userId) return getInitialUserSettings();
     const db = loadDb();
     const current = db.userSettings[userId] || getInitialUserSettings();
     db.userSettings[userId] = {
@@ -387,13 +421,21 @@ export const dbEngine = {
   },
 
   getState(userId) {
-    const db = loadDb();
-    const effectiveUserId = userId || (db.users?.[0]?.id) || 'usr_1785755811844_crbzz5';
-    const transactions = this.getTransactions(effectiveUserId);
-    const investments = this.getInvestments(effectiveUserId);
-    const rules = this.getRules(effectiveUserId);
-    const documents = this.getDocuments(effectiveUserId);
-    const settings = this.getUserSettings(effectiveUserId);
+    if (!userId) {
+      return {
+        transactions: [],
+        investments: [],
+        rules: [],
+        documents: [],
+        settings: getInitialUserSettings(),
+        tags: []
+      };
+    }
+    const transactions = this.getTransactions(userId);
+    const investments = this.getInvestments(userId);
+    const rules = this.getRules(userId);
+    const documents = this.getDocuments(userId);
+    const settings = this.getUserSettings(userId);
     const tags = Array.from(new Set(transactions.flatMap(t => Array.isArray(t.tags) ? t.tags : [])));
 
     return {
@@ -407,8 +449,9 @@ export const dbEngine = {
   },
 
   getTransactions(userId) {
+    if (!userId) return [];
     const db = loadDb();
-    return (db.transactions || []).filter(t => t.userId === userId || !t.userId);
+    return (db.transactions || []).filter(t => t.userId === userId);
   },
 
   addTransactions(userId, payload) {
@@ -495,8 +538,9 @@ export const dbEngine = {
   },
 
   getInvestments(userId) {
+    if (!userId) return [];
     const db = loadDb();
-    return (db.investments || []).filter(i => i.userId === userId || !i.userId);
+    return (db.investments || []).filter(i => i.userId === userId);
   },
 
   saveInvestments(userId, updatedList) {
@@ -547,7 +591,7 @@ export const dbEngine = {
 
   updateInvestment(userId, id, updates) {
     const db = loadDb();
-    const index = (db.investments || []).findIndex(i => i.id === id && (i.userId === userId || !i.userId));
+    const index = (db.investments || []).findIndex(i => i.id === id && i.userId === userId);
     if (index === -1) throw new Error('Investment not found');
 
     db.investments[index] = {
@@ -576,7 +620,7 @@ export const dbEngine = {
   deleteInvestment(userId, id) {
     const db = loadDb();
     const initialLength = (db.investments || []).length;
-    db.investments = (db.investments || []).filter(i => !(i.id === id && (i.userId === userId || !i.userId)));
+    db.investments = (db.investments || []).filter(i => !(i.id === id && i.userId === userId));
     if (db.investments.length === initialLength) throw new Error('Investment not found');
     saveDb();
 
@@ -589,8 +633,9 @@ export const dbEngine = {
   },
 
   getRules(userId) {
+    if (!userId) return [];
     const db = loadDb();
-    return (db.rules || []).filter(r => r.userId === userId || !r.userId);
+    return (db.rules || []).filter(r => r.userId === userId);
   },
 
   addRule(userId, rule) {
@@ -612,15 +657,16 @@ export const dbEngine = {
   deleteRule(userId, id) {
     const db = loadDb();
     const initialLength = (db.rules || []).length;
-    db.rules = (db.rules || []).filter(r => !(r.id === id && (r.userId === userId || !r.userId)));
+    db.rules = (db.rules || []).filter(r => !(r.id === id && r.userId === userId));
     if (db.rules.length === initialLength) throw new Error('Rule not found');
     saveDb();
     return true;
   },
 
   getDocuments(userId) {
+    if (!userId) return [];
     const db = loadDb();
-    return (db.documents || []).filter(d => d.userId === userId || !d.userId);
+    return (db.documents || []).filter(d => d.userId === userId);
   },
 
   addDocument(userId, doc) {

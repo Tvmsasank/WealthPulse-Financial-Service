@@ -55,7 +55,6 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
-  const [activeResetToken, setActiveResetToken] = useState('');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // MPIN Modal State
@@ -63,19 +62,30 @@ export default function App() {
   const [mpinModalMode, setMpinModalMode] = useState('verify'); // 'verify' | 'set'
   const [mpinModalEmail, setMpinModalEmail] = useState('');
 
+  // Password and MPIN Reset Token States
+  const [activeResetToken, setActiveResetToken] = useState('');
+  const [activeMpinResetToken, setActiveMpinResetToken] = useState('');
+
   // Smart UPI Modal State
   const [isSmartUpiOpen, setIsSmartUpiOpen] = useState(false);
 
   // RBI Account Aggregator Modal State
   const [isAaModalOpen, setIsAaModalOpen] = useState(false);
 
-  // Check URL parameters for ?resetToken=... on load
+  // Check URL parameters for ?resetToken=... or ?resetMpinToken=... on load
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tokenFromUrl = params.get('resetToken');
+    const mpinTokenFromUrl = params.get('resetMpinToken');
+
     if (tokenFromUrl) {
       setActiveResetToken(tokenFromUrl);
       setIsForgotPasswordOpen(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (mpinTokenFromUrl) {
+      setActiveMpinResetToken(mpinTokenFromUrl);
+      setMpinModalMode('reset_token');
+      setIsMpinModalOpen(true);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
@@ -83,7 +93,7 @@ export default function App() {
   // Cross-Tab Multi-Session Synchronization
   useEffect(() => {
     const handleStorageChange = (e) => {
-      if (e.key === 'ledgerly_token') {
+      if (e.key === 'wealthpulse_token' || e.key === 'ledgerly_token') {
         if (!e.newValue) {
           setUser(null);
           setToken('');
@@ -91,7 +101,7 @@ export default function App() {
         } else {
           setToken(e.newValue);
           try {
-            const savedUser = localStorage.getItem('ledgerly_user');
+            const savedUser = localStorage.getItem('wealthpulse_user') || localStorage.getItem('ledgerly_user');
             if (savedUser) setUser(JSON.parse(savedUser));
           } catch (err) {}
         }
@@ -109,13 +119,6 @@ export default function App() {
   const [rules, setRules] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [settings, setSettings] = useState({
-    categories: ['Housing', 'Groceries', 'Shopping', 'Dining', 'Transportation', 'Utilities', 'Subscriptions', 'Insurance', 'Health', 'Entertainment', 'Income', 'Needs review', 'Other'],
-    accounts: ['Main Checking', 'Everyday Visa', 'Rewards Card', 'Cash'],
-    goals: [],
-    budgets: [],
-    subscriptions: [],
-    recurring: [],
-    dismissedPatterns: [],
     assets: 0,
     liabilities: 0,
     netWorthConfigured: false,
@@ -151,12 +154,12 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
-  const rememberedEmail = localStorage.getItem('ledgerly_remembered_email') || (user ? user.email : '');
-  const activeToken = token || localStorage.getItem('ledgerly_token') || sessionStorage.getItem('ledgerly_token') || '';
+  const currentEmail = user?.email ? user.email : (localStorage.getItem('wealthpulse_remembered_email') || localStorage.getItem('ledgerly_remembered_email') || '');
+  const activeToken = token || localStorage.getItem('wealthpulse_token') || localStorage.getItem('ledgerly_token') || sessionStorage.getItem('wealthpulse_token') || '';
 
   const authHeaders = {
     ...(activeToken ? { 'Authorization': `Bearer ${activeToken}`, 'X-Auth-Token': activeToken } : {}),
-    ...(rememberedEmail ? { 'X-User-Email': rememberedEmail } : {})
+    ...(currentEmail ? { 'X-User-Email': currentEmail } : {})
   };
 
   const fetchState = async () => {
@@ -792,10 +795,14 @@ export default function App() {
 
       <MpinModal
         isOpen={isMpinModalOpen}
-        onClose={() => setIsMpinModalOpen(false)}
+        onClose={() => {
+          setIsMpinModalOpen(false);
+          setActiveMpinResetToken('');
+        }}
         mode={mpinModalMode}
         email={mpinModalEmail}
         token={token}
+        resetMpinToken={activeMpinResetToken}
         onSuccess={(u, t) => {
           if (u && t) handleLoginSuccess(u, t, true);
         }}

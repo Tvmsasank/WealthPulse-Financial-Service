@@ -4,14 +4,16 @@ import { X, KeyRound, CheckCircle2, AlertCircle, Delete, Lock } from 'lucide-rea
 export default function MpinModal({
   isOpen,
   onClose,
-  mode = 'verify', // 'verify' | 'set' | 'change'
+  mode = 'verify', // 'verify' | 'set' | 'change' | 'reset_token'
   email = '',
   token = '',
+  resetMpinToken = '',
   onSuccess
 }) {
   if (!isOpen) return null;
 
   // Stages for change mode: 'verify_current' -> 'enter_new' -> 'confirm_new'
+  const isResetTokenMode = mode === 'reset_token' || !!resetMpinToken;
   const [stage, setStage] = useState(() => (mode === 'change' ? 'verify_current' : 'enter_pin'));
   const [pin, setPin] = useState('');
   const [newPin, setNewPin] = useState('');
@@ -27,7 +29,7 @@ export default function MpinModal({
     setStage(mode === 'change' ? 'verify_current' : 'enter_pin');
     setError('');
     setSuccess('');
-  }, [isOpen, mode]);
+  }, [isOpen, mode, resetMpinToken]);
 
   const activeDigits = stage === 'confirm_new' ? confirmPin : (stage === 'enter_new' ? newPin : pin);
 
@@ -46,7 +48,7 @@ export default function MpinModal({
         const next = pin + numStr;
         setPin(next);
         if (next.length === 4) {
-          if (mode === 'verify') {
+          if (mode === 'verify' && !isResetTokenMode) {
             handleVerifyMpin(next);
           } else {
             setNewPin(next);
@@ -69,7 +71,7 @@ export default function MpinModal({
         if (next.length === 4) handleFinishSetMpin(newPin || pin, next);
       }
     }
-  }, [loading, stage, pin, newPin, confirmPin, mode]);
+  }, [loading, stage, pin, newPin, confirmPin, mode, isResetTokenMode]);
 
   const handleDelete = useCallback(() => {
     if (loading) return;
@@ -170,9 +172,28 @@ export default function MpinModal({
     }
 
     setLoading(true);
-    const activeToken = token || localStorage.getItem('wealthpulse_token') || sessionStorage.getItem('wealthpulse_token') || localStorage.getItem('ledgerly_token') || '';
 
     try {
+      if (isResetTokenMode && resetMpinToken) {
+        // Reset MPIN via token from email link
+        const res = await fetch('/api/auth/reset-mpin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resetMpinToken, newMpin: secondPin })
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error || 'Failed to reset MPIN');
+
+        localStorage.setItem('wealthpulse_has_mpin', 'true');
+        setSuccess('4-Digit MPIN Reset Successfully! Please Sign In.');
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+        return;
+      }
+
+      const activeToken = token || localStorage.getItem('wealthpulse_token') || sessionStorage.getItem('wealthpulse_token') || localStorage.getItem('ledgerly_token') || '';
+
       const res = await fetch('/api/auth/mpin/set', {
         method: 'POST',
         headers: {
@@ -186,7 +207,6 @@ export default function MpinModal({
       if (!res.ok) throw new Error(json.error || 'Failed to set MPIN');
 
       localStorage.setItem('wealthpulse_has_mpin', 'true');
-      localStorage.setItem('ledgerly_has_mpin', 'true');
       setSuccess(mode === 'change' ? '4-Digit MPIN Changed Successfully!' : '4-Digit Security MPIN Set Successfully!');
       setTimeout(() => {
         if (onSuccess) onSuccess();
