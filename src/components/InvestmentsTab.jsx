@@ -204,13 +204,13 @@ export default function InvestmentsTab({
           </p>
         </div>
 
-        {/* View Switcher: Holdings vs Performance Analytics */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ display: 'flex', background: 'rgba(255, 255, 255, 0.05)', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+        {/* View Switcher & Action Buttons (Fully Responsive on Mobile) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', width: '100%', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', background: 'rgba(255, 255, 255, 0.05)', padding: '3px', borderRadius: '12px', border: '1px solid var(--border-color)', maxWidth: '100%', overflowX: 'auto' }}>
             <button
               type="button"
               className={`btn btn-sm ${activeSubTab === 'holdings' ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ fontSize: '12px', padding: '6px 14px', borderRadius: '8px', fontWeight: '800' }}
+              style={{ fontSize: '12px', padding: '6px 12px', borderRadius: '8px', fontWeight: '800', whiteSpace: 'nowrap' }}
               onClick={() => setActiveSubTab('holdings')}
             >
               Holdings Overview
@@ -218,32 +218,34 @@ export default function InvestmentsTab({
             <button
               type="button"
               className={`btn btn-sm ${activeSubTab === 'performance' ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ fontSize: '12px', padding: '6px 14px', borderRadius: '8px', fontWeight: '800', gap: '5px' }}
+              style={{ fontSize: '12px', padding: '6px 12px', borderRadius: '8px', fontWeight: '800', gap: '5px', whiteSpace: 'nowrap' }}
               onClick={() => setActiveSubTab('performance')}
             >
               <LineChartIcon size={14} /> Performance Analytics
             </button>
           </div>
 
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={onRefreshPrices}
-            disabled={isSyncing}
-            style={{ borderRadius: '12px', padding: '9px 14px', gap: '6px' }}
-          >
-            <RefreshCw size={15} className={isSyncing ? 'spin' : ''} />
-            {isSyncing ? 'Updating Quotes...' : 'Refresh'}
-          </button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={onRefreshPrices}
+              disabled={isSyncing}
+              style={{ borderRadius: '12px', padding: '8px 12px', gap: '6px', fontSize: '12px' }}
+            >
+              <RefreshCw size={14} className={isSyncing ? 'spin' : ''} />
+              {isSyncing ? 'Updating...' : 'Refresh'}
+            </button>
 
-          <button
-            type="button"
-            className="btn btn-primary btn-sm"
-            onClick={onOpenAddInvestment}
-            style={{ borderRadius: '12px', padding: '9px 16px', gap: '6px', fontWeight: '800' }}
-          >
-            <Plus size={16} /> Add Holding
-          </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={onOpenAddInvestment}
+              style={{ borderRadius: '12px', padding: '8px 14px', gap: '6px', fontWeight: '800', fontSize: '12px' }}
+            >
+              <Plus size={15} /> Add Holding
+            </button>
+          </div>
         </div>
       </div>
 

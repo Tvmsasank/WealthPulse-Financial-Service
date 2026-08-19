@@ -347,13 +347,13 @@ export default function Calculators({ isPrivacyMode = false }) {
                 style={{
                   padding: '18px 20px',
                   borderRadius: '16px',
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(10, 25, 47, 0.8) 100%)',
-                  border: '1px solid var(--border-glass)',
+                  background: 'var(--hero-bg)',
+                  border: 'var(--hero-border)',
                   marginBottom: '20px'
                 }}
               >
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Expected Total Corpus</div>
-                <div style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: '900', color: '#10B981', marginTop: '4px' }}>
+                <div style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: '900', color: 'var(--primary)', marginTop: '4px' }}>
                   {formatInr(sipTotalValue)}
                 </div>
               </div>
@@ -479,8 +479,8 @@ export default function Calculators({ isPrivacyMode = false }) {
                 style={{
                   padding: '18px 20px',
                   borderRadius: '16px',
-                  background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(10, 25, 47, 0.8) 100%)',
-                  border: '1px solid var(--border-glass)',
+                  background: 'var(--hero-bg)',
+                  border: 'var(--hero-border)',
                   marginBottom: '20px'
                 }}
               >
@@ -600,13 +600,13 @@ export default function Calculators({ isPrivacyMode = false }) {
                 style={{
                   padding: '18px 20px',
                   borderRadius: '16px',
-                  background: swpDepletedMonth ? 'rgba(239, 68, 68, 0.12)' : 'linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(10, 25, 47, 0.8) 100%)',
-                  border: '1px solid var(--border-glass)',
+                  background: swpDepletedMonth ? 'rgba(239, 68, 68, 0.12)' : 'var(--hero-bg)',
+                  border: swpDepletedMonth ? '1px solid #EF4444' : 'var(--hero-border)',
                   marginBottom: '20px'
                 }}
               >
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Remaining Final Balance</div>
-                <div style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: '900', color: swpDepletedMonth ? '#F87171' : '#38BDF8', marginTop: '4px' }}>
+                <div style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: '900', color: swpDepletedMonth ? '#F87171' : 'var(--primary)', marginTop: '4px' }}>
                   {formatInr(swpRemaining)}
                 </div>
                 {swpDepletedMonth && (
@@ -730,13 +730,13 @@ export default function Calculators({ isPrivacyMode = false }) {
                 style={{
                   padding: '18px 20px',
                   borderRadius: '16px',
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(10, 25, 47, 0.8) 100%)',
-                  border: '1px solid var(--border-glass)',
+                  background: 'var(--hero-bg)',
+                  border: 'var(--hero-border)',
                   marginBottom: '20px'
                 }}
               >
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Guaranteed EPF Retirement Corpus</div>
-                <div style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: '900', color: '#10B981', marginTop: '4px' }}>
+                <div style={{ fontSize: 'clamp(26px, 4vw, 36px)', fontWeight: '900', color: 'var(--primary)', marginTop: '4px' }}>
                   {formatInr(epfBalance)}
                 </div>
               </div>
@@ -850,13 +850,13 @@ export default function Calculators({ isPrivacyMode = false }) {
                 style={{
                   padding: '16px 18px',
                   borderRadius: '16px',
-                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(16, 185, 129, 0.12) 100%)',
-                  border: '1px solid var(--border-glass)',
+                  background: 'var(--hero-bg)',
+                  border: 'var(--hero-border)',
                   marginBottom: '20px'
                 }}
               >
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Opportunity Wealth Gap</div>
-                <div style={{ fontSize: 'clamp(24px, 3.5vw, 32px)', fontWeight: '900', color: '#10B981', marginTop: '2px' }}>
+                <div style={{ fontSize: 'clamp(24px, 3.5vw, 32px)', fontWeight: '900', color: 'var(--primary)', marginTop: '2px' }}>
                   +{formatInr(policyWealthGap)}
                 </div>
                 <div style={{ fontSize: '12px', color: '#38BDF8', fontWeight: '700', marginTop: '4px' }}>

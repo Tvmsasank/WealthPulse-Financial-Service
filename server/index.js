@@ -140,7 +140,7 @@ app.get('/api/auth/me', (req, res) => {
   res.json({ user });
 });
 
-async function sendEmailWithFallback({ to, subject, html }) {
+async function sendEmailWithFallback({ to, subject, text, html }) {
   const user = (process.env.SMTP_USER || 'venkatamanishashankt@gmail.com').trim();
   const pass = (process.env.SMTP_PASS || 'vmvjeagfuqniuydc').trim().replace(/\s+/g, '');
 
@@ -163,6 +163,7 @@ async function sendEmailWithFallback({ to, subject, html }) {
       from: `"WealthPulse Security" <${user}>`,
       to: to.trim(),
       subject,
+      text: text || '',
       html
     });
     console.log(`[WealthPulse Email] Successfully delivered email to ${to} via Gmail Service (IPv4). MessageId: ${info.messageId}`);
@@ -187,6 +188,7 @@ async function sendEmailWithFallback({ to, subject, html }) {
       from: `"WealthPulse Security" <${user}>`,
       to: to.trim(),
       subject,
+      text: text || '',
       html
     });
     console.log(`[WealthPulse Email] Successfully delivered email to ${to} via SSL 465 (IPv4). MessageId: ${info.messageId}`);
@@ -212,6 +214,7 @@ async function sendEmailWithFallback({ to, subject, html }) {
       from: `"WealthPulse Security" <${user}>`,
       to: to.trim(),
       subject,
+      text: text || '',
       html
     });
     console.log(`[WealthPulse Email] Successfully delivered email to ${to} via Port 587 (IPv4). MessageId: ${info.messageId}`);
@@ -223,8 +226,8 @@ async function sendEmailWithFallback({ to, subject, html }) {
 }
 
 async function sendResetEmail(toEmail, resetUrl) {
-  const timeCode = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-  const subject = `🔑 Reset Your WealthPulse Password [${timeCode}]`;
+  const subject = 'Reset Your WealthPulse Password';
+  const text = `You requested a password reset for your WealthPulse account (${toEmail}).\n\nClick the link below to reset your password:\n${resetUrl}\n\nIf you did not request this, you can safely ignore this email. This link will expire in 1 hour.`;
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 28px; border: 1px solid #10B981; border-radius: 18px; background: #040D1A; color: #FFFFFF;">
       <div style="text-align: center; margin-bottom: 24px;">
@@ -249,14 +252,16 @@ async function sendResetEmail(toEmail, resetUrl) {
     </div>
   `;
 
-  return await sendEmailWithFallback({ to: toEmail, subject, html });
+  return await sendEmailWithFallback({ to: toEmail, subject, text, html });
 }
 
 async function sendMpinResetEmail(toEmail, resetMpinUrl, isLocked = false) {
-  const timeCode = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
   const subject = isLocked 
-    ? `🔒 WealthPulse Security Alert: Account Locked [${timeCode}]` 
-    : `🔑 Reset Your WealthPulse 4-Digit MPIN [${timeCode}]`;
+    ? 'WealthPulse Security Alert: Account Locked' 
+    : 'Reset Your WealthPulse 4-Digit MPIN';
+  const text = isLocked
+    ? `Your WealthPulse account (${toEmail}) was locked due to incorrect MPIN attempts.\n\nReset link: ${resetMpinUrl}\n\nLink expires in 1 hour.`
+    : `You requested to reset your 4-digit MPIN for WealthPulse (${toEmail}).\n\nReset link: ${resetMpinUrl}\n\nLink expires in 1 hour.`;
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 28px; border: 1px solid #10B981; border-radius: 18px; background: #040D1A; color: #FFFFFF;">
       <div style="text-align: center; margin-bottom: 24px;">
@@ -265,7 +270,7 @@ async function sendMpinResetEmail(toEmail, resetMpinUrl, isLocked = false) {
       </div>
 
       <h3 style="color: #FFFFFF; margin-top: 0; font-size: 18px;">
-        ${isLocked ? '⚠️ Security Lockout: Reset MPIN to Unlock' : 'Reset Your 4-Digit Security MPIN'}
+        ${isLocked ? 'Security Lockout: Reset MPIN to Unlock' : 'Reset Your 4-Digit Security MPIN'}
       </h3>
       <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
         ${isLocked 
@@ -285,7 +290,7 @@ async function sendMpinResetEmail(toEmail, resetMpinUrl, isLocked = false) {
     </div>
   `;
 
-  return await sendEmailWithFallback({ to: toEmail, subject, html });
+  return await sendEmailWithFallback({ to: toEmail, subject, text, html });
 }
 
 // POST /api/auth/forgot-password

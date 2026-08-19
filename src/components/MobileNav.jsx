@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Home,
   LayoutDashboard,
@@ -38,6 +38,18 @@ const MORE_TABS = [
 
 export default function MobileNav({ activeTab, onSelectTab, user, onOpenProfile, onLogout }) {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+
+  // Lock background scroll when drawer is open
+  useEffect(() => {
+    if (isMoreOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMoreOpen]);
 
   const handleTabClick = (tabId) => {
     onSelectTab(tabId);
@@ -87,35 +99,34 @@ export default function MobileNav({ activeTab, onSelectTab, user, onOpenProfile,
             onClick={e => e.stopPropagation()}
             style={{
               width: '100%',
+              maxHeight: '85vh',
+              overflowY: 'auto',
               background: 'var(--bg-card)',
               backdropFilter: 'blur(30px) saturate(190%)',
               WebkitBackdropFilter: 'blur(30px) saturate(190%)',
               borderTop: '1px solid var(--border-glass)',
               borderTopLeftRadius: '24px',
               borderTopRightRadius: '24px',
-              padding: '20px 20px 36px 20px',
+              padding: '24px 20px 36px 20px',
               boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.5)',
               animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >
-            {/* Drawer Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '32px', height: '4px', background: 'var(--text-muted)', borderRadius: '2px', margin: '0 auto 12px auto' }}></div>
-              </div>
+            {/* Drawer Header (Clean, without the top handle bar) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+                All Features & Settings
+              </h3>
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
                 onClick={() => setIsMoreOpen(false)}
-                style={{ padding: '6px', color: 'var(--text-muted)' }}
+                style={{ padding: '6px', color: 'var(--text-muted)', borderRadius: '50%' }}
+                aria-label="Close"
               >
                 <X size={20} />
               </button>
             </div>
-
-            <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '16px', color: 'var(--text-main)' }}>
-              All Features & Settings
-            </h3>
 
             {/* Grid of Remaining Features */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '20px' }}>
@@ -131,13 +142,13 @@ export default function MobileNav({ activeTab, onSelectTab, user, onOpenProfile,
                       display: 'flex',
                       alignItems: 'center',
                       gap: '10px',
-                      padding: '12px 14px',
-                      borderRadius: '12px',
+                      padding: '14px',
+                      borderRadius: '14px',
                       background: isActive ? 'var(--primary-light)' : 'rgba(255, 255, 255, 0.04)',
                       border: `1px solid ${isActive ? 'var(--primary)' : 'var(--border-color)'}`,
                       color: isActive ? 'var(--primary)' : 'var(--text-main)',
                       fontSize: '13px',
-                      fontWeight: '600',
+                      fontWeight: '700',
                       textAlign: 'left',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease'
@@ -157,7 +168,7 @@ export default function MobileNav({ activeTab, onSelectTab, user, onOpenProfile,
                   <button
                     type="button"
                     className="btn btn-secondary btn-sm"
-                    style={{ flex: 1, fontSize: '13px', padding: '10px' }}
+                    style={{ flex: 1, fontSize: '13px', padding: '12px', borderRadius: '12px', fontWeight: '700' }}
                     onClick={() => { setIsMoreOpen(false); onOpenProfile(); }}
                   >
                     <User size={16} /> My Account
@@ -167,7 +178,7 @@ export default function MobileNav({ activeTab, onSelectTab, user, onOpenProfile,
                   <button
                     type="button"
                     className="btn btn-secondary btn-sm"
-                    style={{ flex: 1, fontSize: '13px', padding: '10px', color: 'var(--danger)' }}
+                    style={{ flex: 1, fontSize: '13px', padding: '12px', borderRadius: '12px', fontWeight: '700', color: 'var(--danger)' }}
                     onClick={() => { setIsMoreOpen(false); onLogout(); }}
                   >
                     <LogOut size={16} /> Sign Out
