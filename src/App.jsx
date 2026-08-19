@@ -607,44 +607,84 @@ export default function App() {
             </div>
           ) : !user ? (
             /* Public Welcome / Resume Showcase Banner when Logged Out */
-            <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-              <div className="card" style={{ padding: '48px 32px', background: 'linear-gradient(135deg, rgba(124, 110, 230, 0.1) 0%, rgba(79, 70, 229, 0.05) 100%)', border: '1px solid var(--primary-light)' }}>
-                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto' }}>
-                  <Shield size={32} />
+            <div className="welcome-hero-container">
+              <div className="welcome-hero-card">
+                <div
+                  style={{
+                    width: '54px',
+                    height: '54px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, var(--primary) 0%, #059669 100%)',
+                    color: '#000000',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px auto',
+                    boxShadow: '0 8px 24px var(--primary-glow)'
+                  }}
+                >
+                  <Shield size={28} />
                 </div>
 
-                <h2 style={{ fontSize: '26px', fontWeight: '800', marginBottom: '12px' }}>
+                <h2 className="welcome-hero-title">
                   Real-Time Wealth & Investment Portfolio Tracker
                 </h2>
-                <p style={{ fontSize: '15px', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '28px', maxWidth: '600px', margin: '0 auto 28px auto' }}>
+
+                <p className="welcome-hero-desc">
                   WealthPulse provides live stock market tracking, AMFI mutual fund NAVs, encrypted multi-user financial tracking with Face ID, 4-digit MPIN, and Google Drive integration in <strong>₹ (INR)</strong>.
                 </p>
 
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                  <button className="btn btn-primary" style={{ padding: '12px 24px', fontSize: '15px' }} onClick={() => { setAuthModalMode('register'); setIsAuthModalOpen(true); }}>
-                    <UserPlus size={18} /> Create Your Account
+                <div className="welcome-actions-wrap">
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => { setAuthModalMode('register'); setIsAuthModalOpen(true); }}
+                  >
+                    <UserPlus size={17} /> Create Your Account
                   </button>
-                  <button className="btn btn-secondary" style={{ padding: '12px 24px', fontSize: '15px' }} onClick={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}>
-                    <LogIn size={18} /> Sign In
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
+                  >
+                    <LogIn size={17} /> Sign In
                   </button>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', marginTop: '40px', paddingTop: '28px', borderTop: '1px solid var(--border-color)', textTransform: 'none' }}>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--primary)' }}>👤 Face ID / Touch ID</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>W3C WebAuthn Passkeys</div>
+                {/* 2x2 Responsive Feature Tiles */}
+                <div className="welcome-features-grid">
+                  <div className="welcome-feature-card">
+                    <div className="feat-title" style={{ fontSize: '12px', fontWeight: '800', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      👤 Touch / Face ID
+                    </div>
+                    <div className="feat-sub" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      W3C WebAuthn Passkeys
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--success)' }}>🔢 4-Digit MPIN</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Fast numeric lock pad</div>
+
+                  <div className="welcome-feature-card">
+                    <div className="feat-title" style={{ fontSize: '12px', fontWeight: '800', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      🔢 4-Digit MPIN
+                    </div>
+                    <div className="feat-sub" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      Fast numeric keypad lock
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--info)' }}>🔒 Bcrypt Encrypted</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Salted 10-round passwords</div>
+
+                  <div className="welcome-feature-card">
+                    <div className="feat-title" style={{ fontSize: '12px', fontWeight: '800', color: 'var(--info)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      🔒 Bcrypt Encrypted
+                    </div>
+                    <div className="feat-sub" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      Salted 10-round hashing
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-main)' }}>🔑 JWT Sessions</div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Token authorization</div>
+
+                  <div className="welcome-feature-card">
+                    <div className="feat-title" style={{ fontSize: '12px', fontWeight: '800', color: '#FBBF24', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      🔑 JWT Sessions
+                    </div>
+                    <div className="feat-sub" style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      Multi-device sync & cloud
+                    </div>
                   </div>
                 </div>
               </div>

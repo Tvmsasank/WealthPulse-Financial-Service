@@ -814,3 +814,121 @@ select.form-control option {
   .mobile-theme-selector { display: block !important; }
   .desktop-only-action { display: none !important; }
 }
+
+/* Welcome / Logged-Out Hero Card - Responsive & Modern */
+.welcome-hero-container {
+  padding: 32px 16px;
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.welcome-hero-card {
+  padding: 40px 32px;
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.75) 100%);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--border-glass);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-hero-title {
+  font-size: clamp(20px, 4.5vw, 28px);
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  line-height: 1.25;
+  margin-bottom: 12px;
+  color: var(--text-main);
+}
+
+.welcome-hero-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0 auto 28px auto;
+  max-width: 520px;
+}
+
+.welcome-actions-wrap {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.welcome-features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.welcome-feature-card {
+  padding: 12px 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.welcome-feature-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 640px) {
+  .welcome-hero-container {
+    padding: 16px 10px;
+  }
+
+  .welcome-hero-card {
+    padding: 26px 18px;
+    border-radius: 22px;
+  }
+
+  .welcome-hero-desc {
+    font-size: 12.5px;
+    margin-bottom: 22px;
+  }
+
+  .welcome-actions-wrap {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .welcome-actions-wrap .btn {
+    width: 100%;
+    padding: 13px 18px !important;
+    font-size: 14px !important;
+    justify-content: center;
+  }
+
+  .welcome-features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding-top: 20px;
+  }
+
+  .welcome-feature-card {
+    padding: 10px 10px;
+    border-radius: 12px;
+  }
+
+  .welcome-feature-card .feat-title {
+    font-size: 11.5px !important;
+  }
+
+  .welcome-feature-card .feat-sub {
+    font-size: 10px !important;
+  }
+}
