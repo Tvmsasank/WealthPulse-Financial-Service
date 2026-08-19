@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FolderSync,
   Upload,
@@ -13,19 +13,21 @@ import {
   Landmark,
   TrendingUp,
   Shield,
-  Lock
+  Lock,
+  ArrowUpRight,
+  ArrowDownRight
 } from 'lucide-react';
 
-const LIVE_TICKERS = [
-  { name: 'NIFTY 50', value: '24,050.05', change: '+237.65', pct: '+0.98%', isUp: true },
-  { name: 'SENSEX', value: '78,907.64', change: '+820.56', pct: '+1.06%', isUp: true },
-  { name: 'BANK NIFTY', value: '51,240.20', change: '+426.30', pct: '+0.84%', isUp: true },
-  { name: 'S&P 500', value: '5,691.76', change: '+38.50', pct: '+0.68%', isUp: true },
-  { name: 'NASDAQ', value: '18,289.71', change: '+239.80', pct: '+1.33%', isUp: true },
-  { name: 'DOW JONES', value: '40,834.97', change: '+185.20', pct: '+0.45%', isUp: true },
-  { name: 'GOLD 24K', value: '₹72,450/10g', change: '+₹320', pct: '+0.45%', isUp: true },
-  { name: 'SILVER', value: '₹84,200/kg', change: '+₹950', pct: '+1.15%', isUp: true },
-  { name: 'USD/INR', value: '₹83.92', change: '+0.03', pct: '+0.04%', isUp: true }
+const INITIAL_TICKERS = [
+  { name: 'NIFTY 50', numValue: 24050.05, change: '+237.65', pct: '+0.98%', isUp: true, prefix: '' },
+  { name: 'SENSEX', numValue: 78907.64, change: '+820.56', pct: '+1.06%', isUp: true, prefix: '' },
+  { name: 'BANK NIFTY', numValue: 51240.20, change: '+426.30', pct: '+0.84%', isUp: true, prefix: '' },
+  { name: 'S&P 500', numValue: 5691.76, change: '+38.50', pct: '+0.68%', isUp: true, prefix: '' },
+  { name: 'NASDAQ', numValue: 18289.71, change: '+239.80', pct: '+1.33%', isUp: true, prefix: '' },
+  { name: 'DOW JONES', numValue: 40834.97, change: '+185.20', pct: '+0.45%', isUp: true, prefix: '' },
+  { name: 'GOLD 24K', numValue: 72450, change: '+₹320', pct: '+0.45%', isUp: true, prefix: '₹', suffix: '/10g' },
+  { name: 'SILVER', numValue: 84200, change: '+₹950', pct: '+1.15%', isUp: true, prefix: '₹', suffix: '/kg' },
+  { name: 'USD/INR', numValue: 83.92, change: '+0.03', pct: '+0.04%', isUp: true, prefix: '₹' }
 ];
 
 export default function Header({
@@ -44,6 +46,34 @@ export default function Header({
   onTogglePrivacyMode
 }) {
   const isDark = theme !== 'light';
+  const [tickers, setTickers] = useState(INITIAL_TICKERS);
+  const [flashedTicker, setFlashedTicker] = useState(null); // { index, dir }
+
+  // ⚡ Live Real-Time Micro-Ticking Simulation (Every 3 seconds)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const targetIdx = Math.floor(Math.random() * INITIAL_TICKERS.length);
+      const isUp = Math.random() > 0.45;
+      const deltaFactor = (Math.random() * 0.0015 + 0.0003) * (isUp ? 1 : -1);
+
+      setTickers(prev => {
+        const next = [...prev];
+        const item = { ...next[targetIdx] };
+        const updatedNum = item.numValue * (1 + deltaFactor);
+        const diff = updatedNum - item.numValue;
+        item.numValue = updatedNum;
+        item.isUp = isUp;
+        item.pct = (isUp ? '+' : '') + (Math.random() * 0.4 + (isUp ? 0.6 : -0.3)).toFixed(2) + '%';
+        next[targetIdx] = item;
+        return next;
+      });
+
+      setFlashedTicker({ index: targetIdx, dir: isUp ? 'up' : 'down' });
+      setTimeout(() => setFlashedTicker(null), 900);
+    }, 3200);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const getInitials = (name) => {
     if (!name) return 'U';
@@ -57,43 +87,105 @@ export default function Header({
     if (onSelectTheme) onSelectTheme(nextTheme);
   };
 
+  const formatTickerVal = (t) => {
+    const formatted = t.numValue > 1000
+      ? t.numValue.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })
+      : t.numValue.toFixed(2);
+    return `${t.prefix || ''}${formatted}${t.suffix || ''}`;
+  };
+
+  const renderTickerList = (keySuffix) => (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '20px' }}>
+      {tickers.map((t, idx) => {
+        const isFlashed = flashedTicker?.index === idx;
+        const flashDir = flashedTicker?.dir;
+        return (
+          <div
+            key={`${t.name}-${keySuffix}-${idx}`}
+            className={`ticker-item ${isFlashed ? (flashDir === 'up' ? 'ticked-up' : 'ticked-down') : ''}`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '3px 10px',
+              borderRadius: '8px',
+              cursor: 'default',
+              border: isFlashed
+                ? `1px solid ${flashDir === 'up' ? '#10B981' : '#EF4444'}`
+                : '1px solid transparent',
+              background: isFlashed
+                ? (flashDir === 'up' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)')
+                : 'transparent',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>{t.name}</span>
+            <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{formatTickerVal(t)}</span>
+            <span
+              style={{
+                color: t.isUp ? '#10B981' : '#F87171',
+                fontSize: '10.5px',
+                fontWeight: '800',
+                display: 'inline-flex',
+                alignItems: 'center'
+              }}
+            >
+              {t.isUp ? '▲ ' : '▼ '}{t.pct}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div style={{ width: '100%' }}>
-      {/* 🔴 Top Live Streaming Indices Ticker Bar */}
+      {/* 🔴 Top Live Streaming Marquee Ticker Bar */}
       <div
-        className="no-scrollbar"
         style={{
           width: '100%',
-          background: isDark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(241, 245, 249, 0.9)',
+          background: isDark ? 'rgba(3, 10, 22, 0.95)' : '#F1F5F9',
           borderBottom: '1px solid var(--border-color)',
-          padding: '5px 12px',
+          padding: '5px 0',
           display: 'flex',
           alignItems: 'center',
-          gap: '24px',
-          overflowX: 'auto',
-          whiteSpace: 'nowrap',
+          position: 'relative',
+          overflow: 'hidden',
           fontSize: '11px',
-          fontWeight: '700'
+          zIndex: 30
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#10B981', flexShrink: 0 }}>
-          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981', display: 'inline-block', boxShadow: '0 0 6px #10B981' }} />
+        {/* Fixed LIVE Badge on the Left */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            color: '#10B981',
+            padding: '0 16px',
+            fontWeight: '900',
+            flexShrink: 0,
+            background: isDark ? 'rgba(3, 10, 22, 0.98)' : '#F1F5F9',
+            boxShadow: '10px 0 20px rgba(0,0,0,0.3)',
+            zIndex: 10
+          }}
+        >
+          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10B981', display: 'inline-block', boxShadow: '0 0 8px #10B981', animation: 'pulse 1.5s infinite' }} />
           <span>NSE/BSE LIVE</span>
         </div>
 
-        {LIVE_TICKERS.map((t, idx) => (
-          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-            <span style={{ color: 'var(--text-muted)' }}>{t.name}</span>
-            <span style={{ color: 'var(--text-main)', fontWeight: '800' }}>{t.value}</span>
-            <span style={{ color: t.isUp ? '#10B981' : '#F87171', fontSize: '10.5px' }}>
-              {t.pct}
-            </span>
+        {/* Continuous Smooth Marquee Track */}
+        <div className="ticker-marquee-wrapper" style={{ flex: 1 }}>
+          <div className="ticker-marquee-track">
+            {renderTickerList('set1')}
+            <div style={{ width: '30px' }} />
+            {renderTickerList('set2')}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Main Top Header Bar */}
-      <header className="top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px' }}>
+      <header className="top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px' }}>
         <div className="page-title-area" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {!user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -103,13 +195,13 @@ export default function Header({
               </span>
             </div>
           ) : (
-            <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+            <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '800', letterSpacing: '-0.5px', color: 'var(--text-main)' }}>
               {activeTabTitle}
             </h1>
           )}
         </div>
 
-        <div className="top-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="top-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {/* 👁️ Privacy Mode Masking Toggle Button */}
           {user && (
             <button
@@ -139,7 +231,7 @@ export default function Header({
             className="btn btn-ghost"
             onClick={handleToggleTheme}
             style={{
-              padding: '7px 10px',
+              padding: '7px 12px',
               borderRadius: '20px',
               display: 'flex',
               alignItems: 'center',
@@ -177,7 +269,7 @@ export default function Header({
               </button>
 
               {/* Quick Add Entry */}
-              <button className="btn btn-primary btn-sm" onClick={onOpenAddEntry} title="Add Entry" style={{ padding: '6px 12px' }}>
+              <button className="btn btn-primary btn-sm" onClick={onOpenAddEntry} title="Add Entry" style={{ padding: '6px 14px' }}>
                 <Plus size={16} /> <span className="btn-text-desktop">Add entry</span>
               </button>
 

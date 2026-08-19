@@ -25,8 +25,8 @@ export default function HomeTab({ onNavigateTab, onOpenRegister, user }) {
         style={{
           padding: '48px 36px',
           marginBottom: '32px',
-          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(10, 25, 47, 0.8) 100%)',
-          border: '1px solid var(--border-glass)',
+          background: 'var(--hero-bg)',
+          border: 'var(--hero-border)',
           borderRadius: 'var(--radius-xl)',
           textAlign: 'center',
           position: 'relative',
@@ -51,7 +51,7 @@ export default function HomeTab({ onNavigateTab, onOpenRegister, user }) {
           <Sparkles size={16} /> Next-Gen Personal Wealth & Live Market Intelligence
         </div>
 
-        <h1 style={{ fontSize: '38px', fontWeight: '900', lineHeight: '1.2', marginBottom: '16px', color: '#FFFFFF', letterSpacing: '-0.5px' }}>
+        <h1 style={{ fontSize: '38px', fontWeight: '900', lineHeight: '1.2', marginBottom: '16px', color: 'var(--text-main)', letterSpacing: '-0.5px' }}>
           Master Your Wealth with <span style={{ color: 'var(--primary)', textShadow: '0 0 20px var(--primary-glow)' }}>Real-Time Precision</span>
         </h1>
 

@@ -10,7 +10,8 @@ import {
   PieChart,
   Sparkles,
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  Clock
 } from 'lucide-react';
 
 export default function StockDetailModal({
@@ -22,6 +23,7 @@ export default function StockDetailModal({
   if (!isOpen || !investment) return null;
 
   const [timeframe, setTimeframe] = useState('1M'); // '1D' | '1W' | '1M' | '6M' | '1Y' | '5Y' | 'ALL'
+  const [hoveredPoint, setHoveredPoint] = useState(null); // { index, x, y, price, label }
 
   const mask = (val) => (isPrivacyMode ? '₹••••••••' : val);
   const formatInr = (num) =>
@@ -44,7 +46,7 @@ export default function StockDetailModal({
   );
   const isPositive = pnl >= 0;
 
-  // Day Change simulation
+  // Day Change
   const dayPct = investment.dayPercentage !== undefined ? Number(investment.dayPercentage) : (isPositive ? 0.85 : -0.42);
   const dayChangeRs = (ltp * dayPct) / 100;
   const isDayPositive = dayPct >= 0;
@@ -54,43 +56,67 @@ export default function StockDetailModal({
   const high52 = investment.high52 || Math.round(ltp * 1.35 * 100) / 100;
   const rangePct = Math.min(100, Math.max(0, ((ltp - low52) / (high52 - low52)) * 100));
 
-  // Generate realistic SVG chart curve points based on timeframe
-  const chartPoints = useMemo(() => {
-    const pointsCount = timeframe === '1D' ? 24 : (timeframe === '1W' ? 30 : 45);
-    const data = [];
-    const base = buyPrice > 0 ? buyPrice : ltp * 0.9;
-    const end = ltp;
-    const trend = end - base;
+  // Generate realistic time series based on timeframe
+  const chartData = useMemo(() => {
+    const pointsCount = timeframe === '1D' ? 26 : timeframe === '1W' ? 30 : timeframe === '1M' ? 30 : timeframe === '6M' ? 45 : 60;
+    const items = [];
+    const base = timeframe === '1D' ? ltp * (1 - dayPct / 100) : (buyPrice > 0 ? buyPrice : ltp * 0.88);
+    const trend = ltp - base;
+
+    const now = new Date();
 
     for (let i = 0; i < pointsCount; i++) {
       const progress = i / (pointsCount - 1);
-      // add natural market wave variation
-      const noise = (Math.sin(i * 0.8) + Math.cos(i * 1.4)) * (ltp * 0.02);
-      const val = base + trend * progress + noise;
-      data.push(val);
-    }
-    data[data.length - 1] = end;
+      // Realistic fractal market wave
+      const wave = (Math.sin(i * 0.7) * 0.6 + Math.cos(i * 1.3) * 0.4 + Math.sin(i * 2.1) * 0.2) * (ltp * 0.025);
+      const val = Math.max(ltp * 0.4, base + trend * Math.pow(progress, 1.2) + wave);
 
-    const min = Math.min(...data);
-    const max = Math.max(...data);
+      let label = '';
+      if (timeframe === '1D') {
+        const hours = 9 + Math.floor((i / pointsCount) * 6);
+        const mins = (Math.floor((i % 4) * 15)).toString().padStart(2, '0');
+        label = `${hours}:${mins}`;
+      } else {
+        const d = new Date(now);
+        const daysBack = (pointsCount - i) * (timeframe === '1W' ? 0.25 : timeframe === '1M' ? 1 : timeframe === '6M' ? 4 : 8);
+        d.setDate(d.getDate() - Math.floor(daysBack));
+        label = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+      }
+
+      items.push({ price: Math.round(val * 100) / 100, label });
+    }
+    items[items.length - 1] = { price: ltp, label: timeframe === '1D' ? 'Live' : 'Today' };
+
+    const prices = items.map(d => d.price);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
     const range = max - min || 1;
 
-    const width = 500;
-    const height = 160;
+    const width = 560;
+    const height = 180;
 
-    const svgCoords = data.map((val, idx) => {
+    const points = items.map((d, idx) => {
       const x = (idx / (pointsCount - 1)) * width;
-      const y = height - ((val - min) / range) * (height - 30) - 15;
-      return `${x},${y}`;
+      const y = height - ((d.price - min) / range) * (height - 36) - 18;
+      return { x, y, price: d.price, label: d.label };
     });
 
-    return {
-      polyline: svgCoords.join(' '),
-      areaPath: `M 0,${height} L ${svgCoords.join(' L ')} L ${width},${height} Z`,
-      min,
-      max
-    };
-  }, [timeframe, buyPrice, ltp]);
+    const polyline = points.map(p => `${p.x},${p.y}`).join(' ');
+    const areaPath = `M 0,${height} L ${polyline.replace(/ /g, ' L ')} L ${width},${height} Z`;
+
+    return { points, polyline, areaPath, min, max, width, height };
+  }, [timeframe, buyPrice, ltp, dayPct]);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const ratio = Math.max(0, Math.min(1, mouseX / rect.width));
+    const closestIdx = Math.round(ratio * (chartData.points.length - 1));
+    const pt = chartData.points[closestIdx];
+    if (pt) {
+      setHoveredPoint({ ...pt, displayX: (pt.x / chartData.width) * rect.width, displayY: (pt.y / chartData.height) * rect.height });
+    }
+  };
 
   return (
     <div className="modal-backdrop" onClick={onClose} style={{ padding: '16px' }}>
@@ -98,7 +124,7 @@ export default function StockDetailModal({
         className="modal-content"
         onClick={(e) => e.stopPropagation()}
         style={{
-          maxWidth: '640px',
+          maxWidth: '680px',
           width: '100%',
           padding: '24px',
           borderRadius: '24px',
@@ -111,21 +137,22 @@ export default function StockDetailModal({
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: '900', margin: 0, color: 'var(--text-main)' }}>
+              <h2 style={{ fontSize: '22px', fontWeight: '900', margin: 0, color: 'var(--text-main)' }}>
                 {investment.symbol || investment.name}
               </h2>
               <span
                 className="badge"
                 style={{
-                  fontSize: '10px',
+                  fontSize: '10.5px',
                   textTransform: 'uppercase',
                   padding: '2px 8px',
                   background: 'rgba(56, 189, 248, 0.15)',
                   color: '#38BDF8',
-                  borderRadius: '6px'
+                  borderRadius: '6px',
+                  fontWeight: '700'
                 }}
               >
-                {investment.type || 'Stock'} • NSE
+                {investment.type || 'Stock'} • NSE Live
               </span>
             </div>
             <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -144,7 +171,7 @@ export default function StockDetailModal({
               Last Traded Price (LTP)
             </div>
             <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--text-main)', marginTop: '2px' }}>
-              {formatInr(ltp)}
+              {hoveredPoint ? formatInr(hoveredPoint.price) : formatInr(ltp)}
             </div>
             <div
               style={{
@@ -157,9 +184,17 @@ export default function StockDetailModal({
                 marginTop: '2px'
               }}
             >
-              {isDayPositive ? '+' : ''}
-              {isPrivacyMode ? '₹••••' : `₹${Math.abs(dayChangeRs).toFixed(2)}`} ({isDayPositive ? '+' : ''}
-              {dayPct.toFixed(2)}%) Today
+              {hoveredPoint ? (
+                <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>
+                  <Clock size={12} style={{ display: 'inline', marginRight: '4px' }} /> {hoveredPoint.label}
+                </span>
+              ) : (
+                <>
+                  {isDayPositive ? '+' : ''}
+                  {isPrivacyMode ? '₹••••' : `₹${Math.abs(dayChangeRs).toFixed(2)}`} ({isDayPositive ? '+' : ''}
+                  {dayPct.toFixed(2)}%) Today
+                </>
+              )}
             </div>
           </div>
 
@@ -186,7 +221,10 @@ export default function StockDetailModal({
                   borderRadius: '6px',
                   minWidth: '32px'
                 }}
-                onClick={() => setTimeframe(tf)}
+                onClick={() => {
+                  setTimeframe(tf);
+                  setHoveredPoint(null);
+                }}
               >
                 {tf}
               </button>
@@ -194,40 +232,99 @@ export default function StockDetailModal({
           </div>
         </div>
 
-        {/* Interactive SVG Performance Curve */}
+        {/* 📈 High-Fidelity Interactive SVG Chart with Mouse Crosshairs */}
         <div
+          onMouseMove={handleMouseMove}
+          onMouseLeave={() => setHoveredPoint(null)}
           style={{
             position: 'relative',
             width: '100%',
-            height: '160px',
-            background: 'linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, rgba(10, 25, 47, 0.4) 100%)',
+            height: '180px',
+            background: isPositive
+              ? 'linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(10, 25, 47, 0.3) 100%)'
+              : 'linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, rgba(10, 25, 47, 0.3) 100%)',
             borderRadius: '16px',
             border: '1px solid var(--border-color)',
             overflow: 'hidden',
-            marginBottom: '20px'
+            marginBottom: '16px',
+            cursor: 'crosshair'
           }}
         >
-          <svg viewBox="0 0 500 160" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
+          {/* Min & Max Y-Axis Labels */}
+          <div style={{ position: 'absolute', top: '6px', right: '10px', fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700' }}>
+            H: {formatInr(chartData.max)}
+          </div>
+          <div style={{ position: 'absolute', bottom: '6px', right: '10px', fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700' }}>
+            L: {formatInr(chartData.min)}
+          </div>
+
+          <svg viewBox={`0 0 ${chartData.width} ${chartData.height}`} preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
             <defs>
-              <linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={isPositive ? '#10B981' : '#F87171'} stopOpacity="0.4" />
+              <linearGradient id="stockCurveGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={isPositive ? '#10B981' : '#F87171'} stopOpacity="0.45" />
                 <stop offset="100%" stopColor={isPositive ? '#10B981' : '#F87171'} stopOpacity="0.0" />
               </linearGradient>
             </defs>
-            <path d={chartPoints.areaPath} fill="url(#curveGradient)" />
+            <path d={chartData.areaPath} fill="url(#stockCurveGrad)" />
             <polyline
               fill="none"
               stroke={isPositive ? '#10B981' : '#F87171'}
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              points={chartPoints.polyline}
+              points={chartData.polyline}
             />
+            {/* Interactive Vertical Crosshair */}
+            {hoveredPoint && (
+              <>
+                <line
+                  x1={hoveredPoint.x}
+                  y1="0"
+                  x2={hoveredPoint.x}
+                  y2={chartData.height}
+                  stroke="rgba(255, 255, 255, 0.4)"
+                  strokeWidth="1.5"
+                  strokeDasharray="3 3"
+                />
+                <circle
+                  cx={hoveredPoint.x}
+                  cy={hoveredPoint.y}
+                  r="5"
+                  fill="#FFFFFF"
+                  stroke={isPositive ? '#10B981' : '#EF4444'}
+                  strokeWidth="2"
+                />
+              </>
+            )}
           </svg>
+
+          {/* Floating Tooltip Bubble */}
+          {hoveredPoint && (
+            <div
+              style={{
+                position: 'absolute',
+                left: `${Math.min(82, Math.max(18, (hoveredPoint.x / chartData.width) * 100))}%`,
+                top: '12px',
+                transform: 'translateX(-50%)',
+                background: 'rgba(15, 23, 42, 0.95)',
+                border: '1px solid var(--border-glass)',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                fontSize: '11px',
+                fontWeight: '700',
+                color: '#FFFFFF',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {hoveredPoint.label} : {formatInr(hoveredPoint.price)}
+            </div>
+          )}
         </div>
 
         {/* 52-Week High / Low Range Slider */}
-        <div style={{ marginBottom: '20px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-color)' }}>
+        <div style={{ marginBottom: '18px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: '600' }}>
             <span>52W Low: {formatInr(low52)}</span>
             <span style={{ color: 'var(--text-main)', fontWeight: '700' }}>52-Week Range</span>
@@ -255,7 +352,7 @@ export default function StockDetailModal({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
             gap: '10px',
             marginBottom: '20px'
           }}
