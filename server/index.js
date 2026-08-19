@@ -534,6 +534,10 @@ app.get('/api/user/webhook-config', (req, res) => {
     });
   } catch (err) {
     console.error('GET /api/user/webhook-config error:', err);
+    res.status(500).json({ error: 'Failed to get webhook configuration' });
+  }
+});
+
 // ==========================================
 // RBI ACCOUNT AGGREGATOR (AA) DIRECT BANK FEED ENDPOINTS
 // ==========================================
