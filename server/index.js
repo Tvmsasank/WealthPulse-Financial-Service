@@ -9,6 +9,7 @@ import nodemailer from 'nodemailer';
 import 'dotenv/config';
 import { dbEngine } from './db.js';
 import { refreshHoldingsPrices } from './investments.js';
+import { parseUpiTransactionText } from './upiParser.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -430,6 +431,109 @@ app.delete('/api/transactions', (req, res) => {
   } catch (err) {
     console.error('DELETE /api/transactions error:', err);
     res.status(500).json({ error: 'Failed to delete transaction' });
+  }
+});
+
+// ==========================================
+// REAL-TIME SMART UPI & SMS INGESTION ENDPOINTS
+// ==========================================
+
+// POST /api/transactions/parse-smart-text (Interactive SMS & Natural Language Preview)
+app.post('/api/transactions/parse-smart-text', (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ error: 'Text string required' });
+    }
+
+    const parsed = parseUpiTransactionText(text);
+    if (!parsed) {
+      return res.status(422).json({ error: 'Could not extract financial amount or merchant from text. Please enter like: Paid 10 to Sharma Tea Stall for tea' });
+    }
+
+    res.json({ success: true, parsed });
+  } catch (err) {
+    console.error('POST /api/transactions/parse-smart-text error:', err);
+    res.status(500).json({ error: 'Failed to parse text' });
+  }
+});
+
+// POST /api/transactions/upi-webhook (Automated Real-Time Ingestion for Android Tasker / MacroDroid / SMS)
+app.post('/api/transactions/upi-webhook', (req, res) => {
+  try {
+    const { rawText, text, sms, body: messageBody, email, userEmail, key } = req.body || {};
+    const inputMsg = (rawText || text || sms || messageBody || req.query.text || '').toString();
+
+    if (!inputMsg) {
+      return res.status(400).json({ error: 'SMS / message text required' });
+    }
+
+    // Resolve User ID via Token, Email, or Query
+    let userId = getUserIdFromReq(req);
+    const targetEmail = (email || userEmail || req.query.userEmail || req.query.email || '').toString().trim().toLowerCase();
+    if (!userId && targetEmail) {
+      const user = dbEngine.getUserByEmail(targetEmail);
+      if (user) userId = user.id;
+    }
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized: Valid account email or authentication token required' });
+    }
+
+    const parsed = parseUpiTransactionText(inputMsg);
+    if (!parsed) {
+      return res.status(422).json({
+        error: 'Non-transactional message ignored (no debit/credit amount detected)',
+        receivedText: inputMsg
+      });
+    }
+
+    // Automatically add transaction to user's account in real-time
+    const newTx = dbEngine.addTransaction(userId, parsed);
+
+    res.json({
+      success: true,
+      message: `Successfully synced ₹${parsed.amount} ${parsed.type === 'expense' ? 'paid to' : 'received from'} ${parsed.merchant}!`,
+      transaction: newTx,
+      parsed
+    });
+  } catch (err) {
+    console.error('POST /api/transactions/upi-webhook error:', err);
+    res.status(500).json({ error: err.message || 'Webhook processing failed' });
+  }
+});
+
+// GET /api/user/webhook-config (Returns the user's private webhook URL & Tasker/MacroDroid guide)
+app.get('/api/user/webhook-config', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const state = dbEngine.getState(userId);
+    const user = state.user || {};
+    const host = req.get('host') || 'wealthpulse-financial-service.onrender.com';
+    const protocol = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+    
+    const webhookUrl = `${protocol}://${host}/api/transactions/upi-webhook?userEmail=${encodeURIComponent(user.email || '')}`;
+
+    res.json({
+      webhookUrl,
+      userEmail: user.email,
+      method: 'POST',
+      samplePayload: {
+        rawText: "Sent Rs.10.00 from HDFC Bank A/C *1234 to SHARMA TEA STALL (UPI Ref: 42358912) on 19-Aug-26. Info: Chai and biscuits."
+      },
+      instructions: [
+        "1. Install MacroDroid or Tasker on your Android phone (Free).",
+        "2. Add Trigger: SMS Received (Sender: *HDFC*, *SBI*, *ICICI*, *AXIS*, *GPAY*, *PAYTM*).",
+        "3. Add Action: HTTP Request -> POST to your Webhook URL.",
+        "4. Body: { \"rawText\": \"{sms_body}\" }",
+        "5. Result: Every ₹10 merchant payment or UPI transfer instantly logs into WealthPulse in 0.1s!"
+      ]
+    });
+  } catch (err) {
+    console.error('GET /api/user/webhook-config error:', err);
+    res.status(500).json({ error: 'Failed to get webhook configuration' });
   }
 });
 

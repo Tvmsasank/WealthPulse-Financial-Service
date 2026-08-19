@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Plus, FileText, Trash2, Tag, ChevronDown, Edit3 } from 'lucide-react';
+import { Search, Filter, Plus, FileText, Trash2, Tag, ChevronDown, Edit3, Zap, Sparkles } from 'lucide-react';
 import ConfirmDeleteTxModal from './ConfirmDeleteTxModal';
 
 export default function TransactionsTab({
@@ -14,7 +14,8 @@ export default function TransactionsTab({
   onDeleteTransaction,
   onOpenAddEntry,
   onOpenEditEntry,
-  onOpenTagModal
+  onOpenTagModal,
+  onOpenSmartUpi
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAccount, setSelectedAccount] = useState('');
@@ -40,13 +41,13 @@ export default function TransactionsTab({
   return (
     <div>
       {/* Top Controls Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '700' }}>Transactions</h2>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Search, filter, and manage financial records</p>
+          <h2 style={{ fontSize: '20px', fontWeight: '800' }}>Transactions</h2>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Search, filter, and real-time UPI sync</p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', maxWidth: '100%' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', maxWidth: '100%' }}>
           <div className="period-selector">
             {[
               { id: 'all-time', label: 'All time' },
@@ -66,10 +67,64 @@ export default function TransactionsTab({
             ))}
           </div>
 
+          <button
+            className="btn btn-secondary"
+            onClick={onOpenSmartUpi}
+            style={{
+              fontSize: '13px',
+              gap: '6px',
+              border: '1px solid var(--primary)',
+              color: 'var(--primary)',
+              background: 'rgba(16, 185, 129, 0.08)'
+            }}
+            title="Smart UPI & Bank SMS Auto-Sync"
+          >
+            <Zap size={15} /> <span>Smart UPI / SMS</span>
+          </button>
+
           <button className="btn btn-primary" onClick={onOpenAddEntry} style={{ fontSize: '13px' }}>
             <Plus size={16} /> Add Entry
           </button>
         </div>
+      </div>
+
+      {/* Smart UPI Banner Bar */}
+      <div
+        style={{
+          padding: '12px 16px',
+          borderRadius: '14px',
+          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(10, 25, 47, 0.7) 100%)',
+          border: '1px solid var(--border-glass)',
+          marginBottom: '16px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px',
+          flexWrap: 'wrap'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ padding: '6px', borderRadius: '8px', background: 'var(--primary-light)', color: 'var(--primary)' }}>
+            <Sparkles size={16} />
+          </div>
+          <div>
+            <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-main)' }}>
+              Real-Time UPI Auto-Tracking Active
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              GPay, PhonePe, Paytm, and Indian Bank SMS auto-categorize instantly with merchant & notes
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={onOpenSmartUpi}
+          style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '8px', gap: '4px' }}
+        >
+          <Zap size={13} style={{ color: 'var(--primary)' }} /> Paste SMS or Setup Webhook →
+        </button>
       </div>
 
       {/* Filter Controls Card */}

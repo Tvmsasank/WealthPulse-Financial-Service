@@ -29,7 +29,8 @@ import AuthModal from './components/AuthModal';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
 import UserProfileModal from './components/UserProfileModal';
 import MpinModal from './components/MpinModal';
-import { CheckCircle2, FolderSync, X, Shield, Lock, UserPlus, LogIn, Fingerprint, KeyRound } from 'lucide-react';
+import SmartUpiModal from './components/SmartUpiModal';
+import { CheckCircle2, FolderSync, X, Shield, Lock, UserPlus, LogIn, Fingerprint, KeyRound, Zap } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -59,6 +60,9 @@ export default function App() {
   const [isMpinModalOpen, setIsMpinModalOpen] = useState(false);
   const [mpinModalMode, setMpinModalMode] = useState('verify'); // 'verify' | 'set'
   const [mpinModalEmail, setMpinModalEmail] = useState('');
+
+  // Smart UPI Modal State
+  const [isSmartUpiOpen, setIsSmartUpiOpen] = useState(false);
 
   // Check URL parameters for ?resetToken=... on load
   useEffect(() => {
@@ -674,6 +678,7 @@ export default function App() {
                   onOpenAddEntry={() => { setEditingTx(null); setIsAddEntryOpen(true); }}
                   onOpenEditEntry={tx => { setEditingTx(tx); setIsAddEntryOpen(true); }}
                   onOpenTagModal={tx => setTagModalTx(tx)}
+                  onOpenSmartUpi={() => setIsSmartUpiOpen(true)}
                 />
               )}
 
@@ -930,6 +935,14 @@ export default function App() {
         isOpen={isConfirmWipeOpen}
         onClose={() => setIsConfirmWipeOpen(false)}
         onConfirmWipe={handleConfirmWipeData}
+      />
+
+      <SmartUpiModal
+        isOpen={isSmartUpiOpen}
+        onClose={() => setIsSmartUpiOpen(false)}
+        onTransactionAdded={fetchState}
+        token={token}
+        userEmail={user?.email}
       />
     </div>
   );
