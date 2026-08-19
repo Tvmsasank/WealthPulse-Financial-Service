@@ -135,17 +135,29 @@ app.get('/api/auth/me', (req, res) => {
   res.json({ user });
 });
 
-async function sendResetEmail(toEmail, resetUrl) {
+function getMailTransporter() {
   const user = (process.env.SMTP_USER || 'venkatamanishashankt@gmail.com').trim();
   const pass = (process.env.SMTP_PASS || 'vmvjeagfuqniuydc').trim().replace(/\s+/g, '');
 
-  if (user && pass && toEmail) {
-    try {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user, pass }
-      });
+  return {
+    user,
+    transporter: nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user, pass },
+      connectionTimeout: 8000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000
+    })
+  };
+}
 
+async function sendResetEmail(toEmail, resetUrl) {
+  const { user, transporter } = getMailTransporter();
+
+  if (user && toEmail) {
+    try {
       const info = await transporter.sendMail({
         from: `"WealthPulse Security" <${user}>`,
         to: toEmail.trim(),
@@ -186,16 +198,10 @@ async function sendResetEmail(toEmail, resetUrl) {
 }
 
 async function sendMpinResetEmail(toEmail, resetMpinUrl, isLocked = false) {
-  const user = (process.env.SMTP_USER || 'venkatamanishashankt@gmail.com').trim();
-  const pass = (process.env.SMTP_PASS || 'vmvjeagfuqniuydc').trim().replace(/\s+/g, '');
+  const { user, transporter } = getMailTransporter();
 
-  if (user && pass && toEmail) {
+  if (user && toEmail) {
     try {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user, pass }
-      });
-
       const info = await transporter.sendMail({
         from: `"WealthPulse Security" <${user}>`,
         to: toEmail.trim(),

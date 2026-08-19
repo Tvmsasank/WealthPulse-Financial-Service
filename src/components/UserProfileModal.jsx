@@ -42,19 +42,30 @@ export default function UserProfileModal({
   const [deleteError, setDeleteError] = useState('');
 
   const handleRequestMpinReset = async () => {
+    const emailToUse = (user?.email || localStorage.getItem('wealthpulse_remembered_email') || '').trim();
+    if (!emailToUse) {
+      setMpinResetMessage('User email not found. Please log in again.');
+      return;
+    }
     setMpinResetMessage('');
     setMpinResetLoading(true);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
       const res = await fetch('/api/auth/forgot-mpin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email })
+        body: JSON.stringify({ email: emailToUse }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to send MPIN reset link');
-      setMpinResetMessage(`MPIN reset link sent to ${user.email}! Check your Gmail inbox.`);
+      setMpinResetMessage(`MPIN reset link sent to ${emailToUse}! Check your Gmail inbox.`);
     } catch (err) {
-      setMpinResetMessage(err.message || 'Failed to send MPIN reset link');
+      setMpinResetMessage(err.name === 'AbortError' ? 'Server timed out. Please check your network and retry.' : (err.message || 'Failed to send MPIN reset link'));
     } finally {
       setMpinResetLoading(false);
     }

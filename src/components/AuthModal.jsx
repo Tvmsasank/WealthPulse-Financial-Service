@@ -179,18 +179,19 @@ export default function AuthModal({
   };
 
   const handleForgotMpin = async () => {
-    const targetEmail = email || rememberedEmail;
+    const targetEmail = (email || rememberedEmail || '').trim();
     if (!targetEmail) {
       setError('Please enter your account email to receive an MPIN reset link');
       return;
     }
     setLoading(true);
     setError('');
+    setSuccess('');
     try {
       const res = await fetch('/api/auth/forgot-mpin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: targetEmail.trim() })
+        body: JSON.stringify({ email: targetEmail })
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to send MPIN reset link');
@@ -556,7 +557,11 @@ export default function AuthModal({
                 type="button"
                 className="btn btn-ghost btn-sm"
                 style={{ color: '#F87171', gap: '4px', padding: '6px 6px', fontSize: '11.5px' }}
-                onClick={handleForgotMpin}
+                onClick={() => {
+                  setError('');
+                  setSuccess('');
+                  setAuthMethod('forgot_mpin');
+                }}
                 disabled={loading}
               >
                 <KeyRound size={13} /> Reset MPIN
@@ -746,6 +751,68 @@ export default function AuthModal({
                 }}
               >
                 Sign In
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* MODE 4: FORGOT 4-DIGIT MPIN */}
+        {authMethod === 'forgot_mpin' && (
+          <form onSubmit={async (e) => { e.preventDefault(); await handleForgotMpin(); }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px', lineHeight: '1.5' }}>
+              Enter your registered account email to receive a secure link to reset your 4-digit MPIN.
+            </p>
+
+            <div className="form-group">
+              <label className="form-label">Registered Email Address</label>
+              <div style={{ position: 'relative' }}>
+                <Mail size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
+                <input
+                  type="email"
+                  className="form-control"
+                  style={{ paddingLeft: '36px' }}
+                  placeholder="name@example.com"
+                  value={email || rememberedEmail}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '12px', fontSize: '15px', marginTop: '8px' }}
+              disabled={loading}
+            >
+              {loading ? 'Sending MPIN Link...' : 'Send 4-Digit MPIN Reset Link →'}
+            </button>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '18px', fontSize: '13px' }}>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ color: 'var(--primary)', padding: 0, fontWeight: '600' }}
+                onClick={() => {
+                  setError('');
+                  setSuccess('');
+                  setAuthMethod('mpin');
+                }}
+              >
+                ← Back to MPIN Keypad
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ color: 'var(--text-muted)', padding: 0 }}
+                onClick={() => {
+                  setError('');
+                  setSuccess('');
+                  setAuthMethod('password');
+                }}
+              >
+                Password Login
               </button>
             </div>
           </form>

@@ -67,29 +67,8 @@ export default function LandingPage({
 
   return (
     <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '0 16px 60px 16px' }}>
-      {/* 🚀 HERO SECTION WITH FLOATING FINTECH BADGES */}
+      {/* 🚀 HERO SECTION */}
       <section style={{ textAlign: 'center', padding: '40px 0 50px 0', position: 'relative' }}>
-        {/* Floating Fintech Watermarks (Wealthsimple inspired) */}
-        <div className="floating-fintech-badge anim-float-1" style={{ position: 'absolute', top: '5%', left: '-10px', zIndex: 1 }}>
-          <TrendingUp size={16} style={{ color: '#10B981' }} />
-          <span>RELIANCE +1.4%</span>
-        </div>
-
-        <div className="floating-fintech-badge anim-float-2" style={{ position: 'absolute', top: '12%', right: '-10px', zIndex: 1 }}>
-          <Sparkles size={16} style={{ color: '#FBBF24' }} />
-          <span>₹14.82L Net Worth</span>
-        </div>
-
-        <div className="floating-fintech-badge anim-float-3" style={{ position: 'absolute', top: '50%', left: '-25px', zIndex: 1 }}>
-          <Zap size={16} style={{ color: '#38BDF8' }} />
-          <span>Smart UPI 1-Tap</span>
-        </div>
-
-        <div className="floating-fintech-badge anim-float-1" style={{ position: 'absolute', top: '60%', right: '-25px', zIndex: 1 }}>
-          <ShieldCheck size={16} style={{ color: '#10B981' }} />
-          <span>Touch ID Passkey</span>
-        </div>
-
         {/* Top Innovation Badge */}
         <div
           style={{
