@@ -25,7 +25,7 @@ export default function AuthModal({
 
   const [authMethod, setAuthMethod] = useState(getInitialAuthMethod);
   const [name, setName] = useState('');
-  const [email, setEmail] = useState(rememberedEmail);
+  const [email, setEmail] = useState(() => initialMode === 'register' ? '' : rememberedEmail);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -38,7 +38,6 @@ export default function AuthModal({
 
   useEffect(() => {
     const savedEmail = localStorage.getItem('wealthpulse_remembered_email') || localStorage.getItem('ledgerly_remembered_email') || '';
-    setEmail(savedEmail);
     setMpin('');
     setError('');
     setSuccess('');
@@ -47,8 +46,14 @@ export default function AuthModal({
 
     if (initialMode === 'register') {
       setAuthMethod('register');
+      setEmail('');
+      setName('');
+      setPassword('');
+      setConfirmPassword('');
       return;
     }
+
+    setEmail(savedEmail);
 
     if (savedEmail) {
       fetch('/api/auth/check-methods', {
@@ -602,6 +607,25 @@ export default function AuthModal({
             <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '15px' }} disabled={loading}>
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
+
+            <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
+              New to WealthPulse?{' '}
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ padding: 0, color: 'var(--primary)', fontWeight: '700' }}
+                onClick={() => {
+                  setAuthMethod('register');
+                  setEmail('');
+                  setName('');
+                  setPassword('');
+                  setConfirmPassword('');
+                  setError('');
+                }}
+              >
+                Create Account
+              </button>
+            </div>
           </form>
         )}
 
@@ -659,6 +683,23 @@ export default function AuthModal({
             <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '15px' }} disabled={loading}>
               {loading ? 'Creating Account...' : 'Create Account'}
             </button>
+
+            <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
+              Already have an account?{' '}
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                style={{ padding: 0, color: 'var(--primary)', fontWeight: '700' }}
+                onClick={() => {
+                  const savedEmail = localStorage.getItem('wealthpulse_remembered_email') || localStorage.getItem('ledgerly_remembered_email') || '';
+                  setEmail(savedEmail);
+                  setAuthMethod('password');
+                  setError('');
+                }}
+              >
+                Sign In
+              </button>
+            </div>
           </form>
         )}
       </div>
