@@ -218,12 +218,22 @@ export default function Header({
             </button>
           </>
         ) : (
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button className="btn btn-secondary btn-sm" onClick={onOpenLogin} style={{ padding: '6px 10px', fontSize: '12px' }}>
-              <LogIn size={14} /> Sign In
+          <div className="header-auth-group" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm btn-sign-in"
+              onClick={onOpenLogin}
+              style={{ padding: '6px 10px', fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', color: 'var(--text-main)' }}
+            >
+              Sign In
             </button>
-            <button className="btn btn-primary btn-sm" onClick={onOpenRegister} style={{ padding: '6px 10px', fontSize: '12px' }}>
-              <UserPlus size={14} /> Register
+            <button
+              type="button"
+              className="btn btn-primary btn-sm btn-register"
+              onClick={onOpenRegister}
+              style={{ padding: '6px 14px', fontSize: '13px', fontWeight: '800', whiteSpace: 'nowrap', borderRadius: '12px' }}
+            >
+              Register
             </button>
           </div>
         )}

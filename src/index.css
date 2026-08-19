@@ -738,6 +738,28 @@ select.form-control option {
 }
 
 @media (max-width: 480px) {
+  .top-bar {
+    padding: 0 10px !important;
+  }
+
+  .top-actions {
+    gap: 4px !important;
+  }
+
+  .header-auth-group {
+    gap: 4px !important;
+  }
+
+  .header-auth-group .btn-sign-in {
+    padding: 5px 8px !important;
+    font-size: 12px !important;
+  }
+
+  .header-auth-group .btn-register {
+    padding: 5px 12px !important;
+    font-size: 12px !important;
+  }
+
   .grid-4 {
     gap: 8px !important;
   }
