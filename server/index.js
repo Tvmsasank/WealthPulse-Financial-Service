@@ -558,13 +558,16 @@ app.get('/api/aa/linked-accounts', (req, res) => {
 });
 
 // POST /api/aa/initiate (Step 1: Initiate Consent & Bank OTP)
-app.post('/api/aa/initiate', (req, res) => {
+app.post('/api/aa/initiate', async (req, res) => {
   try {
     const userId = getUserIdFromReq(req);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
+    const user = dbEngine.getUserById(userId);
+    const userEmail = user?.email || '';
+
     const { mobileNumber, bankCode } = req.body;
-    const result = initiateAaConsent({ userId, mobileNumber, bankCode });
+    const result = await initiateAaConsent({ userId, userEmail, mobileNumber, bankCode });
     res.json(result);
   } catch (err) {
     console.error('POST /api/aa/initiate error:', err);

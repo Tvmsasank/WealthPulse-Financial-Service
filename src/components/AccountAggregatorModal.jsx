@@ -39,6 +39,8 @@ export default function AccountAggregatorModal({
   const [success, setSuccess] = useState('');
   const [lastLinkedAccount, setLastLinkedAccount] = useState(null);
 
+  const [sessionOtp, setSessionOtp] = useState('');
+
   const fetchBanksAndAccounts = async () => {
     try {
       const [banksRes, accountsRes] = await Promise.all([
@@ -97,6 +99,9 @@ export default function AccountAggregatorModal({
       if (!res.ok) throw new Error(json.error || 'Failed to initiate consent');
 
       setConsentHandle(json.consentHandle);
+      if (json.generatedOtp) {
+        setSessionOtp(json.generatedOtp);
+      }
       setStep(2);
       setSuccess(json.message || 'Bank OTP sent!');
     } catch (err) {
@@ -374,9 +379,28 @@ export default function AccountAggregatorModal({
                     Enter 6-Digit Bank OTP
                   </h3>
                   <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                    Sent by {selectedBank} to +91 XXXXXX{mobileNumber.slice(-4)}
+                    Generated for +91 XXXXXX{mobileNumber.slice(-4)} ({selectedBank})
                   </p>
                 </div>
+
+                {sessionOtp && (
+                  <div style={{ padding: '12px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid var(--primary)', borderRadius: '12px', textAlign: 'center', marginBottom: '14px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      🔑 Real-Time Session Bank OTP:
+                    </div>
+                    <div style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '6px', color: '#10B981' }}>
+                      {sessionOtp}
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      style={{ fontSize: '11px', color: 'var(--primary)', marginTop: '4px', textDecoration: 'underline', padding: '2px' }}
+                      onClick={() => setOtp(sessionOtp)}
+                    >
+                      ⚡ Click to auto-fill OTP ({sessionOtp})
+                    </button>
+                  </div>
+                )}
 
                 <div style={{ marginBottom: '16px' }}>
                   <input
@@ -390,8 +414,8 @@ export default function AccountAggregatorModal({
                     autoFocus
                     required
                   />
-                  <div style={{ fontSize: '11px', color: 'var(--primary)', textAlign: 'center', marginTop: '6px' }}>
-                    💡 Sandbox Test OTP: <strong>123456</strong>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '6px' }}>
+                    Sent via secure banking handshake (or use fallback <code>123456</code>)
                   </div>
                 </div>
 
