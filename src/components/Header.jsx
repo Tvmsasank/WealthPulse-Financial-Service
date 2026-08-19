@@ -148,12 +148,12 @@ export default function Header({
               <Upload size={16} /> <span>Import</span>
             </button>
 
-            {/* RBI Account Aggregator Live Bank Sync */}
+            {/* RBI Account Aggregator Live Bank Sync (Disabled for future release) */}
             <button
               className="btn btn-ghost btn-sm"
-              onClick={onOpenAaModal}
-              style={{ color: 'var(--primary)', gap: '5px', padding: '6px 10px', borderRadius: '10px' }}
-              title="RBI Account Aggregator Live Bank Sync"
+              disabled
+              style={{ color: 'var(--text-muted)', gap: '5px', padding: '6px 10px', borderRadius: '10px', opacity: 0.5, cursor: 'not-allowed' }}
+              title="Bank Sync (Coming Soon)"
             >
               <Landmark size={15} /> <span className="btn-text-desktop">Bank Sync</span>
             </button>

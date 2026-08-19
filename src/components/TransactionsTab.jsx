@@ -70,30 +70,34 @@ export default function TransactionsTab({
 
           <button
             className="btn btn-secondary"
-            onClick={onOpenAaModal}
+            disabled
             style={{
               fontSize: '13px',
               gap: '6px',
-              border: '1px solid #004c8f',
-              color: '#38BDF8',
-              background: 'rgba(0, 76, 143, 0.15)'
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-muted)',
+              background: 'rgba(255, 255, 255, 0.04)',
+              opacity: 0.5,
+              cursor: 'not-allowed'
             }}
-            title="RBI Account Aggregator Direct Bank Link"
+            title="Bank Sync (Coming Soon)"
           >
             <Landmark size={15} /> <span>Bank Sync (AA)</span>
           </button>
 
           <button
             className="btn btn-secondary"
-            onClick={onOpenSmartUpi}
+            disabled
             style={{
               fontSize: '13px',
               gap: '6px',
-              border: '1px solid var(--primary)',
-              color: 'var(--primary)',
-              background: 'rgba(16, 185, 129, 0.08)'
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-muted)',
+              background: 'rgba(255, 255, 255, 0.04)',
+              opacity: 0.5,
+              cursor: 'not-allowed'
             }}
-            title="Smart UPI & Bank SMS Auto-Sync"
+            title="Smart UPI / SMS (Coming Soon)"
           >
             <Zap size={15} /> <span>Smart UPI / SMS</span>
           </button>
@@ -104,31 +108,32 @@ export default function TransactionsTab({
         </div>
       </div>
 
-      {/* Smart UPI & Bank Sync Banner Bar */}
+      {/* Smart UPI & Bank Sync Banner Bar (Coming Soon) */}
       <div
         style={{
           padding: '12px 16px',
           borderRadius: '14px',
-          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(10, 25, 47, 0.7) 100%)',
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(10, 25, 47, 0.5) 100%)',
           border: '1px solid var(--border-glass)',
           marginBottom: '16px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: '12px',
-          flexWrap: 'wrap'
+          flexWrap: 'wrap',
+          opacity: 0.8
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ padding: '6px', borderRadius: '8px', background: 'var(--primary-light)', color: 'var(--primary)' }}>
+          <div style={{ padding: '6px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text-muted)' }}>
             <Sparkles size={16} />
           </div>
           <div>
             <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-main)' }}>
-              Real-Time Bank & UPI Auto-Tracking Active
+              Bank & UPI Auto-Tracking <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '6px', color: 'var(--text-muted)', marginLeft: '6px' }}>Upcoming</span>
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              Official RBI Account Aggregator (HDFC, SBI, ICICI) + AI UPI SMS Parser
+              Official RBI Account Aggregator & Smart UPI SMS automation engine
             </div>
           </div>
         </div>
@@ -137,18 +142,20 @@ export default function TransactionsTab({
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            onClick={onOpenAaModal}
-            style={{ fontSize: '11px', padding: '6px 10px', borderRadius: '8px', gap: '4px', border: '1px solid #004c8f' }}
+            disabled
+            style={{ fontSize: '11px', padding: '6px 10px', borderRadius: '8px', gap: '4px', opacity: 0.5, cursor: 'not-allowed' }}
+            title="Coming Soon"
           >
-            <Landmark size={13} style={{ color: '#38BDF8' }} /> Link Bank Account →
+            <Landmark size={13} /> Link Bank Account →
           </button>
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            onClick={onOpenSmartUpi}
-            style={{ fontSize: '11px', padding: '6px 10px', borderRadius: '8px', gap: '4px' }}
+            disabled
+            style={{ fontSize: '11px', padding: '6px 10px', borderRadius: '8px', gap: '4px', opacity: 0.5, cursor: 'not-allowed' }}
+            title="Coming Soon"
           >
-            <Zap size={13} style={{ color: 'var(--primary)' }} /> Paste SMS
+            <Zap size={13} /> Paste SMS
           </button>
         </div>
       </div>
