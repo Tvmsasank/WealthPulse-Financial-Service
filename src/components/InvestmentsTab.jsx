@@ -129,32 +129,66 @@ export default function InvestmentsTab({
     }
   };
 
-  // 📈 High-Fidelity Performance Analytics NAV Curve Simulation (Exact replica of Image 5)
+  // 📈 High-Fidelity Performance Analytics NAV Curve Simulation with Specific Timeframe Dates & Years
   const navPoints = useMemo(() => {
-    const count = performanceTimeframe === '1M' ? 20 : performanceTimeframe === '3M' ? 35 : performanceTimeframe === '6M' ? 50 : 80;
+    const count = performanceTimeframe === '1M' ? 24 : performanceTimeframe === '3M' ? 35 : performanceTimeframe === '6M' ? 50 : performanceTimeframe === '1Y' ? 52 : 75;
     const baseNav = 1000;
     const currentNav = totalCost > 0 ? (totalValuation / totalCost) * 1000 : 1130.00;
     const netReturn = currentNav - baseNav;
 
-    const dates = [
-      '19 Aug', '01 Sept', '15 Sept', '29 Sept', '12 Oct', '24 Oct', '08 Nov', '19 Nov', '01 Dec', '14 Dec',
-      '27 Dec', '09 Jan', '21 Jan', '03 Feb', '15 Feb', '27 Feb', '11 Mar', '23 Mar', '05 Apr', '17 Apr',
-      '29 Apr', '12 May', '25 May', '07 Jun', '19 Jun', '01 Jul', '11 Jul', '21 Jul', '02 Aug', '19 Aug'
-    ];
+    const now = new Date(2026, 7, 19);
+
+    let axisMilestones = [];
+    if (performanceTimeframe === '1M') {
+      axisMilestones = ['21 Jul 2026', '30 Jul 2026', '08 Aug 2026', '19 Aug 2026'];
+    } else if (performanceTimeframe === '3M') {
+      axisMilestones = ['19 May 2026', '15 Jun 2026', '15 Jul 2026', '19 Aug 2026'];
+    } else if (performanceTimeframe === '6M') {
+      axisMilestones = ['Feb 2026', 'Apr 2026', 'Jun 2026', 'Aug 2026'];
+    } else if (performanceTimeframe === '1Y') {
+      axisMilestones = ['Aug 2025', 'Nov 2025', 'Feb 2026', 'May 2026', 'Aug 2026'];
+    } else if (performanceTimeframe === 'ALL') {
+      axisMilestones = ['2018', '2020', '2022', '2024', '2026'];
+    }
 
     const data = [];
     for (let i = 0; i < count; i++) {
       const progress = i / (count - 1);
-      // Realistic multi-cycle market dips and rallies
       const marketCycle = Math.sin(i * 0.45) * 45 + Math.cos(i * 0.9) * 30 + Math.sin(i * 1.6) * 15;
       const navVal = baseNav + (netReturn * Math.pow(progress, 1.15)) + marketCycle;
-      const dateIdx = Math.floor((i / (count - 1)) * (dates.length - 1));
+
+      let dateLabel = '';
+      if (performanceTimeframe === '1M') {
+        const d = new Date(now);
+        d.setDate(d.getDate() - Math.floor((count - 1 - i) * (30 / count)));
+        dateLabel = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      } else if (performanceTimeframe === '3M') {
+        const d = new Date(now);
+        d.setDate(d.getDate() - Math.floor((count - 1 - i) * (90 / count)));
+        dateLabel = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      } else if (performanceTimeframe === '6M') {
+        const d = new Date(now);
+        d.setMonth(d.getMonth() - Math.floor((count - 1 - i) * (6 / count)));
+        dateLabel = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      } else if (performanceTimeframe === '1Y') {
+        const d = new Date(now);
+        d.setMonth(d.getMonth() - Math.floor((count - 1 - i) * (12 / count)));
+        dateLabel = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      } else if (performanceTimeframe === 'ALL') {
+        const startYear = 2018;
+        const yearFraction = startYear + progress * (2026 - startYear);
+        const year = Math.floor(yearFraction);
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const month = monthNames[Math.floor((yearFraction % 1) * 12)] || 'Aug';
+        dateLabel = `${month} ${year}`;
+      }
+
       data.push({
-        date: dates[dateIdx] || `Day ${i + 1}`,
+        date: dateLabel,
         nav: Math.max(910, Math.round(navVal * 100) / 100)
       });
     }
-    data[data.length - 1] = { date: '19 Aug (Today)', nav: Math.round(currentNav * 100) / 100 };
+    data[data.length - 1] = { date: '19 Aug 2026 (Live Close)', nav: Math.round(currentNav * 100) / 100 };
 
     const navs = data.map(d => d.nav);
     const min = Math.min(...navs, 910);
@@ -173,7 +207,7 @@ export default function InvestmentsTab({
     const polyline = coords.map(p => `${p.x},${p.y}`).join(' ');
     const areaPath = `M 0,${height} L ${polyline.replace(/ /g, ' L ')} L ${width},${height} Z`;
 
-    return { data, coords, polyline, areaPath, min, max, width, height, currentNav };
+    return { data, coords, polyline, areaPath, min, max, width, height, currentNav, axisMilestones };
   }, [performanceTimeframe, totalValuation, totalCost]);
 
   const handlePerfMouseMove = (e) => {
@@ -745,13 +779,13 @@ export default function InvestmentsTab({
               )}
             </div>
 
-            {/* Date Milestones X-Axis */}
+            {/* Date & Year Milestones X-Axis (Dynamic to Selected Timeframe) */}
             <div
               className="no-scrollbar"
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                fontSize: '10px',
+                fontSize: '10.5px',
                 color: 'var(--text-muted)',
                 fontWeight: '600',
                 padding: '0 4px',
@@ -760,26 +794,9 @@ export default function InvestmentsTab({
                 gap: '8px'
               }}
             >
-              <span>19 Aug</span>
-              <span>01 Sept</span>
-              <span>15 Sept</span>
-              <span>29 Sept</span>
-              <span>12 Oct</span>
-              <span>24 Oct</span>
-              <span>08 Nov</span>
-              <span>01 Dec</span>
-              <span>14 Dec</span>
-              <span>09 Jan</span>
-              <span>03 Feb</span>
-              <span>27 Feb</span>
-              <span>11 Mar</span>
-              <span>05 Apr</span>
-              <span>29 Apr</span>
-              <span>25 May</span>
-              <span>07 Jun</span>
-              <span>01 Jul</span>
-              <span>21 Jul</span>
-              <span>19 Aug</span>
+              {navPoints.axisMilestones.map((ms, idx) => (
+                <span key={idx}>{ms}</span>
+              ))}
             </div>
 
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>

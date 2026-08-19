@@ -19,15 +19,16 @@ import {
 } from 'lucide-react';
 
 const INITIAL_TICKERS = [
-  { name: 'NIFTY 50', numValue: 24050.05, change: '+237.65', pct: '+0.98%', isUp: true, prefix: '' },
-  { name: 'SENSEX', numValue: 78907.64, change: '+820.56', pct: '+1.06%', isUp: true, prefix: '' },
-  { name: 'BANK NIFTY', numValue: 51240.20, change: '+426.30', pct: '+0.84%', isUp: true, prefix: '' },
-  { name: 'S&P 500', numValue: 5691.76, change: '+38.50', pct: '+0.68%', isUp: true, prefix: '' },
-  { name: 'NASDAQ', numValue: 18289.71, change: '+239.80', pct: '+1.33%', isUp: true, prefix: '' },
-  { name: 'DOW JONES', numValue: 40834.97, change: '+185.20', pct: '+0.45%', isUp: true, prefix: '' },
-  { name: 'GOLD 24K', numValue: 72450, change: '+₹320', pct: '+0.45%', isUp: true, prefix: '₹', suffix: '/10g' },
-  { name: 'SILVER', numValue: 84200, change: '+₹950', pct: '+1.15%', isUp: true, prefix: '₹', suffix: '/kg' },
-  { name: 'USD/INR', numValue: 83.92, change: '+0.03', pct: '+0.04%', isUp: true, prefix: '₹' }
+  { name: 'NIFTY 50', numValue: 24078.30, change: '+124.50', pct: '+0.52%', isUp: true, prefix: '' },
+  { name: 'SENSEX', numValue: 76909.68, change: '+412.30', pct: '+0.54%', isUp: true, prefix: '' },
+  { name: 'BANK NIFTY', numValue: 57239.75, change: '+218.60', pct: '+0.38%', isUp: true, prefix: '' },
+  { name: 'S&P 500', numValue: 7691.76, change: '+42.10', pct: '+0.55%', isUp: true, prefix: '' },
+  { name: 'NASDAQ', numValue: 26289.71, change: '+185.30', pct: '+0.71%', isUp: true, prefix: '' },
+  { name: 'DOW JONES', numValue: 53343.40, change: '+115.80', pct: '+0.22%', isUp: true, prefix: '' },
+  { name: 'USD/INR', numValue: 95.74, change: '+0.06', pct: '+0.06%', isUp: true, prefix: '₹' },
+  { name: 'GOLD 24K', numValue: 74850, change: '+₹380', pct: '+0.52%', isUp: true, prefix: '₹', suffix: '/10g' },
+  { name: 'SILVER', numValue: 85400, change: '+₹650', pct: '+0.78%', isUp: true, prefix: '₹', suffix: '/kg' },
+  { name: 'BITCOIN', numValue: 6161382, change: '+₹112450', pct: '+1.85%', isUp: true, prefix: '₹' }
 ];
 
 export default function Header({
@@ -49,26 +50,45 @@ export default function Header({
   const [tickers, setTickers] = useState(INITIAL_TICKERS);
   const [flashedTicker, setFlashedTicker] = useState(null); // { index, dir }
 
-  // ⚡ Live Real-Time Micro-Ticking Simulation (Every 3 seconds)
+  // 🌐 Fetch Real-World Live Market Quotes from Backend API
+  useEffect(() => {
+    const fetchLiveQuotes = async () => {
+      try {
+        const res = await fetch('/api/market/ticker');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.tickers) && json.tickers.length > 0) {
+            setTickers(json.tickers);
+          }
+        }
+      } catch (err) {
+        // Fallback to active state
+      }
+    };
+
+    fetchLiveQuotes();
+    const pollInterval = setInterval(fetchLiveQuotes, 25000);
+    return () => clearInterval(pollInterval);
+  }, []);
+
+  // ⚡ Live Real-Time Micro-Ticking Simulation (Every 3.2 seconds)
   useEffect(() => {
     const interval = setInterval(() => {
-      const targetIdx = Math.floor(Math.random() * INITIAL_TICKERS.length);
-      const isUp = Math.random() > 0.45;
-      const deltaFactor = (Math.random() * 0.0015 + 0.0003) * (isUp ? 1 : -1);
-
       setTickers(prev => {
+        if (!prev || prev.length === 0) return prev;
+        const targetIdx = Math.floor(Math.random() * prev.length);
         const next = [...prev];
         const item = { ...next[targetIdx] };
+        const isUp = Math.random() > 0.45;
+        const deltaFactor = (Math.random() * 0.0008 + 0.0002) * (isUp ? 1 : -1);
         const updatedNum = item.numValue * (1 + deltaFactor);
-        const diff = updatedNum - item.numValue;
         item.numValue = updatedNum;
         item.isUp = isUp;
-        item.pct = (isUp ? '+' : '') + (Math.random() * 0.4 + (isUp ? 0.6 : -0.3)).toFixed(2) + '%';
         next[targetIdx] = item;
+        setFlashedTicker({ index: targetIdx, dir: isUp ? 'up' : 'down' });
         return next;
       });
 
-      setFlashedTicker({ index: targetIdx, dir: isUp ? 'up' : 'down' });
       setTimeout(() => setFlashedTicker(null), 900);
     }, 3200);
 

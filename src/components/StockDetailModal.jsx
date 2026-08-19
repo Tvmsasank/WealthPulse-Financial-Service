@@ -56,55 +56,111 @@ export default function StockDetailModal({
   const high52 = investment.high52 || Math.round(ltp * 1.35 * 100) / 100;
   const rangePct = Math.min(100, Math.max(0, ((ltp - low52) / (high52 - low52)) * 100));
 
-  // Generate realistic time series based on timeframe
+  // Generate realistic time series based on exact timeframe with precise dates/years
   const chartData = useMemo(() => {
-    const pointsCount = timeframe === '1D' ? 26 : timeframe === '1W' ? 30 : timeframe === '1M' ? 30 : timeframe === '6M' ? 45 : 60;
+    const pointsCount = timeframe === '1D' ? 28 : timeframe === '1W' ? 30 : timeframe === '1M' ? 30 : timeframe === '6M' ? 45 : timeframe === '1Y' ? 52 : timeframe === '5Y' ? 60 : 75;
     const items = [];
-    const base = timeframe === '1D' ? ltp * (1 - dayPct / 100) : (buyPrice > 0 ? buyPrice : ltp * 0.88);
-    const trend = ltp - base;
+    
+    // Starting base price ratio according to timeframe
+    let base = buyPrice > 0 ? buyPrice : ltp * 0.88;
+    if (timeframe === '1D') base = ltp * (1 - dayPct / 100);
+    else if (timeframe === '1W') base = ltp * (1 - (isPositive ? 0.024 : -0.018));
+    else if (timeframe === '1M') base = ltp * (1 - (isPositive ? 0.08 : -0.05));
+    else if (timeframe === '6M') base = ltp * (1 - (isPositive ? 0.18 : -0.12));
+    else if (timeframe === '1Y') base = ltp * (1 - (isPositive ? 0.32 : -0.20));
+    else if (timeframe === '5Y') base = ltp * 0.42;
+    else if (timeframe === 'ALL') base = ltp * 0.18; // Inception price
 
-    const now = new Date();
+    const trend = ltp - base;
+    const now = new Date(2026, 7, 19, 15, 30); // 19 Aug 2026
+
+    let axisMilestones = [];
+
+    if (timeframe === '1D') {
+      axisMilestones = ['09:15 AM', '11:00 AM', '01:00 PM', '02:30 PM', '03:30 PM'];
+    } else if (timeframe === '1W') {
+      axisMilestones = ['13 Aug 2026', '15 Aug 2026', '17 Aug 2026', '19 Aug 2026'];
+    } else if (timeframe === '1M') {
+      axisMilestones = ['21 Jul 2026', '30 Jul 2026', '08 Aug 2026', '19 Aug 2026'];
+    } else if (timeframe === '6M') {
+      axisMilestones = ['Feb 2026', 'Apr 2026', 'Jun 2026', 'Aug 2026'];
+    } else if (timeframe === '1Y') {
+      axisMilestones = ['Aug 2025', 'Nov 2025', 'Feb 2026', 'May 2026', 'Aug 2026'];
+    } else if (timeframe === '5Y') {
+      axisMilestones = ['2021', '2022', '2023', '2024', '2025', '2026'];
+    } else if (timeframe === 'ALL') {
+      axisMilestones = ['2018', '2020', '2022', '2024', '2026'];
+    }
 
     for (let i = 0; i < pointsCount; i++) {
       const progress = i / (pointsCount - 1);
-      // Realistic fractal market wave
-      const wave = (Math.sin(i * 0.7) * 0.6 + Math.cos(i * 1.3) * 0.4 + Math.sin(i * 2.1) * 0.2) * (ltp * 0.025);
-      const val = Math.max(ltp * 0.4, base + trend * Math.pow(progress, 1.2) + wave);
+      // Realistic multi-wave cycle
+      const wave = (Math.sin(i * 0.7) * 0.5 + Math.cos(i * 1.4) * 0.35 + Math.sin(i * 2.3) * 0.15) * (ltp * 0.03);
+      const val = Math.max(ltp * 0.1, base + trend * Math.pow(progress, 1.2) + wave);
 
       let label = '';
       if (timeframe === '1D') {
-        const hours = 9 + Math.floor((i / pointsCount) * 6);
-        const mins = (Math.floor((i % 4) * 15)).toString().padStart(2, '0');
-        label = `${hours}:${mins}`;
-      } else {
+        const totalMinutes = 375; // 9:15 to 15:30 = 6h 15m
+        const currentMins = Math.floor(progress * totalMinutes);
+        const h = 9 + Math.floor((15 + currentMins) / 60);
+        const m = (15 + currentMins) % 60;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const displayH = h > 12 ? h - 12 : h;
+        label = `19 Aug 2026, ${displayH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
+      } else if (timeframe === '1W') {
         const d = new Date(now);
-        const daysBack = (pointsCount - i) * (timeframe === '1W' ? 0.25 : timeframe === '1M' ? 1 : timeframe === '6M' ? 4 : 8);
-        d.setDate(d.getDate() - Math.floor(daysBack));
-        label = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+        d.setDate(d.getDate() - Math.floor((pointsCount - 1 - i) * (7 / pointsCount)));
+        label = d.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+      } else if (timeframe === '1M') {
+        const d = new Date(now);
+        d.setDate(d.getDate() - Math.floor((pointsCount - 1 - i) * (30 / pointsCount)));
+        label = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      } else if (timeframe === '6M') {
+        const d = new Date(now);
+        d.setMonth(d.getMonth() - Math.floor((pointsCount - 1 - i) * (6 / pointsCount)));
+        label = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      } else if (timeframe === '1Y') {
+        const d = new Date(now);
+        d.setMonth(d.getMonth() - Math.floor((pointsCount - 1 - i) * (12 / pointsCount)));
+        label = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      } else if (timeframe === '5Y') {
+        const d = new Date(now);
+        d.setFullYear(d.getFullYear() - Math.floor((pointsCount - 1 - i) * (5 / pointsCount)));
+        label = d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+      } else if (timeframe === 'ALL') {
+        const startYear = 2018;
+        const yearFraction = startYear + progress * (2026 - startYear);
+        const year = Math.floor(yearFraction);
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const month = monthNames[Math.floor((yearFraction % 1) * 12)] || 'Aug';
+        label = `${month} ${year}`;
       }
 
       items.push({ price: Math.round(val * 100) / 100, label });
     }
-    items[items.length - 1] = { price: ltp, label: timeframe === '1D' ? 'Live' : 'Today' };
+    items[items.length - 1] = {
+      price: ltp,
+      label: timeframe === '1D' ? '19 Aug 2026, 03:30 PM (Live Close)' : '19 Aug 2026 (Live Close)'
+    };
 
     const prices = items.map(d => d.price);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
     const range = max - min || 1;
 
-    const width = 560;
-    const height = 180;
+    const width = 580;
+    const height = 190;
 
     const points = items.map((d, idx) => {
       const x = (idx / (pointsCount - 1)) * width;
-      const y = height - ((d.price - min) / range) * (height - 36) - 18;
+      const y = height - ((d.price - min) / range) * (height - 40) - 20;
       return { x, y, price: d.price, label: d.label };
     });
 
     const polyline = points.map(p => `${p.x},${p.y}`).join(' ');
     const areaPath = `M 0,${height} L ${polyline.replace(/ /g, ' L ')} L ${width},${height} Z`;
 
-    return { points, polyline, areaPath, min, max, width, height };
+    return { points, polyline, areaPath, min, max, width, height, axisMilestones };
   }, [timeframe, buyPrice, ltp, dayPct]);
 
   const handleMouseMove = (e) => {
@@ -114,7 +170,11 @@ export default function StockDetailModal({
     const closestIdx = Math.round(ratio * (chartData.points.length - 1));
     const pt = chartData.points[closestIdx];
     if (pt) {
-      setHoveredPoint({ ...pt, displayX: (pt.x / chartData.width) * rect.width, displayY: (pt.y / chartData.height) * rect.height });
+      setHoveredPoint({
+        ...pt,
+        displayX: (pt.x / chartData.width) * rect.width,
+        displayY: (pt.y / chartData.height) * rect.height
+      });
     }
   };
 
@@ -152,7 +212,7 @@ export default function StockDetailModal({
                   fontWeight: '700'
                 }}
               >
-                {investment.type || 'Stock'} • NSE Live
+                {investment.type || 'Stock'} • Live Feed
               </span>
             </div>
             <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -239,14 +299,14 @@ export default function StockDetailModal({
           style={{
             position: 'relative',
             width: '100%',
-            height: '180px',
+            height: '190px',
             background: isPositive
               ? 'linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(10, 25, 47, 0.3) 100%)'
               : 'linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, rgba(10, 25, 47, 0.3) 100%)',
             borderRadius: '16px',
             border: '1px solid var(--border-color)',
             overflow: 'hidden',
-            marginBottom: '16px',
+            marginBottom: '8px',
             cursor: 'crosshair'
           }}
         >
@@ -282,7 +342,7 @@ export default function StockDetailModal({
                   y1="0"
                   x2={hoveredPoint.x}
                   y2={chartData.height}
-                  stroke="rgba(255, 255, 255, 0.4)"
+                  stroke="rgba(255, 255, 255, 0.45)"
                   strokeWidth="1.5"
                   strokeDasharray="3 3"
                 />
@@ -308,7 +368,7 @@ export default function StockDetailModal({
                 transform: 'translateX(-50%)',
                 background: 'rgba(15, 23, 42, 0.95)',
                 border: '1px solid var(--border-glass)',
-                padding: '4px 10px',
+                padding: '5px 12px',
                 borderRadius: '8px',
                 fontSize: '11px',
                 fontWeight: '700',
@@ -318,9 +378,29 @@ export default function StockDetailModal({
                 whiteSpace: 'nowrap'
               }}
             >
-              {hoveredPoint.label} : {formatInr(hoveredPoint.price)}
+              {hoveredPoint.label} : <strong style={{ color: isPositive ? '#10B981' : '#F87171' }}>{formatInr(hoveredPoint.price)}</strong>
             </div>
           )}
+        </div>
+
+        {/* Specific Date & Year Milestone Axis Ticks */}
+        <div
+          className="no-scrollbar"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            fontSize: '10.5px',
+            color: 'var(--text-muted)',
+            fontWeight: '600',
+            padding: '0 4px',
+            marginBottom: '16px',
+            overflowX: 'auto',
+            gap: '8px'
+          }}
+        >
+          {chartData.axisMilestones.map((ms, idx) => (
+            <span key={idx} style={{ whiteSpace: 'nowrap' }}>{ms}</span>
+          ))}
         </div>
 
         {/* 52-Week High / Low Range Slider */}
