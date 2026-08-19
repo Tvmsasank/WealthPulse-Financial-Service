@@ -133,15 +133,16 @@ export function parseUpiTransactionText(text = '') {
 
   if (!amount) return null;
 
-  // 3. Extract UPI Reference Number (e.g., UPI Ref: 42358912, UPI/42319082, Ref No 123456)
+  // 3. Extract UPI Reference Number (e.g., UPI Ref: 42358912, Ref 659740211224, (UPI 128148388270))
   const upiRefMatch = raw.match(/(?:upi\s*ref(?:erence)?\s*(?:no\.?)?|ref\s*(?:no\.?)?|rrn)[\s/:]*([a-zA-Z0-9]{6,16})/i)
+    || raw.match(/\bupi[\s:]*([0-9]{8,16})\b/i)
     || raw.match(/upi\/([0-9]{8,16})/i);
   if (upiRefMatch && upiRefMatch[1]) {
     upiRef = upiRefMatch[1].trim();
   }
 
   // 4. Extract User Note / Remarks / Info (e.g. Info: Chai and biscuits, Note: Petrol, Remarks: Dinner)
-  const noteMatch = raw.match(/(?:info|note|remarks?|desc(?:ription)?|for)[\s/:]+([^.\n,]+?)(?=\s*(?:bal|avail|on|\(upi|upi\s*ref|\.|$))/i);
+  const noteMatch = raw.match(/(?:info|note|remarks?|desc(?:ription)?|for)[\s/:]+([^.\n,]+?)(?=\s*(?:bal|avail|on|\(upi|upi\s*ref|ref|\.|$))/i);
   if (noteMatch && noteMatch[1]) {
     const cleanNote = noteMatch[1].trim();
     // Exclude if it captured standard system words
@@ -153,8 +154,8 @@ export function parseUpiTransactionText(text = '') {
   // 5. Extract Merchant / Beneficiary Name
   // Patterns for Indian Bank SMS and UPI apps
   const merchantPatterns = [
-    /(?:to|towards|at|vpa|paid\s+to|transfer\s+to)\s+([A-Za-z0-9\s&'-]+?)(?=\s+(?:on|via|using|ref|\(upi|upi|bal|avail|\.|\n|$))/i,
-    /(?:vpa|upi\s*id)[\s/:]+([a-zA-Z0-9._-]+@[a-zA-Z0-9]+)/i,
+    /(?:from\s+vpa|to\s+vpa|from\s+upi|to\s+upi|vpa|upi\s*id)[\s/:]+([a-zA-Z0-9._-]+@[a-zA-Z0-9]+)/i,
+    /(?:to|towards|at|paid\s+to|transfer\s+to)\s+([A-Za-z0-9\s&'-]+?)(?=\s+(?:on|via|using|ref|\(upi|upi|bal|avail|not\s+you|\.|\n|$))/i,
     /upi\/[0-9]+\/([^/.\n]+)/i,
     /(?:paid|sent)\s+(?:rs\.?|inr|₹)?\s*[\d,.]+\s+to\s+([A-Za-z0-9\s&'-]+?)(?=\s+(?:on|via|for|\.|$))/i
   ];
@@ -163,6 +164,11 @@ export function parseUpiTransactionText(text = '') {
     const match = raw.match(mPattern);
     if (match && match[1]) {
       let candidate = match[1].trim();
+      // If candidate is a VPA like "nunnalakshmiprasanna-2@okhdfcbank", clean it into readable name
+      if (candidate.includes('@')) {
+        candidate = candidate.split('@')[0].replace(/[-_0-9]+/g, ' ').trim();
+      }
+
       // Clean noise words
       candidate = candidate
         .replace(/^(a\/c|account|m\/s|mr|mrs|dr)\s+/i, '')
@@ -181,7 +187,7 @@ export function parseUpiTransactionText(text = '') {
     if (note && note.length > 2) {
       merchant = note;
     } else {
-      merchant = 'UPI Merchant';
+      merchant = type === 'income' ? 'UPI Sender' : 'UPI Merchant';
     }
   }
 
@@ -189,7 +195,7 @@ export function parseUpiTransactionText(text = '') {
   if (/gpay|google\s*pay/i.test(raw)) source = 'UPI - GPay';
   else if (/phonepe/i.test(raw)) source = 'UPI - PhonePe';
   else if (/paytm/i.test(raw)) source = 'UPI - Paytm';
-  else if (/cred/i.test(raw)) source = 'UPI - CRED';
+  else if (/\bcred\s+(?:app|pay|upi)?\b/i.test(raw) && !/credit/i.test(raw)) source = 'UPI - CRED';
   else if (/bhim/i.test(raw)) source = 'UPI - BHIM';
 
   // Detect Bank Account
