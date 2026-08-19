@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Plus, FileText, Trash2, Tag, ChevronDown, Edit3, Zap, Sparkles } from 'lucide-react';
+import { Search, Filter, Plus, FileText, Trash2, Tag, ChevronDown, Edit3, Zap, Sparkles, Landmark } from 'lucide-react';
 import ConfirmDeleteTxModal from './ConfirmDeleteTxModal';
 
 export default function TransactionsTab({
@@ -15,7 +15,8 @@ export default function TransactionsTab({
   onOpenAddEntry,
   onOpenEditEntry,
   onOpenTagModal,
-  onOpenSmartUpi
+  onOpenSmartUpi,
+  onOpenAaModal
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAccount, setSelectedAccount] = useState('');
@@ -44,7 +45,7 @@ export default function TransactionsTab({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h2 style={{ fontSize: '20px', fontWeight: '800' }}>Transactions</h2>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Search, filter, and real-time UPI sync</p>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Search, filter, and real-time bank sync</p>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', maxWidth: '100%' }}>
@@ -69,6 +70,21 @@ export default function TransactionsTab({
 
           <button
             className="btn btn-secondary"
+            onClick={onOpenAaModal}
+            style={{
+              fontSize: '13px',
+              gap: '6px',
+              border: '1px solid #004c8f',
+              color: '#38BDF8',
+              background: 'rgba(0, 76, 143, 0.15)'
+            }}
+            title="RBI Account Aggregator Direct Bank Link"
+          >
+            <Landmark size={15} /> <span>Bank Sync (AA)</span>
+          </button>
+
+          <button
+            className="btn btn-secondary"
             onClick={onOpenSmartUpi}
             style={{
               fontSize: '13px',
@@ -88,7 +104,7 @@ export default function TransactionsTab({
         </div>
       </div>
 
-      {/* Smart UPI Banner Bar */}
+      {/* Smart UPI & Bank Sync Banner Bar */}
       <div
         style={{
           padding: '12px 16px',
@@ -109,22 +125,32 @@ export default function TransactionsTab({
           </div>
           <div>
             <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-main)' }}>
-              Real-Time UPI Auto-Tracking Active
+              Real-Time Bank & UPI Auto-Tracking Active
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              GPay, PhonePe, Paytm, and Indian Bank SMS auto-categorize instantly with merchant & notes
+              Official RBI Account Aggregator (HDFC, SBI, ICICI) + AI UPI SMS Parser
             </div>
           </div>
         </div>
 
-        <button
-          type="button"
-          className="btn btn-secondary btn-sm"
-          onClick={onOpenSmartUpi}
-          style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '8px', gap: '4px' }}
-        >
-          <Zap size={13} style={{ color: 'var(--primary)' }} /> Paste SMS or Setup Webhook →
-        </button>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={onOpenAaModal}
+            style={{ fontSize: '11px', padding: '6px 10px', borderRadius: '8px', gap: '4px', border: '1px solid #004c8f' }}
+          >
+            <Landmark size={13} style={{ color: '#38BDF8' }} /> Link Bank Account →
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={onOpenSmartUpi}
+            style={{ fontSize: '11px', padding: '6px 10px', borderRadius: '8px', gap: '4px' }}
+          >
+            <Zap size={13} style={{ color: 'var(--primary)' }} /> Paste SMS
+          </button>
+        </div>
       </div>
 
       {/* Filter Controls Card */}

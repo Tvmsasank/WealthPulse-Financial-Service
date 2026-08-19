@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FolderSync, Upload, Plus, LogIn, UserPlus, LogOut, Palette, ChevronDown } from 'lucide-react';
+import { FolderSync, Upload, Plus, LogIn, UserPlus, LogOut, Palette, ChevronDown, Landmark } from 'lucide-react';
 
 const THEMES = [
   { id: 'emerald', label: 'Emerald Dark', color: '#10B981' },
@@ -19,7 +19,8 @@ export default function Header({
   onLogout,
   onOpenAddEntry,
   onOpenImport,
-  onTriggerDriveSync
+  onTriggerDriveSync,
+  onOpenAaModal
 }) {
   const [showThemePicker, setShowThemePicker] = useState(false);
 
@@ -145,6 +146,16 @@ export default function Header({
 
             <button className="btn btn-secondary btn-sm desktop-only-action" onClick={onOpenImport} title="Import Statement or File">
               <Upload size={16} /> <span>Import</span>
+            </button>
+
+            {/* RBI Account Aggregator Live Bank Sync */}
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={onOpenAaModal}
+              style={{ color: 'var(--primary)', gap: '5px', padding: '6px 10px', borderRadius: '10px' }}
+              title="RBI Account Aggregator Live Bank Sync"
+            >
+              <Landmark size={15} /> <span className="btn-text-desktop">Bank Sync</span>
             </button>
 
             {/* Quick Add Entry (+ Button on Mobile, Full on Desktop) */}

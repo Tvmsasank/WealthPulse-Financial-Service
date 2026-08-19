@@ -655,5 +655,42 @@ export const dbEngine = {
 
   updatePreferences(userId, updates) {
     return this.updateUserSettings(userId, updates);
+  },
+
+  // RBI Account Aggregator Linked Banks
+  getLinkedBankAccounts(userId) {
+    const db = loadDb();
+    return (db.linkedBankAccounts || []).filter(a => a.userId === userId);
+  },
+
+  saveLinkedBankAccount(userId, account) {
+    const db = loadDb();
+    if (!db.linkedBankAccounts) db.linkedBankAccounts = [];
+    const existingIndex = db.linkedBankAccounts.findIndex(a => a.id === account.id || (a.userId === userId && a.bankCode === account.bankCode));
+    if (existingIndex !== -1) {
+      db.linkedBankAccounts[existingIndex] = { ...db.linkedBankAccounts[existingIndex], ...account };
+    } else {
+      db.linkedBankAccounts.unshift(account);
+    }
+    saveDb();
+    return account;
+  },
+
+  unlinkBankAccount(userId, accountId) {
+    const db = loadDb();
+    if (!db.linkedBankAccounts) return false;
+    db.linkedBankAccounts = db.linkedBankAccounts.filter(a => !(a.id === accountId && a.userId === userId));
+    saveDb();
+    return true;
+  },
+
+  updateLinkedBankAccountSync(userId, accountId, updates) {
+    const db = loadDb();
+    const acc = (db.linkedBankAccounts || []).find(a => a.id === accountId && a.userId === userId);
+    if (acc) {
+      Object.assign(acc, updates);
+      saveDb();
+    }
+    return acc;
   }
 };

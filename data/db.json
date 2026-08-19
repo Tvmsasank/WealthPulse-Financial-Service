@@ -40,7 +40,7 @@
   ],
   "transactions": [
     {
-      "id": "tx_1787113402788_py9g7f",
+      "id": "tx_1787113585640_771gx7",
       "userId": "usr_1785755811844_crbzz5",
       "date": "2026-08-19",
       "merchant": "Nunna Lakshmi Prasanna",
@@ -55,7 +55,20 @@
       "source": "UPI Auto-Sync",
       "flagged": false,
       "receiptUrl": null,
-      "createdAt": "2026-08-19T04:23:22.788Z"
+      "createdAt": "2026-08-19T04:26:25.640Z"
+    },
+    {
+      "id": "tx_1787113402788_py9g7f",
+      "userId": "usr_1785755811844_crbzz5",
+      "amount": 1,
+      "tags": [
+        "UPI"
+      ],
+      "source": "UPI Auto-Sync",
+      "flagged": false,
+      "receiptUrl": null,
+      "createdAt": "2026-08-19T04:23:22.788Z",
+      "updatedAt": "2026-08-19T04:26:00.168Z"
     },
     {
       "id": "tx_1787113391589_x52127",
@@ -551,7 +564,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:08:46.650Z",
       "updatedAt": "2026-08-06T09:11:11.764Z",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z",
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z",
       "priceStatus": "ok"
     },
     {
@@ -569,7 +582,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:12:27.082Z",
       "updatedAt": "2026-08-06T09:13:21.916Z",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z",
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z",
       "priceStatus": "ok"
     },
     {
@@ -587,7 +600,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:42:20.816Z",
       "updatedAt": "2026-08-06T09:42:20.816Z",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z",
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z",
       "priceStatus": "ok"
     },
     {
@@ -598,15 +611,15 @@
       "type": "stock",
       "quantity": 10,
       "buyPrice": 9.42,
-      "currentPrice": 6.77,
-      "currentValuation": 67.7,
-      "unrealizedPnL": -26.5,
-      "pnlPercentage": -28.13,
+      "currentPrice": 6.75,
+      "currentValuation": 67.5,
+      "unrealizedPnL": -26.7,
+      "pnlPercentage": -28.34,
       "notes": "",
       "createdAt": "2026-08-06T09:45:17.335Z",
       "updatedAt": "2026-08-06T09:45:30.445Z",
       "priceStatus": "ok",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z"
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z"
     },
     {
       "id": "inv_1786009572245_nknwut",
@@ -616,14 +629,14 @@
       "type": "stock",
       "quantity": 5,
       "buyPrice": 919,
-      "currentPrice": 2848.1,
-      "currentValuation": 14240.5,
-      "unrealizedPnL": 9645.5,
-      "pnlPercentage": 209.91,
+      "currentPrice": 2845.2,
+      "currentValuation": 14226,
+      "unrealizedPnL": 9631,
+      "pnlPercentage": 209.6,
       "notes": "",
       "createdAt": "2026-08-06T09:46:12.245Z",
       "updatedAt": "2026-08-06T09:46:12.245Z",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z",
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z",
       "priceStatus": "ok"
     },
     {
@@ -634,14 +647,14 @@
       "type": "stock",
       "quantity": 1,
       "buyPrice": 1208.7,
-      "currentPrice": 1124.9,
-      "currentValuation": 1124.9,
-      "unrealizedPnL": -83.8,
-      "pnlPercentage": -6.93,
+      "currentPrice": 1124.1,
+      "currentValuation": 1124.1,
+      "unrealizedPnL": -84.6,
+      "pnlPercentage": -7,
       "notes": "",
       "createdAt": "2026-08-06T09:48:15.487Z",
       "updatedAt": "2026-08-06T09:48:15.487Z",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z",
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z",
       "priceStatus": "ok"
     },
     {
@@ -652,14 +665,14 @@
       "type": "stock",
       "quantity": 58,
       "buyPrice": 27.5,
-      "currentPrice": 85.8,
-      "currentValuation": 4976.4,
-      "unrealizedPnL": 3381.4,
-      "pnlPercentage": 212,
+      "currentPrice": 85.82,
+      "currentValuation": 4977.56,
+      "unrealizedPnL": 3382.56,
+      "pnlPercentage": 212.07,
       "notes": "",
       "createdAt": "2026-08-06T09:49:00.061Z",
       "updatedAt": "2026-08-06T09:49:00.061Z",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z",
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z",
       "priceStatus": "ok"
     },
     {
@@ -670,14 +683,14 @@
       "type": "stock",
       "quantity": 5,
       "buyPrice": 310.45,
-      "currentPrice": 245.2,
-      "currentValuation": 1226,
-      "unrealizedPnL": -326.25,
-      "pnlPercentage": -21.02,
+      "currentPrice": 244.95,
+      "currentValuation": 1224.75,
+      "unrealizedPnL": -327.5,
+      "pnlPercentage": -21.1,
       "notes": "",
       "createdAt": "2026-08-06T09:49:21.172Z",
       "updatedAt": "2026-08-06T09:49:21.172Z",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z",
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z",
       "priceStatus": "ok"
     },
     {
@@ -688,14 +701,14 @@
       "type": "stock",
       "quantity": 34,
       "buyPrice": 516.3,
-      "currentPrice": 1803.8,
-      "currentValuation": 61329.2,
-      "unrealizedPnL": 43775,
-      "pnlPercentage": 249.37,
+      "currentPrice": 1805.2,
+      "currentValuation": 61376.8,
+      "unrealizedPnL": 43822.6,
+      "pnlPercentage": 249.64,
       "notes": "",
       "createdAt": "2026-08-06T09:49:46.157Z",
       "updatedAt": "2026-08-06T09:49:46.157Z",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z",
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z",
       "priceStatus": "ok"
     },
     {
@@ -713,7 +726,7 @@
       "notes": "",
       "createdAt": "2026-08-06T09:50:07.825Z",
       "updatedAt": "2026-08-06T09:50:07.825Z",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z",
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z",
       "priceStatus": "ok"
     },
     {
@@ -724,14 +737,14 @@
       "type": "stock",
       "quantity": 16,
       "buyPrice": 251.44,
-      "currentPrice": 470.4,
-      "currentValuation": 7526.4,
-      "unrealizedPnL": 3503.36,
-      "pnlPercentage": 87.08,
+      "currentPrice": 470.55,
+      "currentValuation": 7528.8,
+      "unrealizedPnL": 3505.76,
+      "pnlPercentage": 87.14,
       "notes": "",
       "createdAt": "2026-08-06T09:50:27.253Z",
       "updatedAt": "2026-08-07T10:01:59.879Z",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z",
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z",
       "priceStatus": "ok"
     },
     {
@@ -742,14 +755,14 @@
       "type": "stock",
       "quantity": 10,
       "buyPrice": 276.96,
-      "currentPrice": 321.15,
-      "currentValuation": 3211.5,
-      "unrealizedPnL": 441.9,
-      "pnlPercentage": 15.96,
+      "currentPrice": 320.85,
+      "currentValuation": 3208.5,
+      "unrealizedPnL": 438.9,
+      "pnlPercentage": 15.85,
       "notes": "",
       "createdAt": "2026-08-06T09:50:41.805Z",
       "updatedAt": "2026-08-06T09:50:41.805Z",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z",
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z",
       "priceStatus": "ok"
     },
     {
@@ -760,14 +773,14 @@
       "type": "stock",
       "quantity": 16,
       "buyPrice": 235,
-      "currentPrice": 179.42,
-      "currentValuation": 2870.72,
-      "unrealizedPnL": -889.28,
-      "pnlPercentage": -23.65,
+      "currentPrice": 179.23,
+      "currentValuation": 2867.68,
+      "unrealizedPnL": -892.32,
+      "pnlPercentage": -23.73,
       "notes": "",
       "createdAt": "2026-08-06T09:50:51.200Z",
       "updatedAt": "2026-08-06T09:50:51.200Z",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z",
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z",
       "priceStatus": "ok"
     },
     {
@@ -778,15 +791,15 @@
       "type": "stock",
       "quantity": 110,
       "buyPrice": 8.68,
-      "currentPrice": 6.77,
-      "currentValuation": 744.7,
-      "unrealizedPnL": -210.1,
-      "pnlPercentage": -22,
+      "currentPrice": 6.75,
+      "currentValuation": 742.5,
+      "unrealizedPnL": -212.3,
+      "pnlPercentage": -22.24,
       "notes": "",
       "createdAt": "2026-08-07T06:53:40.993Z",
       "updatedAt": "2026-08-07T06:53:40.993Z",
       "priceStatus": "ok",
-      "lastPriceSyncAt": "2026-08-19T04:25:03.255Z"
+      "lastPriceSyncAt": "2026-08-19T04:27:15.251Z"
     }
   ]
 }

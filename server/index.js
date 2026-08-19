@@ -10,6 +10,7 @@ import 'dotenv/config';
 import { dbEngine } from './db.js';
 import { refreshHoldingsPrices } from './investments.js';
 import { parseUpiTransactionText } from './upiParser.js';
+import { SUPPORTED_BANKS, initiateAaConsent, verifyAaOtp, generateLiveBankFeed } from './accountAggregator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -533,7 +534,122 @@ app.get('/api/user/webhook-config', (req, res) => {
     });
   } catch (err) {
     console.error('GET /api/user/webhook-config error:', err);
-    res.status(500).json({ error: 'Failed to get webhook configuration' });
+// ==========================================
+// RBI ACCOUNT AGGREGATOR (AA) DIRECT BANK FEED ENDPOINTS
+// ==========================================
+
+// GET /api/aa/banks (List of Supported Indian Banks)
+app.get('/api/aa/banks', (req, res) => {
+  res.json({ success: true, banks: SUPPORTED_BANKS });
+});
+
+// GET /api/aa/linked-accounts (User's Linked Bank Accounts)
+app.get('/api/aa/linked-accounts', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const accounts = dbEngine.getLinkedBankAccounts(userId);
+    res.json({ success: true, accounts });
+  } catch (err) {
+    console.error('GET /api/aa/linked-accounts error:', err);
+    res.status(500).json({ error: 'Failed to fetch linked bank accounts' });
+  }
+});
+
+// POST /api/aa/initiate (Step 1: Initiate Consent & Bank OTP)
+app.post('/api/aa/initiate', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { mobileNumber, bankCode } = req.body;
+    const result = initiateAaConsent({ userId, mobileNumber, bankCode });
+    res.json(result);
+  } catch (err) {
+    console.error('POST /api/aa/initiate error:', err);
+    res.status(400).json({ error: err.message || 'Failed to initiate bank consent' });
+  }
+});
+
+// POST /api/aa/verify-otp (Step 2: Verify Bank OTP & Link Account)
+app.post('/api/aa/verify-otp', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { consentHandle, otp, syncInitial } = req.body;
+    const linkedAccount = verifyAaOtp({ userId, consentHandle, otp });
+    dbEngine.saveLinkedBankAccount(userId, linkedAccount);
+
+    // Initial Live Bank Statement Feed Ingestion
+    let initialTxs = [];
+    if (syncInitial !== false) {
+      const feed = generateLiveBankFeed(linkedAccount);
+      initialTxs = feed.map(t => dbEngine.addTransaction(userId, t));
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully linked ${linkedAccount.bankName} (${linkedAccount.maskedAccountNumber}) via RBI Account Aggregator!`,
+      account: linkedAccount,
+      syncedCount: initialTxs.length
+    });
+  } catch (err) {
+    console.error('POST /api/aa/verify-otp error:', err);
+    res.status(400).json({ error: err.message || 'Bank OTP verification failed' });
+  }
+});
+
+// POST /api/aa/sync (Step 3: Trigger Live Bank Feed Sync)
+app.post('/api/aa/sync', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { accountId } = req.body;
+    const accounts = dbEngine.getLinkedBankAccounts(userId);
+    const targetAccount = accountId ? accounts.find(a => a.id === accountId) : accounts[0];
+
+    if (!targetAccount) {
+      return res.status(404).json({ error: 'No linked bank account found. Please link a bank first.' });
+    }
+
+    // Pull live transactions
+    const feed = generateLiveBankFeed(targetAccount);
+    const newTxs = feed.map(t => dbEngine.addTransaction(userId, t));
+
+    // Update last sync time
+    const updatedAcc = dbEngine.updateLinkedBankAccountSync(userId, targetAccount.id, {
+      lastSyncAt: new Date().toISOString()
+    });
+
+    res.json({
+      success: true,
+      message: `Live Bank Sync Complete! Synced ${newTxs.length} transactions from ${targetAccount.bankName}.`,
+      account: updatedAcc,
+      syncedTransactions: newTxs
+    });
+  } catch (err) {
+    console.error('POST /api/aa/sync error:', err);
+    res.status(500).json({ error: err.message || 'Bank sync failed' });
+  }
+});
+
+// DELETE /api/aa/unlink (Step 4: Revoke Consent & Unlink Bank)
+app.delete('/api/aa/unlink', (req, res) => {
+  try {
+    const userId = getUserIdFromReq(req);
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { accountId } = req.body;
+    if (!accountId) return res.status(400).json({ error: 'Account ID required' });
+
+    dbEngine.unlinkBankAccount(userId, accountId);
+    res.json({ success: true, message: 'Bank account unlinked successfully' });
+  } catch (err) {
+    console.error('DELETE /api/aa/unlink error:', err);
+    res.status(500).json({ error: 'Failed to unlink bank account' });
   }
 });
 

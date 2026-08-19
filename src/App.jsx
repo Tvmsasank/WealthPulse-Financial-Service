@@ -30,7 +30,8 @@ import ForgotPasswordModal from './components/ForgotPasswordModal';
 import UserProfileModal from './components/UserProfileModal';
 import MpinModal from './components/MpinModal';
 import SmartUpiModal from './components/SmartUpiModal';
-import { CheckCircle2, FolderSync, X, Shield, Lock, UserPlus, LogIn, Fingerprint, KeyRound, Zap } from 'lucide-react';
+import AccountAggregatorModal from './components/AccountAggregatorModal';
+import { CheckCircle2, FolderSync, X, Shield, Lock, UserPlus, LogIn, Fingerprint, KeyRound, Zap, Landmark } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -63,6 +64,9 @@ export default function App() {
 
   // Smart UPI Modal State
   const [isSmartUpiOpen, setIsSmartUpiOpen] = useState(false);
+
+  // RBI Account Aggregator Modal State
+  const [isAaModalOpen, setIsAaModalOpen] = useState(false);
 
   // Check URL parameters for ?resetToken=... on load
   useEffect(() => {
@@ -590,6 +594,10 @@ export default function App() {
             if (!user) { setAuthModalMode('login'); setIsAuthModalOpen(true); return; }
             handleTriggerDriveSync();
           }}
+          onOpenAaModal={() => {
+            if (!user) { setAuthModalMode('login'); setIsAuthModalOpen(true); return; }
+            setIsAaModalOpen(true);
+          }}
         />
 
         <main className="page-body">
@@ -679,6 +687,7 @@ export default function App() {
                   onOpenEditEntry={tx => { setEditingTx(tx); setIsAddEntryOpen(true); }}
                   onOpenTagModal={tx => setTagModalTx(tx)}
                   onOpenSmartUpi={() => setIsSmartUpiOpen(true)}
+                  onOpenAaModal={() => setIsAaModalOpen(true)}
                 />
               )}
 
@@ -943,6 +952,13 @@ export default function App() {
         onTransactionAdded={fetchState}
         token={token}
         userEmail={user?.email}
+      />
+
+      <AccountAggregatorModal
+        isOpen={isAaModalOpen}
+        onClose={() => setIsAaModalOpen(false)}
+        token={token}
+        onSyncCompleted={fetchState}
       />
     </div>
   );
