@@ -176,11 +176,15 @@ export default function Calculators({ isPrivacyMode = false }) {
         className="no-scrollbar"
         style={{
           display: 'flex',
-          gap: '8px',
+          gap: '6px',
           overflowX: 'auto',
-          paddingBottom: '8px',
+          padding: '6px',
           marginBottom: '24px',
-          borderBottom: '1px solid var(--border-color)'
+          background: 'rgba(255, 255, 255, 0.04)',
+          borderRadius: '16px',
+          border: '1px solid var(--border-color)',
+          width: 'fit-content',
+          maxWidth: '100%'
         }}
       >
         <button

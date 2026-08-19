@@ -1,3 +1,8 @@
+import dns from 'dns';
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
+
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
@@ -144,14 +149,15 @@ async function sendEmailWithFallback({ to, subject, html }) {
     return false;
   }
 
-  // Attempt 1: Gmail service
+  // Attempt 1: Gmail service with IPv4 enforcement
   try {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
+      family: 4,
       auth: { user, pass },
-      connectionTimeout: 8000,
-      greetingTimeout: 5000,
-      socketTimeout: 10000
+      connectionTimeout: 6000,
+      greetingTimeout: 4000,
+      socketTimeout: 8000
     });
     const info = await transporter.sendMail({
       from: `"WealthPulse Security" <${user}>`,
@@ -159,23 +165,48 @@ async function sendEmailWithFallback({ to, subject, html }) {
       subject,
       html
     });
-    console.log(`[WealthPulse Email] Successfully delivered email to ${to} via Gmail Service. MessageId: ${info.messageId}`);
+    console.log(`[WealthPulse Email] Successfully delivered email to ${to} via Gmail Service (IPv4). MessageId: ${info.messageId}`);
     return true;
   } catch (err1) {
-    console.warn(`[WealthPulse Email] Primary transport failed (${err1.message}). Trying fallback transport on port 587...`);
+    console.warn(`[WealthPulse Email] Primary transport failed (${err1.message}). Trying Direct SSL transport...`);
   }
 
-  // Attempt 2: Direct SMTP on port 587
+  // Attempt 2: Direct SMTP SSL (port 465) with IPv4 enforcement
+  try {
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      family: 4,
+      auth: { user, pass },
+      connectionTimeout: 6000,
+      greetingTimeout: 4000,
+      socketTimeout: 8000
+    });
+    const info = await transporter.sendMail({
+      from: `"WealthPulse Security" <${user}>`,
+      to: to.trim(),
+      subject,
+      html
+    });
+    console.log(`[WealthPulse Email] Successfully delivered email to ${to} via SSL 465 (IPv4). MessageId: ${info.messageId}`);
+    return true;
+  } catch (err2) {
+    console.warn(`[WealthPulse Email] SSL transport failed (${err2.message}). Trying STARTTLS 587...`);
+  }
+
+  // Attempt 3: Direct SMTP TLS on port 587 with IPv4 enforcement
   try {
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
       secure: false,
       requireTLS: true,
+      family: 4,
       auth: { user, pass },
-      connectionTimeout: 8000,
-      greetingTimeout: 5000,
-      socketTimeout: 10000
+      connectionTimeout: 6000,
+      greetingTimeout: 4000,
+      socketTimeout: 8000
     });
     const info = await transporter.sendMail({
       from: `"WealthPulse Security" <${user}>`,
@@ -183,10 +214,10 @@ async function sendEmailWithFallback({ to, subject, html }) {
       subject,
       html
     });
-    console.log(`[WealthPulse Email] Successfully delivered email to ${to} via Port 587. MessageId: ${info.messageId}`);
+    console.log(`[WealthPulse Email] Successfully delivered email to ${to} via Port 587 (IPv4). MessageId: ${info.messageId}`);
     return true;
-  } catch (err2) {
-    console.error(`[WealthPulse Email Error] Both SMTP transports failed: ${err2.message}`);
+  } catch (err3) {
+    console.error(`[WealthPulse Email Error] All 3 SMTP transports failed: ${err3.message}`);
     return false;
   }
 }
@@ -413,13 +444,24 @@ app.delete('/api/auth/account', (req, res) => {
 // POST /api/auth/mpin/set
 app.post('/api/auth/mpin/set', (req, res) => {
   try {
-    const userId = getUserIdFromReq(req);
+    let userId = getUserIdFromReq(req);
+    const { mpin, email } = req.body;
+
+    if (!userId && email) {
+      const u = dbEngine.getUserByEmail(email.toString().trim().toLowerCase());
+      if (u) userId = u.id;
+    }
+
     if (!userId) return res.status(401).json({ error: 'Unauthorized: Please sign in' });
 
-    const { mpin } = req.body;
     dbEngine.setUserMpin({ userId, mpin });
+    const updatedUser = dbEngine.getUserById(userId);
 
-    res.json({ message: '4-Digit MPIN set successfully!' });
+    res.json({
+      message: '4-Digit MPIN set successfully!',
+      hasMpin: true,
+      user: updatedUser
+    });
   } catch (err) {
     console.error('POST /api/auth/mpin/set error:', err);
     res.status(400).json({ error: err.message || 'Failed to set MPIN' });

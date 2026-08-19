@@ -51,7 +51,7 @@ export default function UserProfileModal({
     setMpinResetLoading(true);
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       const res = await fetch('/api/auth/forgot-mpin', {
         method: 'POST',
@@ -61,7 +61,7 @@ export default function UserProfileModal({
       });
       clearTimeout(timeoutId);
 
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || 'Failed to send MPIN reset link');
       setMpinResetMessage(`MPIN reset link sent to ${emailToUse}! Check your Gmail inbox.`);
     } catch (err) {

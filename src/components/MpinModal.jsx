@@ -192,15 +192,17 @@ export default function MpinModal({
         return;
       }
 
+      const targetEmail = (email || localStorage.getItem('wealthpulse_remembered_email') || localStorage.getItem('ledgerly_remembered_email') || '').trim();
       const activeToken = token || localStorage.getItem('wealthpulse_token') || sessionStorage.getItem('wealthpulse_token') || localStorage.getItem('ledgerly_token') || '';
 
       const res = await fetch('/api/auth/mpin/set', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${activeToken}`
+          'Authorization': `Bearer ${activeToken}`,
+          'X-User-Email': targetEmail
         },
-        body: JSON.stringify({ mpin: secondPin })
+        body: JSON.stringify({ mpin: secondPin, email: targetEmail })
       });
 
       const json = await res.json().catch(() => ({}));
@@ -209,7 +211,7 @@ export default function MpinModal({
       localStorage.setItem('wealthpulse_has_mpin', 'true');
       setSuccess(mode === 'change' ? '4-Digit MPIN Changed Successfully!' : '4-Digit Security MPIN Set Successfully!');
       setTimeout(() => {
-        if (onSuccess) onSuccess();
+        if (onSuccess) onSuccess(json.user, activeToken);
         onClose();
       }, 800);
     } catch (err) {
