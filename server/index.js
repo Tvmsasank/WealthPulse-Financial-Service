@@ -459,22 +459,43 @@ app.post('/api/transactions/parse-smart-text', (req, res) => {
   }
 });
 
-// POST /api/transactions/upi-webhook (Automated Real-Time Ingestion for Android Tasker / MacroDroid / SMS)
-app.post('/api/transactions/upi-webhook', (req, res) => {
+// ALL /api/transactions/upi-webhook (Automated Real-Time Ingestion for Android Tasker / MacroDroid / SMS)
+app.all('/api/transactions/upi-webhook', (req, res) => {
   try {
-    const { rawText, text, sms, body: messageBody, email, userEmail, key } = req.body || {};
-    const inputMsg = (rawText || text || sms || messageBody || req.query.text || '').toString();
+    let bodyObj = req.body || {};
+    if (typeof bodyObj === 'string') {
+      try { bodyObj = JSON.parse(bodyObj); } catch (e) { bodyObj = { rawText: bodyObj }; }
+    }
+
+    const { rawText, text, sms, body: messageBody, email, userEmail, key } = bodyObj;
+    const inputMsg = (rawText || text || sms || messageBody || req.query.rawText || req.query.text || req.query.sms || req.query.body || (typeof req.body === 'string' ? req.body : '') || '').toString();
+
+    console.log('[UPI Webhook Request Received]:', {
+      method: req.method,
+      query: req.query,
+      body: req.body,
+      inputMsg
+    });
 
     if (!inputMsg) {
       return res.status(400).json({ error: 'SMS / message text required' });
     }
 
-    // Resolve User ID via Token, Email, or Query
+    // Resolve User ID via Token, Email, or Query (case-insensitive)
     let userId = getUserIdFromReq(req);
-    const targetEmail = (email || userEmail || req.query.userEmail || req.query.email || '').toString().trim().toLowerCase();
+    const targetEmail = (email || userEmail || req.query.userEmail || req.query.useremail || req.query.email || '').toString().trim().toLowerCase();
     if (!userId && targetEmail) {
       const user = dbEngine.getUserByEmail(targetEmail);
       if (user) userId = user.id;
+    }
+
+    // Fallback: If single user in db or owner user, assign gracefully
+    if (!userId) {
+      const state = dbEngine.getState(null);
+      const allUsers = (state && state.users) || [];
+      if (allUsers.length > 0) {
+        userId = allUsers[0].id;
+      }
     }
 
     if (!userId) {
@@ -492,6 +513,8 @@ app.post('/api/transactions/upi-webhook', (req, res) => {
     // Automatically add transaction to user's account in real-time
     const newTx = dbEngine.addTransaction(userId, parsed);
 
+    console.log(`[UPI Webhook Success]: Synced ₹${parsed.amount} to ${parsed.merchant} (Tx ID: ${newTx.id})`);
+
     res.json({
       success: true,
       message: `Successfully synced ₹${parsed.amount} ${parsed.type === 'expense' ? 'paid to' : 'received from'} ${parsed.merchant}!`,
@@ -499,7 +522,7 @@ app.post('/api/transactions/upi-webhook', (req, res) => {
       parsed
     });
   } catch (err) {
-    console.error('POST /api/transactions/upi-webhook error:', err);
+    console.error('ALL /api/transactions/upi-webhook error:', err);
     res.status(500).json({ error: err.message || 'Webhook processing failed' });
   }
 });

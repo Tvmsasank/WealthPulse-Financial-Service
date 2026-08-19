@@ -40,6 +40,24 @@
   ],
   "transactions": [
     {
+      "id": "tx_1787116320148_l094xk",
+      "userId": "usr_1785755811844_crbzz5",
+      "date": "2026-08-19",
+      "merchant": "Nunna Lakshmi Prasanna",
+      "amount": 1,
+      "category": "General",
+      "account": "HDFC Account",
+      "type": "expense",
+      "tags": [
+        "UPI",
+        "UPI Auto-Sync"
+      ],
+      "source": "UPI Auto-Sync",
+      "flagged": false,
+      "receiptUrl": null,
+      "createdAt": "2026-08-19T05:12:00.149Z"
+    },
+    {
       "id": "tx_1787113585640_771gx7",
       "userId": "usr_1785755811844_crbzz5",
       "date": "2026-08-19",
