@@ -25,9 +25,19 @@ export default function DashboardTab({
   onPeriodChange,
   onOpenAddEntry,
   onOpenImport,
-  onNavigateTab
+  onNavigateTab,
+  isPrivacyMode = false
 }) {
   const { assets = 0, liabilities = 0, netWorthConfigured = false, recurring = [], subscriptions = [] } = settings;
+
+  const formatInr = (val) =>
+    isPrivacyMode
+      ? '₹••••••••'
+      : '₹' +
+        Number(val || 0).toLocaleString('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
 
   // Live Investments Total Valuation (Safe array check)
   const safeInvestments = Array.isArray(investments) ? investments : [];
@@ -111,7 +121,7 @@ export default function DashboardTab({
             </div>
             {netWorthConfigured ? (
               <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
-                ₹{netWorthValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {formatInr(netWorthValue)}
               </div>
             ) : (
               <div style={{ marginBottom: '4px' }}>
@@ -141,7 +151,7 @@ export default function DashboardTab({
               </div>
             </div>
             <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
-              ₹{totalIncome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatInr(totalIncome)}
             </div>
           </div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>
@@ -159,7 +169,7 @@ export default function DashboardTab({
               </div>
             </div>
             <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
-              ₹{totalSpending.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatInr(totalSpending)}
             </div>
           </div>
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '8px' }}>

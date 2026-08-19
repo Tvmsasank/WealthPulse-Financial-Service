@@ -15,6 +15,7 @@ import DocumentsTab from './components/DocumentsTab';
 import RulesTagsTab from './components/RulesTagsTab';
 import SettingsTab from './components/SettingsTab';
 import InvestmentsTab from './components/InvestmentsTab';
+import Calculators from './components/Calculators';
 
 // Modals
 import AddEntryModal from './components/AddEntryModal';
@@ -38,6 +39,9 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState(() => localStorage.getItem('wealthpulse_theme') || localStorage.getItem('ledgerly_theme') || 'dark');
+  const [isPrivacyMode, setIsPrivacyMode] = useState(() => {
+    return localStorage.getItem('wealthpulse_privacy_mode') === 'true';
+  });
 
   // Auth State
   const [user, setUser] = useState(() => {
@@ -563,16 +567,38 @@ export default function App() {
     setActiveTab('dashboard');
   };
 
-  const activeNav = NAV_ITEMS.find(n => n.id === activeTab) || NAV_ITEMS[0];
   const safeTags = Array.isArray(tags) ? tags : [];
   const safeSettingsTags = Array.isArray(settings?.tags) ? settings.tags : [];
   const tagList = safeTags.map(t => typeof t === 'object' && t ? (t.name || '') : String(t)).filter(Boolean);
   const allTagNames = Array.from(new Set([...tagList, ...safeSettingsTags]));
+  // Privacy Mode Toggle Guard (Prompts for MPIN if turning OFF)
+  const handleTogglePrivacyMode = () => {
+    if (!isPrivacyMode) {
+      setIsPrivacyMode(true);
+      localStorage.setItem('wealthpulse_privacy_mode', 'true');
+    } else {
+      if (user?.hasMpin) {
+        setMpinModalMode('verify');
+        setMpinModalEmail(user?.email || '');
+        setIsMpinModalOpen(true);
+      } else {
+        setIsPrivacyMode(false);
+        localStorage.setItem('wealthpulse_privacy_mode', 'false');
+      }
+    }
+  };
+
+  const activeNav = NAV_ITEMS.find(n => n.id === activeTab) || NAV_ITEMS[0];
 
   return (
-    <div className="app-container">
-      {/* Desktop Sidebar (Only when logged in) */}
-      {user && <Sidebar activeTab={activeTab} onSelectTab={setActiveTab} />}
+    <div className={`app-container theme-${theme}`}>
+      {/* Sidebar Navigation */}
+      {user && (
+        <Sidebar
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+        />
+      )}
 
       {/* Main Content Area */}
       <div className={`main-content ${!user ? 'logged-out' : ''}`}>
@@ -581,6 +607,8 @@ export default function App() {
           theme={theme}
           onSelectTheme={handleSelectTheme}
           user={user}
+          isPrivacyMode={isPrivacyMode}
+          onTogglePrivacyMode={handleTogglePrivacyMode}
           onOpenLogin={() => { setAuthModalMode('login'); setIsAuthModalOpen(true); }}
           onOpenRegister={() => { setAuthModalMode('register'); setIsAuthModalOpen(true); }}
           onOpenProfileModal={() => setIsProfileModalOpen(true)}
@@ -635,6 +663,7 @@ export default function App() {
                   onOpenAddEntry={() => setIsAddEntryOpen(true)}
                   onOpenImport={() => setIsImportOpen(true)}
                   onNavigateTab={setActiveTab}
+                  isPrivacyMode={isPrivacyMode}
                 />
               )}
 
@@ -654,6 +683,7 @@ export default function App() {
                   onOpenTagModal={tx => setTagModalTx(tx)}
                   onOpenSmartUpi={() => setIsSmartUpiOpen(true)}
                   onOpenAaModal={() => setIsAaModalOpen(true)}
+                  isPrivacyMode={isPrivacyMode}
                 />
               )}
 
@@ -665,7 +695,12 @@ export default function App() {
                   onDeleteInvestment={handleDeleteInvestment}
                   onRefreshPrices={handleRefreshPrices}
                   isSyncing={isSyncingPrices}
+                  isPrivacyMode={isPrivacyMode}
                 />
+              )}
+
+              {activeTab === 'calculators' && (
+                <Calculators isPrivacyMode={isPrivacyMode} />
               )}
 
               {activeTab === 'recurring' && (
@@ -804,6 +839,10 @@ export default function App() {
         token={token}
         resetMpinToken={activeMpinResetToken}
         onSuccess={(u, t) => {
+          if (isPrivacyMode) {
+            setIsPrivacyMode(false);
+            localStorage.setItem('wealthpulse_privacy_mode', 'false');
+          }
           if (u && t) handleLoginSuccess(u, t, true);
         }}
       />

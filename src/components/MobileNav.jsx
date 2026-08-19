@@ -12,6 +12,7 @@ import {
   FileText,
   Sliders,
   Settings,
+  Calculator,
   X,
   User,
   LogOut
@@ -20,11 +21,12 @@ import {
 const MAIN_TABS = [
   { id: 'home', label: 'Home', icon: Home },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'transactions', label: 'Transactions', icon: CreditCard },
-  { id: 'investments', label: 'Investments', icon: TrendingUp }
+  { id: 'investments', label: 'Investments', icon: TrendingUp },
+  { id: 'transactions', label: 'Transactions', icon: CreditCard }
 ];
 
 const MORE_TABS = [
+  { id: 'calculators', label: 'SIP & EPF Calculators', icon: Calculator },
   { id: 'recurring', label: 'Recurring Bills', icon: RefreshCw },
   { id: 'subscriptions', label: 'Subscriptions', icon: Calendar },
   { id: 'budgets', label: 'Budgets & Limits', icon: PieChart },

@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Receipt,
   TrendingUp,
+  Calculator,
   RefreshCw,
   CreditCard,
   PieChart,
@@ -16,8 +17,9 @@ import {
 export const NAV_ITEMS = [
   { id: 'home', label: 'Home', icon: Home },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'transactions', label: 'Transactions', icon: Receipt },
   { id: 'investments', label: 'Investments', icon: TrendingUp },
+  { id: 'transactions', label: 'Transactions', icon: Receipt },
+  { id: 'calculators', label: 'Calculators', icon: Calculator },
   { id: 'recurring', label: 'Recurring', icon: RefreshCw },
   { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
   { id: 'budgets', label: 'Budgets', icon: PieChart },
